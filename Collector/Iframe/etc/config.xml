@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+	<default>
+		<payment>
+			<campaign>
+				<active>1</active>
+				<model>Collector\Iframe\Model\Payment\Campaign</model>
+				<order_status>pending</order_status>
+				<title>Campaign</title>
+				<allowspecific>0</allowspecific>
+				<group>Offline</group>
+			</campaign>
+			<card>
+				<active>1</active>
+				<model>Collector\Iframe\Model\Payment\Card</model>
+				<order_status>pending</order_status>
+				<title>Card</title>
+				<allowspecific>0</allowspecific>
+				<group>Offline</group>
+			</card>
+			<bank>
+				<active>1</active>
+				<model>Collector\Iframe\Model\Payment\Bank</model>
+				<order_status>pending</order_status>
+				<title>Bank</title>
+				<allowspecific>0</allowspecific>
+				<group>Offline</group>
+			</bank>
+		</payment>
+	</default>
+</config>
