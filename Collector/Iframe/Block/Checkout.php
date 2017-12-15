@@ -139,13 +139,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 		$output = curl_exec($ch);
 		$result = json_decode($output,true);
-		ob_start();
-		print_r($result);
-		echo "\ncurlinfo: ";
-		print_r(curl_getinfo($ch));
-		echo "\ngetpublictoken req: ";
-		print_r($req);
-		file_put_contents("test", "getpublictoken result: " . ob_get_clean() . "\n", FILE_APPEND);
 		$_SESSION['collector_public_token'] = $result["data"]["publicToken"];
 		$_SESSION['collector_private_id'] = $result['data']['privateId'];
 		curl_close($ch);

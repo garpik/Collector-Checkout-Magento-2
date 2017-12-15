@@ -49,8 +49,6 @@ class PaymentInfo extends \Magento\Sales\Block\Adminhtml\Order\View\Tab\Info
     }
 	
 	public function getInvoiceId(){
-		
-		file_put_contents("test", "getinvoiceid: " . $this->getOrder()->getIncrementId() . " " . get_class($this->getOrder()) . "\n", FILE_APPEND);
 		return $this->getOrder()->getData('collector_invoice_id');
 	}
 

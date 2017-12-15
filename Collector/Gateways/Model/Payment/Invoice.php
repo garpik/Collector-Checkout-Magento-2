@@ -140,7 +140,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 			
 			ob_start();
 			print_r($req);
-			file_put_contents("req", "auth " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents("var/log/req.log", "auth " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 			try {
 				$resp = $client->AddInvoice($req);
 				if ($resp->InvoiceStatus < 5){
@@ -156,7 +156,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 				print_r($e->getMessage());
 				echo "\n";
 				print_r($e->getTraceAsString());
-				file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+				file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}
 		}
 		$_SESSION['is_iframe'] = false;
@@ -173,9 +173,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
         foreach ($header as $k => $v) {
             $headerList[] = new \SoapHeader($this->helper->getHeaderUrl(), $k, $v);
         }
-	/*	ob_start();
-		print_r($headerList);
-		file_put_contents("req", "headers " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);*/
         $client->__setSoapHeaders($headerList);
 		
 		if($order->getBillingAddress()->getCompany()) {
@@ -204,12 +201,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 			catch (\Exception $e){
 				ob_start();
 				var_dump($req);
-				file_put_contents("req", "capture " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+				file_put_contents("var/log/req.log", "capture " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 				ob_start();
 				print_r($e->getMessage());
 				echo "\n";
 				print_r($e->getTraceAsString());
-				file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+				file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}
 		}
 		else {
@@ -264,7 +261,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 					}
 					ob_start();
 					print_r($req);
-					file_put_contents("test", "part-capture ". $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+					file_put_contents("var/log/req.log", "part-capture ". $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 					try {
 						$resp = $client->PartActivateInvoice($req);
 						$payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -274,23 +271,13 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 						$order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
 						$order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
 						$order->setData('collector_invoice_id', $resp->NewInvoiceNo);
-						ob_start();
-						var_dump($resp);
-						file_put_contents("test", "part-capture complete " . ob_get_clean()	 . "\n", FILE_APPEND);
 					}
 					catch (\Exception $e){
-						ob_start();
-						print_r($req);
-						echo "\n";
-						print_r($client->__getLastRequestHeaders());
-						echo "\n";
-						print_r($client->__getLastResponseHeaders());
-						file_put_contents("req", date("Y-m-d H:i:s") . " capture " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 						ob_start();
 						print_r($e->getMessage());
 						echo "\n";
 						print_r($e->getTraceAsString());
-						file_put_contents("req", date("Y-m-d H:i:s") . " exception: " . ob_get_clean() . "\n", FILE_APPEND);
+						file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 					}
 				}
 			}
@@ -298,7 +285,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
     }
 	
 	public function void(\Magento\Payment\Model\InfoInterface $payment){
-		file_put_contents("req", "void: " . $payment->getOrder()->getIncrementId() . "\n", FILE_APPEND);
 		$order = $payment->getOrder();
 		if($order->getBillingAddress()->getCompany()) {
 			$storeID = $this->helper->getB2BStoreID();
@@ -330,13 +316,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 			print_r($e->getMessage());
 			echo "\n";
 			print_r($e->getTraceAsString());
-			file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			
 		}
     }
 	
 	public function cancel(\Magento\Payment\Model\InfoInterface $payment){
-		file_put_contents("req", "cancel: " . $payment->getOrder()->getIncrementId() . "\n", FILE_APPEND);
 		$order = $payment->getOrder();
 		if($order->getBillingAddress()->getCompany()) {
 			$storeID = $this->helper->getB2BStoreID();
@@ -368,12 +353,11 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 			print_r($e->getMessage());
 			echo "\n";
 			print_r($e->getTraceAsString());
-			file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 		}
 	}
 	
 	public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount){
-		file_put_contents("test", "refund entry\n", FILE_APPEND);
 		$order = $payment->getOrder();
 		if($order->getBillingAddress()->getCompany()) {
 			$storeID = $this->helper->getB2BStoreID();
@@ -401,7 +385,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 			);
 			ob_start();
 			print_r($req);
-			file_put_contents("req", "refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents("var/log/req.log", "refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 			try {
 				$client->CreditInvoice($req);
 			}
@@ -410,7 +394,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 				print_r($e->getMessage());
 				echo "\n";
 				print_r($e->getTraceAsString());
-				file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+				file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}
 		}
 		else {

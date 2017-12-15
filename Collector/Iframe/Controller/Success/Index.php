@@ -17,6 +17,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 	protected $shippingRate;
     protected $checkoutSession;
 	protected $cartRepositoryInterface;
+	protected $eventManager;
 	protected $cartManagementInterface;
 	
 	public function __construct(
@@ -35,11 +36,13 @@ class Index extends \Magento\Framework\App\Action\Action {
 		\Magento\Sales\Api\Data\OrderInterface $_orderInterface,
 		\Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
 		\Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
+		\Magento\Framework\Event\Manager $eventManager,
         \Magento\Framework\Json\Helper\Data $jsonHelper
     ) {
         $this->formKey = $formKey;
 		$this->helper = $_helper;
 		$this->layoutFactory = $_layoutFactory;
+		$this->eventManager = $eventManager;
         $this->resultPageFactory = $resultPageFactory;
         $this->jsonHelper = $jsonHelper;
         $this->checkoutSession = $_checkoutSession;
@@ -58,7 +61,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 	
     public function execute(){
 		$response = $this->helper->getOrderResponse();
-		$resultPage = $this->resultPageFactory ->create();
+		$resultPage = $this->resultPageFactory->create();
 		try {
 			$paymentMethod = '';
 			switch ($response['data']['purchase']['paymentName']){
@@ -215,32 +218,23 @@ class Index extends \Magento\Framework\App\Action\Action {
 			$order->setGrandTotal($order->getGrandTotal() + $fee);
 			$order->setBaseGrandTotal($order->getBaseGrandTotal() + $fee);
 			
-			
-			
-			ob_start();
-			print_r($response);
-			file_put_contents("test", "success response: " . ob_get_clean() . "\n", FILE_APPEND);
+			$this->eventManager->dispatch(
+					'checkout_onepage_controller_success_action',
+					['order_ids' => [$order->getId()]]
+			);
 			
 			if ($response["data"]["purchase"]["result"] == "OnHold"){
                 $status = $this->helper->getHoldStatus();
-                $orderState = \Magento\Sales\Model\Order::STATE_PROCESSING;
-                ob_start();
-                var_dump($status);
-                echo "\n";
-                var_dump($orderState);
-                file_put_contents("test", "holded " . ob_get_clean() . "\n", FILE_APPEND);
 				$order->setState($status)->setStatus($status);
 				$order->save();
 			}
 			else if ($response["data"]["purchase"]["result"] == "Preliminary"){
                 $status = $this->helper->getAcceptStatus();
-                file_put_contents("test", "preliminary " . $status . "\n", FILE_APPEND);
 				$order->setState($status)->setStatus($status);
 				$order->save();
 			}
 			else {
                 $status = $this->helper->getDeniedStatus();
-                file_put_contents("test", "denied " . $status . "\n", FILE_APPEND);
 				$order->setState($status)->setStatus($status);
 				$order->save();
 			}
@@ -253,7 +247,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			return $resultPage;
 		}
 		catch (\Exception $e){
-			file_put_contents("test", "checkout error: " . $e->getMessage() . "\n", FILE_APPEND);
+			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n", FILE_APPEND);
 			return $resultPage;
 		}
 	}

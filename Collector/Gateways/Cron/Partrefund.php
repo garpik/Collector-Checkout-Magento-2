@@ -124,7 +124,7 @@ class Partrefund {
 				$memo->save();
 			}
 			catch (\Exception $e){
-				file_put_contents("test", "partcredit error: " . $e->getMessage() . "\n", FILE_APPEND);
+				file_put_contents("var/log/collector.log", "partcredit error: " . $e->getMessage() . "\n", FILE_APPEND);
 				$memo->setData('collector_refunded', '1');
 				$memo->save();
 			}

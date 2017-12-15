@@ -1,5 +1,5 @@
 <?php
-namespace Collector\Iframe\Controller\Success;
+namespace Collector\Iframe\Controller\Notification;
 class Index extends \Magento\Framework\App\Action\Action {
 	
 	protected $resultPageFactory;
@@ -57,6 +57,7 @@ class Index extends \Magento\Framework\App\Action\Action {
     }
 	
     public function execute(){
-		
+		$resultPage = $this->resultPageFactory->create();
+        return $resultPage;
 	}
 }

@@ -4,8 +4,6 @@ define([
 	return {
 		call:function(ajaxUrl){
 			$(document).on('click', '.inc', function() {
-				console.log("inc click");
-				console.log(ajaxUrl);
 				var param = {
 					field1 : "ajax", 
 					field2 : "inc",
@@ -132,7 +130,6 @@ define([
 							jQuery('div.collector-cart').replaceWith(data.cart);
 						}
 						if(data.checkout){
-							console.log(data.checkout);
 							jQuery('div.collector-checkout').replaceWith(data.checkout);
 						}
 					},
@@ -199,7 +196,6 @@ define([
 							jQuery('div.collector-cart').replaceWith(data.cart);
 						}
 						if(data.checkout){
-							console.log(data.checkout);
 							jQuery('div.collector-checkout').replaceWith(data.checkout);
 						}
 						if (ctype == "b2b"){

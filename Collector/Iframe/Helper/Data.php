@@ -506,17 +506,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 				'quantity' => $qty,
 				'vat' => $percent
 			));
-			ob_start();
-			print_r($cartItem->getQty());
-			if ($cartItem->getParentItem()){
-				echo "\nparent item: ";
-				print_r($cartItem->getParentItem()->getQty());
-			}
-			file_put_contents("test", "cart item: " . ob_get_clean() . "\n", FILE_APPEND);
 		}
-		ob_start();
-		print_r($items);
-		file_put_contents("test", "items to collector: " . ob_get_clean() . "\n", FILE_APPEND);
 		$fee = 0;
 		if (array_key_exists('fee', $cartTotals)){
 			$fee = $cartTotals['fee']->getData()['value'];
@@ -553,7 +543,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		if (empty($cartTotals['shipping']->getData()['title']->getArguments())){
 			if (isset($_SESSION['curr_shipping_code'])){
 				if ($_SESSION['curr_shipping_price'] == 0){
-				    file_put_contents("test", "test1\n", FILE_APPEND);
 					$ret = array(
 						'shipping' => array(
 							'id' => "shipping",
@@ -564,14 +553,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 					);
 				}
 				else {
-                    ob_start();
-                    echo $_SESSION['curr_shipping_code'] ."\n";
-                    echo $_SESSION['curr_shipping_price'] ."\n";
-                    echo $_SESSION['curr_shipping_tax'] ."\n";
-
-
-				    file_put_contents("test", "test2".ob_get_clean()."\n", FILE_APPEND);
-
 					$ret = array(
 						'shipping' => array(
 							'id' => "shipping",
@@ -583,7 +564,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 				}
 			}
 			else {
-                file_put_contents("test", "test3\n", FILE_APPEND);
 				$ret = array(
 					'shipping' => array(
 						'id' => 'shipping',
@@ -595,12 +575,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			}
 		}
 		else {
-            ob_start();
-            echo $_SESSION['curr_shipping_code'] ."\n";
-            echo $cartTotals['shipping']->getData()['value'] ."\n";
-
-
-            file_put_contents("test", "test4 ".ob_get_clean()."\n", FILE_APPEND);
 			$ret = array(
 				'shipping' => array(
 					'id' => 'shipping',
@@ -700,12 +674,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 		$output = curl_exec($ch);
-		
-		ob_start();
-		print_r($array);
-		echo "\noutput: ";
-		print_r($output);
-		file_put_contents("test", "update fees req: " . ob_get_clean() . "\n", FILE_APPEND);
 		
 		$data = json_decode($output,true);
 		curl_close($ch);

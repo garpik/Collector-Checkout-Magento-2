@@ -23,9 +23,7 @@ class CancelObserver extends AbstractDataAssignObserver{
 		$order = $observer->getOrder();
 		$payment = $order->getPayment();
 		$method = $payment->getMethodInstance();
-		if (strpos($method->getCode(), "collector") !== false){
-			file_put_contents("req", "cancel: " . $payment->getOrder()->getIncrementId() . "\n", FILE_APPEND);
-			
+		if (strpos($method->getCode(), "collector") !== false){			
 			$client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), ['soap_version' => SOAP_1_1,
 				'exceptions' => 1, 'trace' => true
 			]);
@@ -50,7 +48,7 @@ class CancelObserver extends AbstractDataAssignObserver{
 				print_r($e->getMessage());
 				echo "\n";
 				print_r($e->getTraceAsString());
-				file_put_contents("test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+				file_put_contents("var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}
 		}
 	}
