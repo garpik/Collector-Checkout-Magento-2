@@ -12,6 +12,7 @@
                 <can_order>1</can_order>
                 <can_capture>1</can_capture>
                 <can_refund>1</can_refund>
+				<group>collector</group>
             </collector_invoice>
 			<collector_partpay>
                 <payment_action>authorize</payment_action>
@@ -22,6 +23,7 @@
 				<is_gateway>1</is_gateway>
                 <can_order>1</can_order>
                 <can_capture>1</can_capture>
+				<group>collector</group>
                 <can_refund>1</can_refund>
             </collector_partpay>
 			<collector_account>
@@ -34,6 +36,7 @@
                 <can_order>1</can_order>
                 <can_capture>1</can_capture>
                 <can_refund>1</can_refund>
+				<group>collector</group>
             </collector_account>
         </payment>
     </default>

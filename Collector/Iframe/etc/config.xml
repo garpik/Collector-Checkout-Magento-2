@@ -8,7 +8,7 @@
 				<order_status>pending</order_status>
 				<title>Campaign</title>
 				<allowspecific>0</allowspecific>
-				<group>Offline</group>
+				<group>collector</group>
 			</campaign>
 			<card>
 				<active>1</active>
@@ -16,7 +16,7 @@
 				<order_status>pending</order_status>
 				<title>Card</title>
 				<allowspecific>0</allowspecific>
-				<group>Offline</group>
+				<group>collector</group>
 			</card>
 			<bank>
 				<active>1</active>
@@ -24,7 +24,7 @@
 				<order_status>pending</order_status>
 				<title>Bank</title>
 				<allowspecific>0</allowspecific>
-				<group>Offline</group>
+				<group>collector</group>
 			</bank>
 		</payment>
 	</default>
