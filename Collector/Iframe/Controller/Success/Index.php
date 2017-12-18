@@ -218,10 +218,6 @@ class Index extends \Magento\Framework\App\Action\Action {
 			$order->setGrandTotal($order->getGrandTotal() + $fee);
 			$order->setBaseGrandTotal($order->getBaseGrandTotal() + $fee);
 			
-			$this->eventManager->dispatch(
-					'checkout_onepage_controller_success_action',
-					['order_ids' => [$order->getId()]]
-			);
 			
 			if ($response["data"]["purchase"]["result"] == "OnHold"){
                 $status = $this->helper->getHoldStatus();
@@ -239,6 +235,10 @@ class Index extends \Magento\Framework\App\Action\Action {
 				$order->save();
 			}
 			
+			$this->eventManager->dispatch(
+					'checkout_onepage_controller_success_action',
+					['order_ids' => [$order->getId()]]
+			);
 			
 			
 			
