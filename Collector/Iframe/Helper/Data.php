@@ -502,7 +502,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			array_push($items['items'], array(
 				'id' => $cartItem->getSku(),
 				'description' => $cartItem->getName(),
-				'unitPrice' => round($cartItem->getPrice(),2),
+				'unitPrice' => round($cartItem->getPriceInclTax(),2),
 				'quantity' => $qty,
 				'vat' => $percent
 			));
@@ -781,7 +781,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		} else {
 			$result['code'] = 0;
 			$result['error'] = $data["error"];
-			
 		}			
 		return $result;
 	}
