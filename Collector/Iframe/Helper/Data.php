@@ -502,7 +502,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			array_push($items['items'], array(
 				'id' => $cartItem->getSku(),
 				'description' => $cartItem->getName(),
-				'unitPrice' => round($cartItem->getProduct()->getPrice(),2),
+				'unitPrice' => round($cartItem->getPrice(),2),
 				'quantity' => $qty,
 				'vat' => $percent
 			));
