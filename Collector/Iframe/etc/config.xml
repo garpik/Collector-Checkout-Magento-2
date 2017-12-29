@@ -2,30 +2,45 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
 	<default>
 		<payment>
-			<campaign>
+			<collector_campaign>
+                <payment_action>authorize</payment_action>
 				<active>1</active>
+                <title>Collector Campaign</title>
 				<model>Collector\Iframe\Model\Payment\Campaign</model>
 				<order_status>pending</order_status>
-				<title>Campaign</title>
-				<allowspecific>0</allowspecific>
+				<title>Collector Campaign</title>
+				<is_gateway>1</is_gateway>
+                <can_order>1</can_order>
+                <can_capture>1</can_capture>
+                <can_refund>1</can_refund>
 				<group>collector</group>
-			</campaign>
-			<card>
+			</collector_campaign>
+			<collector_card>
+                <payment_action>authorize</payment_action>
 				<active>1</active>
+                <title>Collector Card</title>
 				<model>Collector\Iframe\Model\Payment\Card</model>
 				<order_status>pending</order_status>
 				<title>Card</title>
-				<allowspecific>0</allowspecific>
+				<is_gateway>1</is_gateway>
+                <can_order>1</can_order>
+                <can_capture>1</can_capture>
+                <can_refund>1</can_refund>
 				<group>collector</group>
-			</card>
-			<bank>
+			</collector_card>
+			<collector_bank>
+                <payment_action>authorize</payment_action>
 				<active>1</active>
+                <title>Collector Bank</title>
 				<model>Collector\Iframe\Model\Payment\Bank</model>
 				<order_status>pending</order_status>
 				<title>Bank</title>
-				<allowspecific>0</allowspecific>
+				<is_gateway>1</is_gateway>
+                <can_order>1</can_order>
+                <can_capture>1</can_capture>
+                <can_refund>1</can_refund>
 				<group>collector</group>
-			</bank>
+			</collector_bank>
 		</payment>
 	</default>
 </config>

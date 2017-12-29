@@ -35,10 +35,38 @@ class UpgradeSchema implements UpgradeSchemaInterface
         SchemaSetupInterface $setup,
         ModuleContextInterface $context
     ) {
-        $setup->startSetup();
-        if (version_compare($context->getVersion(), "1.0.0", "<")) {
-        //Your upgrade script
-        }
-        $setup->endSetup();
+		echo "running";
+		try {
+			$setup->startSetup();
+			if (version_compare($context->getVersion(), "1.0.0", "<")) {
+			//Your upgrade script
+			}
+			
+			$table = $setup->getTable('quote');
+				
+			$columns = [
+				'collector_btype' => [
+					'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+					'length' => '255',
+					'nullable' => true,
+					'comment' => 'Collector Customer Type',
+				],
+				'collector_private_id' => [
+					'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+					'length' => '255',
+					'nullable' => true,
+					'comment' => 'Collector ID',
+				],
+			];
+
+			$connection = $setup->getConnection();
+			foreach ($columns as $name => $definition) {
+				$connection->addColumn($table, $name, $definition);
+			}
+			$setup->endSetup();
+		}
+		catch (\Exception $e){
+			echo $e->getMessage();
+		}
     }
 }

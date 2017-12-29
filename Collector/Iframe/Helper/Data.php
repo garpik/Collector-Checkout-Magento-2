@@ -252,6 +252,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		if (!empty($ruleId)){
 			$this->checkoutSession->getQuote()->setCouponCode($code)->collectTotals()->save();
 			$_SESSION['collector_applied_discount_code'] = $code;
+			$this->cart->getQuote()->setData('collector_applied_discount_code', $code);
+			$this->cart->getQuote()->save();
 			$this->messageManager->addSuccess(__('You used coupon code "%1".',$code));
 		}
 		else {
@@ -261,6 +263,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	
 	public function unsetDiscountCode(){
 		unset($_SESSION['collector_applied_discount_code']);
+		$this->cart->getQuote()->setData('collector_applied_discount_code', NULL);
+		$this->cart->getQuote()->save();
 		$this->messageManager->addSuccess(__('You canceled the coupon code.'));
 		$this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
 	}
@@ -304,6 +308,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 					$t = $cart->getQuote()->getTotals();
 					$first = false;
 					$_SESSION['curr_shipping_code'] = $rate->getCode();
+					$cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
+					$cart->getQuote()->save();
 					break;
 				}
 			}
@@ -353,6 +359,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 						$t = $cart->getQuote()->getTotals();
 						$this->setShippingMethod($rate->getCode());
 						$_SESSION['curr_shipping_code'] = $rate->getCode();
+						$cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
+						$cart->getQuote()->save();
 						break;
 					}
 				}
@@ -385,6 +393,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 						$first = false;
 						$this->setShippingMethod($rate->getCode());
 						$_SESSION['curr_shipping_code'] = $rate->getCode();
+						$cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
+						$cart->getQuote()->save();
 						break;
 					}
 				}
@@ -616,7 +626,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function getWSDL(){
-		return "https://checkout-api-uat.collector.se/";
+		if ($this->getTestMode()){
+			return "https://checkout-api-uat.collector.se/";
+		}
+		else {
+			return "https://checkout-api.collector.se";
+			
+		}
 	}
 		
 	public function updateFees(){

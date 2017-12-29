@@ -240,8 +240,6 @@ class Index extends \Magento\Framework\App\Action\Action {
 					['order_ids' => [$order->getId()]]
 			);
 			
-			
-			
 			$this->checkoutSession->clearStorage();
 			$this->checkoutSession->clearQuote();
 			return $resultPage;

@@ -3,7 +3,7 @@ $url = $_SESSION['collector_url'];
 $dataLang = $_SESSION['collector_language'];
 $dataVariant = $_SESSION['collector_data_variant'];
 $publicToken =  $_SESSION['collector_public_token'];
-
+unset($_SESSION['collector_public_token']);
 ?>
 
 <script>
