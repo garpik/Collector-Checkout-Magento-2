@@ -141,12 +141,9 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$result = json_decode($output,true);
 		$_SESSION['collector_public_token'] = $result["data"]["publicToken"];
 		$_SESSION['collector_private_id'] = $result['data']['privateId'];
-		file_put_contents("test", "gettoken1\n", FILE_APPEND);
 		$this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
-		file_put_contents("test", "gettoken2\n", FILE_APPEND);
 		$this->cart->getQuote()->setData('collector_btype', $_SESSION['btype']);
 		$this->cart->getQuote()->save();
-		file_put_contents("test", "gettoken3\n", FILE_APPEND);
 		curl_close($ch);
 		return $publicToken = $result["data"]["publicToken"];
 	}
