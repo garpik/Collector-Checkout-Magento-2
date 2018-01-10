@@ -6,6 +6,12 @@ The Invoice Fee will not be shown in the cart section on checkout page
 
 Known to work in versions: 2.2.0 and 2.1.8
 
+## Firewall
+If you are using a firewall some urls need to be opened to be able to use this plugin, those are:
+* ecommercetest.collector.se
+* ecommerce.collector.se
+* checkout-api-uat.collector.se
+* checkout-api.collector.se
 ## Settings
 
 #### Required settings:
