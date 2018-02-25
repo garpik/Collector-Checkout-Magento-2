@@ -248,6 +248,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function setDiscountCode($code){
+		$cart = $this->objectManager->get('\Magento\Checkout\Model\Cart');
 		$ruleId = $this->coupon->loadByCode($code)->getRuleId();
 		if (!empty($ruleId)){
 			$this->checkoutSession->getQuote()->setCouponCode($code)->collectTotals()->save();
@@ -262,6 +263,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function unsetDiscountCode(){
+		$cart = $this->objectManager->get('\Magento\Checkout\Model\Cart');
 		unset($_SESSION['collector_applied_discount_code']);
 		$this->cart->getQuote()->setData('collector_applied_discount_code', NULL);
 		$this->cart->getQuote()->save();
@@ -270,7 +272,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function setShippingMethod($methodInput){
-		$priceHelper = $this->objectManager->create('Magento\Framework\Pricing\Helper\Data');
 		$currentStore = $this->storeManager->getStore();
 		$currentStoreId = $currentStore->getId();
 		$taxCalculation = $this->objectManager->get('\Magento\Tax\Model\Calculation');
@@ -278,10 +279,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		$cart = $this->objectManager->get('\Magento\Checkout\Model\Cart');
 		$shippingAddress = $cart->getQuote()->getShippingAddress();
 		$shippingAddress->setCollectShippingRates(true)->collectShippingRates();
-		$methods = $shippingAddress->getGroupedAllShippingRates();
 		$shippingTaxClass = $this->getShippingTaxClass();
 		$shippingTax = $taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
+		$priceHelper = $this->objectManager->create('Magento\Framework\Pricing\Helper\Data');
+		$shippingMethods = array();
 		$first = true;
+		$_SESSION['curr_shipping_code'] = $methodInput;
+		$methods = $shippingAddress->getGroupedAllShippingRates();
 		foreach ($methods as $method){
 			foreach ($method as $rate){
 				if ($rate->getCode() == $methodInput){
@@ -464,7 +468,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 				'unitPrice' => $priceHelper->currency(($cartItem->getPrice()*(1+($percent/100))), true, false),
 				'qty' => $cartItem->getQty(),
 				'sum' => $priceHelper->currency(($cartItem->getPrice()*$cartItem->getQty()*(1+($percent/100))), true, false),
-				'img' => $imgs[$i]
+				'img' => $imgs[$i],
+				'prod_id' => $cartItem->getProduct()->getId()
 			));
 			$i++;
 		}
@@ -509,10 +514,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			else {
 				$qty = $cartItem->getQty();
 			}
+			$price = 0;
+			if ($cartItem->getParentItem()){
+				if ($cartItem->getPriceInclTax() !== null){
+					$price = $cartItem->getPriceInclTax();
+				}
+				else {
+					$price = $cartItem->getParentItem()->getPriceInclTax();
+				}
+			}
+			else {
+				$price = $cartItem->getPriceInclTax();
+			}
+			
 			array_push($items['items'], array(
 				'id' => $cartItem->getSku(),
 				'description' => $cartItem->getName(),
-				'unitPrice' => round($cartItem->getPriceInclTax(),2),
+				'unitPrice' => round($price,2),
 				'quantity' => $qty,
 				'vat' => $percent
 			));
@@ -550,6 +568,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		$request = $taxCalculation->getRateRequest(null, null, null, $currentStoreId);
 		$shippingTaxClass = $this->getShippingTaxClass();
 		$shippingTax = $taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
+		if (!isset($_SESSION['curr_shipping_tax'])){
+			$_SESSION['curr_shipping_tax'] = 0;
+		}
 		if (empty($cartTotals['shipping']->getData()['title']->getArguments())){
 			if (isset($_SESSION['curr_shipping_code'])){
 				if ($_SESSION['curr_shipping_price'] == 0){
