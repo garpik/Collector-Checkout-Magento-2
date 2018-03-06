@@ -651,7 +651,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			return "https://checkout-api-uat.collector.se/";
 		}
 		else {
-			return "https://checkout-api.collector.se";
+			return "https://checkout-api.collector.se/";
 			
 		}
 	}
