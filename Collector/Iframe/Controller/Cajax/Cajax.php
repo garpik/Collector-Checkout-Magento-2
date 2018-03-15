@@ -138,15 +138,24 @@ class Cajax extends \Magento\Framework\App\Action\Action
 			}	
 			else if ($_POST['field2'] == 'submit'){
 			//	if ($this->helper->setDiscountCode($_POST['field3'])){
+				file_put_contents("coldis", "test1\n", FILE_APPEND);
 					if (isset($_SESSION['collector_applied_discount_code'])){
+				file_put_contents("coldis", "test2\n", FILE_APPEND);
 						$this->helper->unsetDiscountCode();
+				file_put_contents("coldis", "test3\n", FILE_APPEND);
 					}
 					else {
+				file_put_contents("coldis", "test4\n", FILE_APPEND);
 						$this->helper->setDiscountCode($_POST['field3']);
+				file_put_contents("coldis", "test5\n", FILE_APPEND);
 					}
+				file_put_contents("coldis", "test6\n", FILE_APPEND);
 					$changed = true;
+				file_put_contents("coldis", "test7\n", FILE_APPEND);
 					$updateCart = true;
+				file_put_contents("coldis", "test8\n", FILE_APPEND);
 					$updateFees = true;
+				file_put_contents("coldis", "test9\n", FILE_APPEND);
 			//	}
 			//	else {
 

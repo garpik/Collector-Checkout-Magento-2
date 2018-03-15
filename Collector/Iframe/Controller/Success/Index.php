@@ -90,11 +90,20 @@ class Index extends \Magento\Framework\App\Action\Action {
 			if ($exOrder->getIncrementId()){
 				return $resultPage;
 			}
+			ob_start();
+			print_r($response);
+			file_put_contents("test", ob_get_clean() . "\n", FILE_APPEND);
 			if ($response['data']['customer']['deliveryAddress']['country'] == 'Sverige'){
 				$shippingCountryId = "SE";
 			}
 			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Norge'){
 				$shippingCountryId = "NO";
+			}
+			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Suomi'){
+				$shippingCountryId = "FI";
+			}
+			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Deutschland'){
+				$shippingCountryId = "DE";
 			}
 			else {
 				return $resultPage;
@@ -104,6 +113,12 @@ class Index extends \Magento\Framework\App\Action\Action {
 			}
 			else if ($response['data']['customer']['billingAddress']['country'] == 'Norge'){
 				$billingCountryId = "NO";
+			}
+			else if ($response['data']['customer']['billingAddress']['country'] == 'Suomi'){
+				$billingCountryId = "FI";
+			}
+			else if ($response['data']['customer']['billingAddress']['country'] == 'Deutschland'){
+				$billingCountryId = "DE";
 			}
 			else {
 				return $resultPage;
@@ -245,7 +260,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			return $resultPage;
 		}
 		catch (\Exception $e){
-			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n", FILE_APPEND);
+			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
 			return $resultPage;
 		}
 	}

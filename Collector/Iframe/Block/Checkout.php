@@ -40,6 +40,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 	
 	public function getLanguage(){
 		$lang = $this->helper->getCountryCode();
+		file_put_contents("test", $lang . "\n", FILE_APPEND);
 		if ($lang == "NO"){
 			$_SESSION['collector_language'] = "nb-NO";
 			return "nb-NO";
@@ -47,6 +48,18 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		else if ($lang == "SE"){
 			$_SESSION['collector_language'] = "sv";
 			return "sv";
+		}
+		else if ($lang == "FI"){
+			$_SESSION['collector_language'] = "fi-FI";
+			return "fi-FI";
+		}
+		else if ($lang == "DK"){
+			$_SESSION['collector_language'] = "en-DK";
+			return "en-DK";
+		}
+		else if ($lang == "DE"){
+			$_SESSION['collector_language'] = "en-DE";
+			return "en-DE";
 		}
 		else {
 			return null;
@@ -127,6 +140,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$req["cart"] = $this->helper->getProducts();
 		$req["fees"] = $this->helper->getFees();
 		$json = json_encode($req);
+		file_put_contents("var/log/collector.log", date("Y-m-d H:i:s") . " " . $json . "\n", FILE_APPEND);
 		$hash = $username.":".hash("sha256",$json.$path.$sharedSecret);
 		$hashstr = 'SharedKey '.base64_encode($hash);
 		$ch = curl_init($this->helper->getWSDL()."checkout");
@@ -138,11 +152,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 		$output = curl_exec($ch);
-		ob_start();
-		var_dump($output);
-		echo "\n";
-		var_dump(curl_getinfo($ch));
-		file_put_contents("test", ob_get_clean() . "\n", FILE_APPEND);
 		$result = json_decode($output,true);
 		$_SESSION['collector_public_token'] = $result["data"]["publicToken"];
 		$_SESSION['collector_private_id'] = $result['data']['privateId'];
@@ -150,6 +159,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$this->cart->getQuote()->setData('collector_btype', $_SESSION['btype']);
 		$this->cart->getQuote()->save();
 		curl_close($ch);
+		file_put_contents("var/log/collector.log", date("Y-m-d H:i:s") . " " . $output . "\n", FILE_APPEND);
 		return $publicToken = $result["data"]["publicToken"];
 	}
 }

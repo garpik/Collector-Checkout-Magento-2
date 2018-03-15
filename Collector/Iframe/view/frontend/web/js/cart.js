@@ -156,8 +156,7 @@ define([
 						window.collector.checkout.api.suspend();
 					},					   
 					success: function(data) {
-						if(data.cart)
-						{
+						if(data.cart){
 							jQuery('div.collector-cart').replaceWith(data.cart);
 						}
 					},
