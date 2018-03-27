@@ -18,12 +18,12 @@ class AcceptStatus implements \Magento\Framework\Option\ArrayInterface
     protected $statusToStateCollection;
 
     public function __construct(
-        \Collector\Iframe\Model\ResourceModel\State\Collection $statusToStateCollection,
+        \Collector\Iframe\Model\ResourceModel\State\CollectionFactory $statusToStateCollection,
         \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection
     )
     {
         $this->statusCollection = $statusCollection;
-        $this->statusToStateCollection = $statusToStateCollection;
+        $this->statusToStateCollection = $statusToStateCollection->create();
         $this->statusToStateCollection->addFieldToFilter('state', ['in' => $this->allowedState]);
     }
 
