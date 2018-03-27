@@ -106,7 +106,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 				$shippingCountryId = "DE";
 			}
 			else {
-				return $resultPage;
+				$shippingCountryId = $response['data']['countryCode'];
 			}
 			if ($response['data']['customer']['billingAddress']['country'] == 'Sverige'){
 				$billingCountryId = "SE";
@@ -121,7 +121,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 				$billingCountryId = "DE";
 			}
 			else {
-				return $resultPage;
+				$billingCountryId = $response['data']['countryCode'];
 			}
 			if (isset($_SESSION['collector_applied_discount_code'])){
 				$discountCode = $_SESSION['collector_applied_discount_code'];
