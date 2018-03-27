@@ -19,7 +19,10 @@ class Index extends \Magento\Framework\App\Action\Action {
 	protected $cartRepositoryInterface;
 	protected $eventManager;
 	protected $cartManagementInterface;
-	
+    protected $orderState;
+
+
+
 	public function __construct(
 		\Magento\Framework\View\Result\LayoutFactory $_layoutFactory,
 		\Collector\Iframe\Helper\Data $_helper,
@@ -37,8 +40,10 @@ class Index extends \Magento\Framework\App\Action\Action {
 		\Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
 		\Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
 		\Magento\Framework\Event\Manager $eventManager,
-        \Magento\Framework\Json\Helper\Data $jsonHelper
+        \Magento\Framework\Json\Helper\Data $jsonHelper,
+        \Collector\Iframe\Model\State $orderState
     ) {
+	    $this->orderState = $orderState;
         $this->formKey = $formKey;
 		$this->helper = $_helper;
 		$this->layoutFactory = $_layoutFactory;
@@ -236,17 +241,20 @@ class Index extends \Magento\Framework\App\Action\Action {
 			
 			if ($response["data"]["purchase"]["result"] == "OnHold"){
                 $status = $this->helper->getHoldStatus();
-				$order->setState($status)->setStatus($status);
+                $state = $this->orderState->load($status)->getState();
+				$order->setState($state)->setStatus($status);
 				$order->save();
 			}
 			else if ($response["data"]["purchase"]["result"] == "Preliminary"){
                 $status = $this->helper->getAcceptStatus();
-				$order->setState($status)->setStatus($status);
+                $state = $this->orderState->load($status)->getState();
+				$order->setState($state)->setStatus($status);
 				$order->save();
 			}
 			else {
                 $status = $this->helper->getDeniedStatus();
-				$order->setState($status)->setStatus($status);
+                $state = $this->orderState->load($status)->getState();
+				$order->setState($state)->setStatus($status);
 				$order->save();
 			}
 			
