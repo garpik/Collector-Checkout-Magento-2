@@ -6,7 +6,7 @@ namespace Collector\Iframe\Model\ResourceModel\State;
  * Class Collection
  * @package Collector\Iframe\Model\ResourceModel\State
  */
-class Collection extends \Belvg\Seller\Model\ResourceModel\AbstractCollection
+class Collection extends \Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection
 {
     /**
      * @var string
