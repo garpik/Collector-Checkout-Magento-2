@@ -150,6 +150,11 @@ class Index extends \Magento\Framework\App\Action\Action {
 						->setPassword($response['data']['customer']['email']);
 				$customer->save();
 			}
+			if (isset($_SESSION['newsletter_signup'])){
+				if ($_SESSION['newsletter_signup']){
+					$objectManager->get('\Magento\Newsletter\Model\SubscriberFactory')->create()->subscribe($response['data']['customer']['email']);
+				}
+			}
 			$customer->setEmail($response['data']['customer']['email']);
 			$customer->save();
 			$actual_quote->setCustomerEmail($response['data']['customer']['email']);

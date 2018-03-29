@@ -75,9 +75,33 @@ define([
 					}
 				});
 			});
+			$(document).on('click', '.newsletter', function(){
+				var param = {
+					field1 : "ajax",
+					field2 : "newsletter",
+					field3 : document.getElementById('newsletter-checkbox').checked
+				};
+				$.ajax({
+					url: ajaxUrl,
+					data: param,
+					type: "POST",
+					dataType: 'json',
+					beforeSend: function(){
+						jQuery('body').addClass('is-suspended');
+						window.collector.checkout.api.suspend();
+					},
+					success: function(data){
+						
+					},
+					complete: function(){
+						jQuery('body').removeClass('is-suspended');
+						window.collector.checkout.api.resume();
+					}
+				});
+			});
 			$(document).on('click', '.del', function() {
 				var param = {
-					field1 : "ajax", 
+					field1 : "ajax",
 					field2 : "del",
 					field3 : this.id
 				};
@@ -91,8 +115,17 @@ define([
 						window.collector.checkout.api.suspend();
 					},					   
 					success: function(data) {
-						if(data.cart)
-						{
+						if (data == "redirect"){
+							require([
+							'Magento_Customer/js/customer-data'
+						], function (customerData) {
+							var sections = ['cart'];
+							customerData.invalidate(sections);
+							customerData.reload(sections, true);
+						});
+							window.location.href = window.location.protocol + "//" + window.location.host + "/";
+						}
+						if(data.cart){
 							jQuery('div.collector-cart').replaceWith(data.cart);
 						}
 					},

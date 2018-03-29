@@ -158,8 +158,10 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
 		$this->cart->getQuote()->setData('collector_btype', $_SESSION['btype']);
 		$this->cart->getQuote()->save();
+		ob_start();
+		print_r(curl_getinfo($ch));
 		curl_close($ch);
-		file_put_contents("var/log/collector.log", date("Y-m-d H:i:s") . " " . $output . "\n", FILE_APPEND);
+		file_put_contents("var/log/collector.log", date("Y-m-d H:i:s") . " " . $output . "\n" . ob_get_clean() . "\n\n", FILE_APPEND);
 		return $publicToken = $result["data"]["publicToken"];
 	}
 }
