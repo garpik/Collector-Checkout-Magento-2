@@ -566,11 +566,14 @@ position:relative;
     }
 }
 h2.checkout.title{font-weight: bold; float:left;margin-top: 0px;margin-bottom: 4rem;}
-ul.links{font-size: 16px;float:right; margin:0; padding:0; list-style:none;}
-ul.links li{display:inline-block; margin:0 5px; border-left:1px solid #B8B8B8;}
+ul.links li{margin:0 5px; border-left:1px solid #B8B8B8;}
 ul.links li:first-child{border-left:none;}
-ul.links li a{color:#333; font-weight:bold;}
+ul.links li a{color:#333;}
 ul.links li.active a{color:#000; }
+
+.footer.content .links a, .footer.content .links strong {
+    font-weight: normal;
+}
 
 .collector-checkout-img {
     margin-left: 50px;
