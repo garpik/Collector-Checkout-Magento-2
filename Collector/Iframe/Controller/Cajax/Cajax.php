@@ -123,7 +123,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
 							);
 						}
 						$_product = $product->load($item->getProduct()->getId());
-						$cart->addProduct($_product, $params);
+						$cart->addProduct($item->getProduct(), $params);
 						$cart->save();
 						$changed = true;
 						$updateCart = true;
