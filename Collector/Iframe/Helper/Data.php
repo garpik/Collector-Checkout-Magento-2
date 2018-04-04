@@ -522,10 +522,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			else {
 				$qty = $cartItem->getQty();
 			}
+			$price = $cartItem->getPriceInclTax();
+			if ($cartItem->getPriceInclTax() == 0){
+				$price = $cartItem->getParentItem()->getPriceInclTax();
+			}
 			array_push($items['items'], array(
 				'id' => $cartItem->getSku(),
 				'description' => $cartItem->getName(),
-				'unitPrice' => round($cartItem->getPriceInclTax(),2),
+				'unitPrice' => round($price, 2),
 				'quantity' => $qty,
 				'vat' => $percent
 			));
