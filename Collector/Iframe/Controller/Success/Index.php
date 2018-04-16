@@ -92,7 +92,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			}
 			ob_start();
 			print_r($response);
-			file_put_contents("test", ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents(BP . "/var/log/test", ob_get_clean() . "\n", FILE_APPEND);
 			if ($response['data']['customer']['deliveryAddress']['country'] == 'Sverige'){
 				$shippingCountryId = "SE";
 			}
@@ -265,7 +265,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			return $resultPage;
 		}
 		catch (\Exception $e){
-			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
+			file_put_contents(BP . "/var/log/collector.log", "checkout error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
 			return $resultPage;
 		}
 	}
