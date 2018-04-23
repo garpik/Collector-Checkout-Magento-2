@@ -34,7 +34,6 @@ class Index extends \Magento\Framework\App\Action\Action {
         \Collector\Iframe\Model\State $orderState
     ) {
 	    $this->orderState = $orderState;
-        $this->formKey = $formKey;
 	    $this->quoteManagement = $quoteManagement;
 		$this->helper = $_helper;
 		$this->eventManager = $eventManager;
