@@ -323,7 +323,7 @@ class Index extends \Magento\Framework\App\Action\Action
 			return $resultPage;
 		}
 		catch (\Exception $e){
-			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n", FILE_APPEND);
+			file_put_contents(BP . "/var/log/collector.log", "checkout error: " . $e->getMessage() . "\n", FILE_APPEND);
 			return $resultPage;
 		}
 	}
