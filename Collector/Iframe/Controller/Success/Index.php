@@ -80,9 +80,6 @@ class Index extends \Magento\Framework\App\Action\Action {
 			if ($exOrder->getIncrementId()){
 				return $resultPage;
 			}
-			ob_start();
-			print_r($response);
-			file_put_contents("test", ob_get_clean() . "\n", FILE_APPEND);
 
 			$shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
             $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
@@ -90,7 +87,36 @@ class Index extends \Magento\Framework\App\Action\Action {
             if($shippingCountryId == '' || $billingCountryId == '') {
                 return $resultPage;
             }
-
+			if ($response['data']['customer']['deliveryAddress']['country'] == 'Sverige'){
+				$shippingCountryId = "SE";
+			}
+			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Norge'){
+				$shippingCountryId = "NO";
+			}
+			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Suomi'){
+				$shippingCountryId = "FI";
+			}
+			else if ($response['data']['customer']['deliveryAddress']['country'] == 'Deutschland'){
+				$shippingCountryId = "DE";
+			}
+			else {
+				$shippingCountryId = $response['data']['countryCode'];
+			}
+			if ($response['data']['customer']['billingAddress']['country'] == 'Sverige'){
+				$billingCountryId = "SE";
+			}
+			else if ($response['data']['customer']['billingAddress']['country'] == 'Norge'){
+				$billingCountryId = "NO";
+			}
+			else if ($response['data']['customer']['billingAddress']['country'] == 'Suomi'){
+				$billingCountryId = "FI";
+			}
+			else if ($response['data']['customer']['billingAddress']['country'] == 'Deutschland'){
+				$billingCountryId = "DE";
+			}
+			else {
+				$billingCountryId = $response['data']['countryCode'];
+			}
 			if (isset($_SESSION['collector_applied_discount_code'])){
 				$discountCode = $_SESSION['collector_applied_discount_code'];
 			}
@@ -220,7 +246,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			return $resultPage;
 		}
 		catch (\Exception $e){
-			file_put_contents("var/log/collector.log", "checkout error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
+			file_put_contents(BP . "/var/log/collector.log", "checkout error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
 			return $resultPage;
 		}
 	}
