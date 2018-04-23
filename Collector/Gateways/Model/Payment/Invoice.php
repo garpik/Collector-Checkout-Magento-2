@@ -422,11 +422,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod {
 				$client->PartCreditInvoice($req);
 			}
 			catch (\Exception $e){
-				ob_start();
-				print_r($e->getMessage());
-				echo "\n";
-				print_r($e->getTraceAsString());
-				file_put_contents(BP . "/var/log/test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}*/
 		}
     }

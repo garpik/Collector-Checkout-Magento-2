@@ -422,16 +422,11 @@ class Campaign extends \Magento\Payment\Model\Method\AbstractMethod
 			}
 			ob_start();
 			print_r($req);
-			file_put_contents(BP . "/var/log/req", "part refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+			file_put_contents(BP . "/var/log/req.log", "part refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
 			try {
 				$client->PartCreditInvoice($req);
 			}
 			catch (\Exception $e){
-				ob_start();
-				print_r($e->getMessage());
-				echo "\n";
-				print_r($e->getTraceAsString());
-				file_put_contents(BP . "/var/log/test", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
 			}*/
 		}
     }

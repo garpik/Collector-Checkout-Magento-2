@@ -40,7 +40,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 	
 	public function getLanguage(){
 		$lang = $this->helper->getCountryCode();
-		file_put_contents(BP . "/var/log/test", $lang . "\n", FILE_APPEND);
 		if ($lang == "NO"){
 			$_SESSION['collector_language'] = "nb-NO";
 			return "nb-NO";
@@ -140,7 +139,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$req["cart"] = $this->helper->getProducts();
 		$req["fees"] = $this->helper->getFees();
 		$json = json_encode($req);
-		file_put_contents(BP . "/var/log/collector.log", date("Y-m-d H:i:s") . " " . $json . "\n", FILE_APPEND);
 		$hash = $username.":".hash("sha256",$json.$path.$sharedSecret);
 		$hashstr = 'SharedKey '.base64_encode($hash);
 		$ch = curl_init($this->helper->getWSDL()."checkout");
@@ -158,10 +156,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage {
 		$this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
 		$this->cart->getQuote()->setData('collector_btype', $_SESSION['btype']);
 		$this->cart->getQuote()->save();
-		ob_start();
-		print_r(curl_getinfo($ch));
 		curl_close($ch);
-		file_put_contents(BP . "/var/log/collector.log", date("Y-m-d H:i:s") . " " . $output . "\n", FILE_APPEND);
 		return $publicToken = $result["data"]["publicToken"];
 	}
 }
