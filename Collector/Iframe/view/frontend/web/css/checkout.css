@@ -67,7 +67,7 @@ body{
 .collector-checkout-img{
     float:left;
 }
-.totals{
+.col-totals{
     margin-top:10px;
     width:60%;
     /*margin-left:54%;*/
@@ -76,7 +76,7 @@ body{
     margin-bottom:10px;
 }
 
-td .name{
+td .col-name{
     margin-left:365px;
 }
 h1{
@@ -84,14 +84,6 @@ h1{
     margin:10px 0px 10px!important;
     color:#7c7c7c !important;
     font-weight:700;
-}
-
-.inc {
-    padding: 0px;
-}
-
-.sub {
-    padding: 0px;
 }
 
 div.checkout {
@@ -103,7 +95,8 @@ div.column.main{
     display:none;
 }
 
-button.inc {
+button.col-inc {
+    padding: 0px;
     width: 30px;
     height: 30px;
     color: #000;
@@ -114,9 +107,10 @@ button.inc {
     border-radius: 50%;
     font-weight: bold;
     font-size: 24px;
+	line-height: 0px;
 }
 
-button.sub {
+button.col-sub {
     width: 30px;
     height: 30px;
     color: #000;
@@ -128,6 +122,7 @@ button.sub {
     border-radius: 50% !important;
     font-weight: bold;
     font-size: 25px;
+	line-height: 0px;
 } 
 .collector-checkout-product-qty{
     height: 17px;
@@ -185,12 +180,12 @@ div.checkout{
     -webkit-border-radius: 100%;
 }
 
-#code{
+#col-code{
     width:49%;
     height:26px;
     border-radius:3px;
 }
-#codeButton{
+#col-codeButton{
     width:49%;
     height:26px;
     border-radius:3px;
@@ -201,7 +196,7 @@ div.checkout{
     margin-left:10px;
     padding-top: 3px;
 }
-#codeButton:hover {
+#col-codeButton:hover {
     background-color: #699967;
 }
 
@@ -247,19 +242,19 @@ iframe#checkout {
     margin-bottom: 2px;
     width: 270px;
 } 
-table.totals td {
+table.col-totals td {
     padding: 3px 10px;
 }
 .collector-checkout-cart-table {
     float: left;
     width: 100%;
 }
-.collector-checkout-discount #code{
+.collector-checkout-discount #col-code{
     border-color: #e2e2e2;
     height: 50px;
         border: 2px solid #ccc;
 }
-.collector-checkout-discount #codeButton{
+.collector-checkout-discount #col-codeButton{
     height: 50px;
     margin-left: 0px;
 }
@@ -267,10 +262,10 @@ table.totals td {
     background-color: #f4f8fb !important;
     color: #737373;
 }
-.totals-table{    
+.col-totals-table{    
     width: 62%;
     float: right;
-    }
+}
 .collector-checkout-discount {
     margin-top: 0px;
     float: right;
@@ -287,14 +282,14 @@ table.totals td {
 .collector-checkout-img {
     padding-right: 10px;
 }
-.collector_shipping_methods .ship_methods .radio{
+.collector_shipping_methods .col-ship_methods .col-radio{
     display: none;
 }
-.collector_shipping_methods .ship_methods .radio + label {
+.collector_shipping_methods .col-ship_methods .col-radio + label {
     float: left;
     width: 100%;
 }
-.collector_shipping_methods .ship_methods .radio + label:before {
+.collector_shipping_methods .col-ship_methods .col-radio + label:before {
     content: "";
     height: 10px;
     width: 10px;
@@ -306,18 +301,18 @@ table.totals td {
     border-radius: 50%;
     float: left;
 }
-.collector_shipping_methods .ship_methods .radio:checked + label:before{
+.collector_shipping_methods .col-ship_methods .col-radio:checked + label:before{
     background-color: #7c7c7c;
 }
 .collector-checkout-product-row .collector-checkout-name ,.collector-checkout-sum ,.collector-checkout-price{
     font-size: 16px;
 }
-table.totals td.price {
+table.col-totals td.col-price {
     text-align: justify;
     text-align-last: right;
     font-weight: normal;
 }
-table.totals td.name {
+table.col-totals td.col-name {
     padding-left: 50px;
         font-weight: normal;
 }
@@ -331,7 +326,7 @@ table.totals td.name {
     .collector-checkout-product-row .collector-checkout-name,.collector-checkout-sum ,.collector-checkout-price{
         font-size: 16px;
     }
-    table.totals td.name {
+    table.col-totals td.col-name {
         padding-left: 40px;
     }
 }
@@ -344,13 +339,13 @@ table.totals td.name {
     div.col-cart-wrapper{
         width: 100%;
     }
-    .collector-checkout-discount #codeButton{
+    .collector-checkout-discount #col-codeButton{
         margin-top: 10px;
     }
     .collector-checkout-product-row .collector-checkout-name, .collector-checkout-sum ,.collector-checkout-price{
         font-size: 14px;
     }
-    .table-responsive{
+    .col-table-responsive{
         border:0;
     }
     .collector-checkout-qty-head {
@@ -390,11 +385,11 @@ table.totals td.name {
 position:relative;
     left: -31%;
     }
-    .totals-table {
+    .col-totals-table {
     width: 70%;
     float: right;
     }
-    .totals {
+    .col-totals {
     width: 96.5%;
     }
     .collector-checkout-discount {
@@ -414,12 +409,12 @@ position:relative;
     /*.collector-checkout-cart-table{*/
     /*width: 550px !important;*/
     /*}*/
-    /*div#collector-cart .table-responsive{*/
+    /*div#collector-cart .col-table-responsive{*/
     /*overflow-x: auto;*/
     /*padding: 15px;*/
     /*border:1px solid #eaeaea;*/
     /*}*/
-    #collector-cart .totals, .collector-checkout-discount{
+    #collector-cart .col-totals, .collector-checkout-discount{
         width: 100%;
         margin-bottom: 15px;
         }
@@ -427,7 +422,7 @@ position:relative;
              width: 100%;
              margin:0px;
         }
-        .totals-table { width: 100%; }
+        .col-totals-table { width: 100%; }
         .collector-checkout-qty {
             position: absolute;
             bottom: 0;
@@ -471,10 +466,10 @@ position:relative;
             display:none;
         }
         
-        table.totals td.name {
+        table.col-totals td.col-name {
             padding-left: 0px;
         }
-        .table-responsive{
+        .col-table-responsive{
         border:0;
     }
     .collector-checkout-product-row .collector-checkout-name span{
@@ -565,7 +560,7 @@ position:relative;
         transform: rotate( 360deg);
     }
 }
-h2.checkout.title{font-weight: bold; float:left;margin-top: 0px;margin-bottom: 4rem;}
+h2.col-checkout.col-title{font-weight: bold; float:left;margin-top: 0px;margin-bottom: 4rem;}
 ul.links li{margin:0 5px; border-left:1px solid #B8B8B8;}
 ul.links li:first-child{border-left:none;}
 ul.links li a{color:#333;}
@@ -578,11 +573,11 @@ ul.links li.active a{color:#000; }
 .collector-checkout-img {
     margin-left: 50px;
 }
-input#codeButton {
+input#col-codeButton {
     background-color: #589d72;
     border-color: #589d72;
 }
-label.radio_label {
+label.col-radio_label {
     margin-top: 15px;
 }    
 }
@@ -606,15 +601,15 @@ tr:last-child{
 
 
 table tr:last-child { font-weight: 800 !important;}
-span.grandname {
+span.col-grandname {
     font-weight: 900;
 }
-td.price.grand {
+td.col-price.col-grand {
     font-weight: 900 !important;
 }
-.btype{color:#000;}
-.active{color:#333;}
-.inactive{color:#ddd;}
+.col-btype{color:#000;}
+.col-active{color:#333;}
+.col-inactive{color:#ddd;}
 @media screen and (min-width: 771px){
 .letter_methods.newsletter {
     text-align: right;

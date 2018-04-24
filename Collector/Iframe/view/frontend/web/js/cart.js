@@ -3,7 +3,7 @@ define([
 ], function ($, collectorajax) {
 	return {
 		call:function(ajaxUrl){
-			$(document).on('click', '.inc', function() {
+			$(document).on('click', '.col-inc', function() {
 				var param = {
 					field1 : "ajax", 
 					field2 : "inc",
@@ -39,7 +39,7 @@ define([
 					}
 				});
 			});
-			$(document).on('click', '.sub', function() {
+			$(document).on('click', '.col-sub', function() {
 				var param = {
 					field1 : "ajax", 
 					field2 : "sub",
@@ -99,7 +99,7 @@ define([
 					}
 				});
 			});
-			$(document).on('click', '.del', function() {
+			$(document).on('click', '.col-del', function() {
 				var param = {
 					field1 : "ajax",
 					field2 : "del",
@@ -142,7 +142,7 @@ define([
 					}
 				});
 			});
-			$(document).on('click', '.radio', function() {
+			$(document).on('click', '.col-radio', function() {
 				var param = {
 					field1 : "ajax", 
 					field2 : "radio",
@@ -173,11 +173,11 @@ define([
 					},
 				});
 			});
-			$(document).on('click', '.codeButton', function(){
+			$(document).on('click', '.col-codeButton', function(){
 				var param = {
 					field1 : "ajax",
 					field2 : "submit",
-					field3 : document.getElementById("code").value
+					field3 : document.getElementById("col-code").value
 				};
 				$.ajax({
 					url: ajaxUrl,
@@ -206,7 +206,7 @@ define([
 					}
 				});
 			});
-			$(document).on('click', '#businesstypes a', function(e) {
+			$(document).on('click', '#col-businesstypes a', function(e) {
 				e.preventDefault();
 				var ctype = jQuery(this).attr('id');
 				jQuery.ajax({
@@ -231,16 +231,16 @@ define([
 							jQuery('div.collector-checkout').replaceWith(data.checkout);
 						}
 						if (ctype == "b2b"){
-							jQuery("#b2c").addClass("inactive");
-							jQuery("#b2c").removeClass("active");
-							jQuery("#b2b").addClass("active");
-							jQuery("#b2b").removeClass("inactive");
+							jQuery("#b2c").addClass("col-inactive");
+							jQuery("#b2c").removeClass("col-active");
+							jQuery("#b2b").addClass("col-active");
+							jQuery("#b2b").removeClass("col-inactive");
 						}
 						else if (ctype == "b2c"){
-							jQuery("#b2b").addClass("inactive");
-							jQuery("#b2b").removeClass("active");
-							jQuery("#b2c").addClass("active");
-							jQuery("#b2c").removeClass("inactive");
+							jQuery("#b2b").addClass("col-inactive");
+							jQuery("#b2b").removeClass("col-active");
+							jQuery("#b2c").addClass("col-active");
+							jQuery("#b2c").removeClass("col-inactive");
 						}					
 					},
 					complete: function() {
