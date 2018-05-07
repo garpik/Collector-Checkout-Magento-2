@@ -165,6 +165,19 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 		$shippingMethods = array();
 		$first = true;
 		$methods = $shippingAddress->getGroupedAllShippingRates();
+		$selectedIsActive = false;
+		if (isset($_SESSION['curr_shipping_code'])){
+			foreach ($methods as $method){
+				foreach ($method as $rate){
+					if ($rate->getCode() == $_SESSION['curr_shipping_code']){
+						$selectedIsActive = true;
+					}
+				}
+			}
+		}
+		if (!$selectedIsActive){
+			unset($_SESSION['curr_shipping_code']);
+		}
 		if (isset($_SESSION['curr_shipping_code'])){
 			foreach ($methods as $method){
 				foreach ($method as $rate){
