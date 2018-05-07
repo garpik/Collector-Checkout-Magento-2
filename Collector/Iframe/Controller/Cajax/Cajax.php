@@ -261,8 +261,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
 					));
 					$cart->getQuote()->getShippingAddress()->save();
 					$cart->getQuote()->collectTotals();
-					$this->helper->getShippingMethods();
 					$cart->getQuote()->save();
+					$this->helper->getShippingMethods();	
 					$updateCart = true;
 					$updateFees = true;
 				}
