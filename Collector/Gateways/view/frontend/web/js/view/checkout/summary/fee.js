@@ -18,7 +18,7 @@ define(
 				isFullTaxSummaryDisplayed: window.checkoutConfig.isFullTaxSummaryDisplayed || false,
 				template: 'Collector_Gateways/checkout/summary/fee'
 			},
-			totals: quote.getTotals(),
+			totals2: quote.getTotals(),
 			isTaxDisplayedInGrandTotal: window.checkoutConfig.includeTaxInGrandTotal || false,
 			isDisplayed: function() {
 				return this.isFullMode();
@@ -26,7 +26,9 @@ define(
 			getValue: function() {
 				var price = 0;
 				if (this.totals()) {
-					price = totals.getSegment('fee').value;
+					if (totals2.getSegment('fee')){
+						price = totals2.getSegment('fee').value;
+					}
 				}
 				return this.getFormattedPrice(price);
 			},

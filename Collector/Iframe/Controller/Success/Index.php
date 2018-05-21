@@ -120,8 +120,10 @@ class Index extends \Magento\Framework\App\Action\Action {
 			if (isset($_SESSION['collector_applied_discount_code'])){
 				$discountCode = $_SESSION['collector_applied_discount_code'];
 			}
-			$shippingCode = $_SESSION['curr_shipping_code'];
-
+			if (isset($_SESSION['curr_shipping_code'])){
+				$shippingCode = $_SESSION['curr_shipping_code'];
+			}
+			
 			$actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
 
 			//init the store id and website id @todo pass from array
