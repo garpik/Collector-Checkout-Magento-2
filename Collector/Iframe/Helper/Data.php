@@ -554,6 +554,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			$fee = $cartTotals['fee']->getData()['value'];
 		}
 		if (array_key_exists('value_incl_tax', $cartTotals['subtotal']->getData())){
+			$left = $cart->getQuote()->getGrandTotal();
+			$right = ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']);
+			ob_start();
+			var_dump($left);
+			var_dump($right);
+			var_dump(abs(($left-$right)/$right) < 0.00001);
+			file_put_contents("var/log/colfdsa.log", ob_get_clean(), FILE_APPEND);	
 			if ($cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'])){
 				if ($cart->getQuote()->getCouponCode() != null){
 					$coupon = $cart->getQuote()->getCouponCode();
@@ -572,6 +579,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 			}
 		}
 		else {
+			ob_start();
+			var_dump($cart->getQuote()->getGrandTotal());
+			var_dump(($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
+			var_dump($cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
+			file_put_contents("var/log/colfdsa.log", ob_get_clean(), FILE_APPEND);
 			if ($cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'])){
 				if ($cart->getQuote()->getCouponCode() != null){
 					$coupon = $cart->getQuote()->getCouponCode();
@@ -691,8 +703,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 		
 	public function updateFees(){
-		$pid = $_SESSION['collector_private_id'];
-		$pusername = $this->getUsername();
+		$quote = $this->objectManager->get('\Magento\Checkout\Model\Cart')->getQuote();
+		if (isset($_SESSION['collector_private_id'])){
+			$pid = $_SESSION['collector_private_id'];
+		}
+		else {
+			$pid = $quote->getData('collector_private_id');
+		}		$pusername = $this->getUsername();
 		$psharedSecret= $this->getPassword();
 		if (isset($_SESSION['col_curr_fee'])){
 			if ($_SESSION['col_curr_fee'] == $this->getFees()){
@@ -751,7 +768,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function updateCart(){
-		$pid = $_SESSION['collector_private_id'];
+		$quote = $this->objectManager->get('\Magento\Checkout\Model\Cart')->getQuote();
+		if (isset($_SESSION['collector_private_id'])){
+			$pid = $_SESSION['collector_private_id'];
+		}
+		else {
+			$pid = $quote->getData('collector_private_id');
+		}
 		$pusername = $this->getUsername();
 		$psharedSecret= $this->getPassword();
 		$array = array();
@@ -800,7 +823,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
 	}
 	
 	public function getOrderResponse(){
-		$pid = $_SESSION['collector_private_id'];
+		$quote = $this->objectManager->get('\Magento\Checkout\Model\Cart')->getQuote();
+		if (isset($_SESSION['collector_private_id'])){
+			$pid = $_SESSION['collector_private_id'];
+		}
+		else {
+			$pid = $quote->getData('collector_private_id');
+		}
 		$pusername = $this->getUsername();
 		$psharedSecret = $this->getPassword();
 		$array = array();
