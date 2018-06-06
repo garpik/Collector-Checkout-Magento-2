@@ -5,6 +5,7 @@ namespace Collector\Iframe\Plugin;
 class Url
 {
     protected $helper;
+    protected $urlBuilder;
 
     public function __construct(\Collector\Iframe\Helper\Data $helper,
                                 \Magento\Framework\UrlInterface $urlBuilder)
