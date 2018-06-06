@@ -5,8 +5,16 @@ namespace Collector\Gateways\Helper;
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
 
+    /**
+     * @var \Magento\Framework\UrlInterface
+     */
     protected $_urlInterface;
 
+    /**
+     * Data constructor.
+     * @param \Magento\Framework\UrlInterface $urlInterface
+     * @param \Magento\Framework\App\Helper\Context $context
+     */
     public function __construct(
         \Magento\Framework\UrlInterface $urlInterface,
         \Magento\Framework\App\Helper\Context $context
@@ -120,7 +128,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getInvoiceRows($order)
     {
-        $rows = array();
+        $rows = [];
+        $bundlesWithFixedPrice = [];
         foreach ($order->getAllItems() as $item) {
             if ($item->getProductType() == 'configurable') {
                 continue;

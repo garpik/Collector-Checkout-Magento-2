@@ -4,10 +4,41 @@ namespace Collector\Iframe\Block;
 
 class Cart extends \Magento\Checkout\Block\Onepage
 {
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
     protected $helper;
+    /**
+     * @var \Magento\Checkout\Model\Session
+     */
     protected $checkoutSession;
+
+    protected $storeManager;
+    /**
+     * @var \Magento\Framework\Pricing\Helper\Data
+     */
+    protected $pricingData;
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
+    /**
+     * @var bool
+     */
     private $initialized = false;
 
+    /**
+     * Cart constructor.
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param array $data
+     * @param \Magento\Checkout\Model\Session $_checkoutSession
+     * @param \Magento\Framework\Data\Form\FormKey $formKey
+     * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Framework\Pricing\Helper\Data $pricingData
+     * @param \Collector\Iframe\Helper\Data $_helper
+     * @param array $layoutProcessors
+     */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         array $data = [],
@@ -28,18 +59,24 @@ class Cart extends \Magento\Checkout\Block\Onepage
         $this->checkoutSession = $_checkoutSession;
         $this->init();
     }
-    public function getCheckoutSessionObject() {
+
+    public function getCheckoutSessionObject()
+    {
         return $this->checkoutSession;
     }
 
-    public function getStoreManagerObject() {
+    public function getStoreManagerObject()
+    {
         return $this->storeManager;
     }
-    public function getPricingObject() {
+
+    public function getPricingObject()
+    {
         return $this->pricingData;
     }
 
-    public function getConfigObject() {
+    public function getConfigObject()
+    {
         return $this->scopeConfig;
     }
 
@@ -101,6 +138,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
     {
         return $this->helper->getShippingMethods();
     }
+
     public function getDiscount()
     {
         return $this->helper->getDiscount();

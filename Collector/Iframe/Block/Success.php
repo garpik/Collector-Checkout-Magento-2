@@ -4,11 +4,26 @@ namespace Collector\Iframe\Block;
  
 class Success extends \Magento\Checkout\Block\Onepage {
 	protected $storeManager;
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
 	protected $helper;
+    /**
+     * @var \Magento\Quote\Model\Quote\Address\Rate
+     */
     protected $shippingRate;
-	
-	private $initialized = false;
 
+
+    /**
+     * Success constructor.
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param array $data
+     * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
+     * @param \Magento\Framework\Data\Form\FormKey $formKey
+     * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
+     * @param \Collector\Iframe\Helper\Data $_helper
+     * @param array $layoutProcessors
+     */
     public function __construct(
 		\Magento\Framework\View\Element\Template\Context $context, 
 		array $data = [],

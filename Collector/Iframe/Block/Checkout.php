@@ -4,9 +4,25 @@ namespace Collector\Iframe\Block;
 
 class Checkout extends \Magento\Checkout\Block\Onepage
 {
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
     protected $helper;
+    /**
+     * @var \Magento\Checkout\Model\Cart
+     */
     protected $cart;
 
+    /**
+     * Checkout constructor.
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param array $data
+     * @param \Magento\Framework\Data\Form\FormKey $formKey
+     * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
+     * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Magento\Checkout\Model\Cart $_cart
+     * @param array $layoutProcessors
+     */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         array $data = [],
