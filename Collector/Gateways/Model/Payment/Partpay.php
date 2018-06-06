@@ -26,8 +26,6 @@ class Partpay extends \Magento\Payment\Model\Method\AbstractMethod {
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger $logger,
-        \Magento\Framework\Module\ModuleListInterface $moduleList,
-        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
 		\Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
 		\Collector\Gateways\Helper\Data $_helper,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,

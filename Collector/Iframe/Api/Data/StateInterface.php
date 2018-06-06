@@ -4,8 +4,7 @@ namespace Collector\Iframe\Api\Data;
 
 interface StateInterface
 {
-
-    const ENTITY_ID    = 'status';
+    const ENTITY_ID = 'status';
 
     /**
      * Get ID

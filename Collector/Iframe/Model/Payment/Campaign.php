@@ -42,18 +42,14 @@ class Campaign extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger $logger,
-        \Magento\Framework\Module\ModuleListInterface $moduleList,
-        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
 		\Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
 		\Collector\Gateways\Helper\Data $_helper,
-		\Magento\Framework\View\Asset\Repository $_assetRepo,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null, 
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
     ) {
 		$this->helper = $_helper;
 		$this->clientFactory = $clientFactory;
-		$this->assetRepo = $_assetRepo;
         parent::__construct(
             $context,
             $registry,

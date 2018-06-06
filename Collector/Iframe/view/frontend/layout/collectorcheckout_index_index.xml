@@ -6,8 +6,6 @@
 	<body>
 		<move element="header-wrapper" destination="header.container" after="-"/>
 		<move element="logo" destination="header-wrapper"/>
-	<!--	<referenceBlock name="footer_links" remove="true"> -->
-
  		<referenceContainer name="checkout.root" remove="true">
 		</referenceContainer>
 		<referenceContainer name="page.messages">

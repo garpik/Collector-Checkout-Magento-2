@@ -5,7 +5,6 @@ class Index extends \Magento\Framework\App\Action\Action {
 	protected $resultPageFactory;
     protected $jsonHelper;
 	protected $layoutFactory;
-    protected $objectManager;
 	protected $resultJsonFactory;
 	protected $helper;
     protected $formKey;
@@ -45,7 +44,6 @@ class Index extends \Magento\Framework\App\Action\Action {
         $this->checkoutSession = $_checkoutSession;
 		$this->orderInterface = $_orderInterface;
 		$this->resultJsonFactory = $resultJsonFactory;
-		$this->objectManager = $context->getObjectManager();
         $this->quoteCollectionFactory = $_quoteCollectionFactory;
 		$this->storeManager = $_storeManager;
 		$this->customerRepository = $_customerRepository;

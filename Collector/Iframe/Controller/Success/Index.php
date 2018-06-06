@@ -2,21 +2,81 @@
 namespace Collector\Iframe\Controller\Success;
 class Index extends \Magento\Framework\App\Action\Action {
 
+    /**
+     * @var \Magento\Framework\View\Result\PageFactory
+     */
 	protected $resultPageFactory;
-    protected $objectManager;
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
 	protected $helper;
+    /**
+     * @var \Magento\Sales\Api\Data\OrderInterface
+     */
 	protected $orderInterface;
+    /**
+     * @var \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory
+     */
 	protected $quoteCollectionFactory;
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
 	protected $storeManager;
+    /**
+     * @var \Magento\Customer\Model\CustomerFactory
+     */
 	protected $customerFactory;
+    /**
+     * @var \Magento\Customer\Api\CustomerRepositoryInterface
+     */
 	protected $customerRepository;
+    /**
+     * @var \Magento\Quote\Model\Quote\Address\Rate
+     */
 	protected $shippingRate;
+    /**
+     * @var \Magento\Checkout\Model\Session
+     */
     protected $checkoutSession;
+    /**
+     * @var \Magento\Framework\Event\Manager
+     */
 	protected $eventManager;
-	protected $cartManagementInterface;
+    /**
+     * @var \Collector\Iframe\Model\State
+     */
     protected $orderState;
+    /**
+     * @var \Magento\Quote\Model\QuoteManagement
+     */
     protected $quoteManagement;
+    /**
+     * @var \Magento\Sales\Model\Order\Email\Sender\OrderSender
+     */
+    protected $orderSender;
+    /**
+     * @var \Magento\Newsletter\Model\SubscriberFactory
+     */
+    protected $subscriberFactory;
 
+    /**
+     * Index constructor.
+     * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Magento\Framework\App\Action\Context $context
+     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
+     * @param \Magento\Store\Model\StoreManagerInterface $_storeManager
+     * @param \Magento\Customer\Api\CustomerRepositoryInterface $_customerRepository
+     * @param \Magento\Checkout\Model\Session $_checkoutSession
+     * @param \Magento\Customer\Model\CustomerFactory $_customerFactory
+     * @param \Magento\Quote\Model\QuoteManagement $quoteManagement
+     * @param \Magento\Sales\Api\Data\OrderInterface $_orderInterface
+     * @param \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory
+     * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
+     * @param \Magento\Framework\Event\Manager $eventManager
+     * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
+     * @param \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory
+     * @param \Collector\Iframe\Model\State $orderState
+     */
 	public function __construct(
 		\Collector\Iframe\Helper\Data $_helper,
         \Magento\Framework\App\Action\Context $context,
@@ -30,9 +90,12 @@ class Index extends \Magento\Framework\App\Action\Action {
 		\Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
 		\Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
 		\Magento\Framework\Event\Manager $eventManager,
-        \Magento\Framework\Json\Helper\Data $jsonHelper,
+        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
+        \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory,
         \Collector\Iframe\Model\State $orderState
     ) {
+	    $this->orderSender = $orderSender;
+	    $this->subscriberFactory = $subscriberFactory;
 	    $this->orderState = $orderState;
 	    $this->quoteManagement = $quoteManagement;
 		$this->helper = $_helper;
@@ -40,7 +103,6 @@ class Index extends \Magento\Framework\App\Action\Action {
         $this->resultPageFactory = $resultPageFactory;
         $this->checkoutSession = $_checkoutSession;
 		$this->orderInterface = $_orderInterface;
-		$this->objectManager = $context->getObjectManager();
         $this->quoteCollectionFactory = $_quoteCollectionFactory;
 		$this->storeManager = $_storeManager;
 		$this->customerRepository = $_customerRepository;
@@ -75,7 +137,6 @@ class Index extends \Magento\Framework\App\Action\Action {
                     break;
             }
 			$_SESSION['col_paymentmethod'] = $paymentMethod;
-			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 			$exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
 			if ($exOrder->getIncrementId()){
 				return $resultPage;
@@ -157,7 +218,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			}
 			if (isset($_SESSION['newsletter_signup'])){
 				if ($_SESSION['newsletter_signup']){
-					$objectManager->get('\Magento\Newsletter\Model\SubscriberFactory')->create()->subscribe($response['data']['customer']['email']);
+					$this->subscriberFactory>create()->subscribe($response['data']['customer']['email']);
 				}
 			}
 			$customer->setEmail($response['data']['customer']['email']);
@@ -267,8 +328,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 
 			$_SESSION['is_iframe'] = 1;
             $order = $this->quoteManagement->submit($actual_quote);
-			$emailSender = $objectManager->create('\Magento\Sales\Model\Order\Email\Sender\OrderSender');
-			$emailSender->send($order);
+            $this->orderSender->send($order);
 			$order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
 			if ($_SESSION['btype'] == 'b2b'){
 				$order->setData('collector_ssn', $response['data']['businessCustomer']['organizationNumber']);
