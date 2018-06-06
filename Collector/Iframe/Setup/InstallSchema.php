@@ -37,7 +37,29 @@ class InstallSchema implements InstallSchemaInterface
     ) {
         $installer = $setup;
         $installer->startSetup();
-		
+
+
+        $table = $setup->getTable('quote');
+
+        $columns = [
+            'collector_btype' => [
+                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+                'length' => '255',
+                'nullable' => true,
+                'comment' => 'Collector Customer Type',
+            ],
+            'collector_private_id' => [
+                'type' => \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+                'length' => '255',
+                'nullable' => true,
+                'comment' => 'Collector ID',
+            ],
+        ];
+
+        $connection = $setup->getConnection();
+        foreach ($columns as $name => $definition) {
+            $connection->addColumn($table, $name, $definition);
+        }
 
 		$installer->endSetup();
         $setup->endSetup();
