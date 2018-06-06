@@ -13,6 +13,10 @@ class Success extends \Magento\Checkout\Block\Onepage {
      */
     protected $shippingRate;
 
+    /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectorSession;
 
     /**
      * Success constructor.
@@ -22,6 +26,7 @@ class Success extends \Magento\Checkout\Block\Onepage {
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Collector\Base\Model\Session $_collectorSession
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -31,14 +36,19 @@ class Success extends \Magento\Checkout\Block\Onepage {
 		\Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
 		\Collector\Iframe\Helper\Data $_helper,
+        \Collector\Base\Model\Session $_collectorSession,
         array $layoutProcessors = []
 	){
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->collectorSession = $_collectorSession;
 		$this->helper = $_helper;
 		$this->shippingRate = $_shippingRate;
         $this->storeManager = $context->getStoreManager();
 	}
 
+	public function getCollectorSession() {
+        return $this->collectorSession;
+    }
 	public function getStoreManagerObject() {
         return $this->storeManager;
     }

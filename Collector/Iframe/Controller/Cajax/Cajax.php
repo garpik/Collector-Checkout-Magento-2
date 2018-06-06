@@ -24,14 +24,43 @@ namespace Collector\Iframe\Controller\Cajax;
 class Cajax extends \Magento\Framework\App\Action\Action
 {
 
+    /**
+     * @var \Magento\Framework\View\Result\PageFactory
+     */
     protected $resultPageFactory;
+    /**
+     * @var \Magento\Framework\Json\Helper\Data
+     */
     protected $jsonHelper;
+    /**
+     * @var \Magento\Framework\View\Result\LayoutFactory
+     */
     protected $layoutFactory;
+    /**
+     * @var \Magento\Framework\Controller\Result\JsonFactory
+     */
     protected $resultJsonFactory;
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
     protected $helper;
+    /**
+     * @var \Magento\Framework\Data\Form\FormKey
+     */
     protected $formKey;
+    /**
+     * @var \Magento\Catalog\Model\Product
+     */
     protected $product;
+    /**
+     * @var \Magento\Checkout\Model\Cart
+     */
     protected $cart;
+    /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectionSession;
+
     /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
@@ -42,6 +71,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\Cart $cart
      * @param \Magento\Catalog\Model\Product $product
+     * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
      */
     public function __construct(
@@ -53,9 +83,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
         \Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\Cart $cart,
         \Magento\Catalog\Model\Product $product,
+        \Collector\Base\Model\Session $_collectorSession,
         \Magento\Framework\Json\Helper\Data $jsonHelper
     )
     {
+        parent::__construct($context);
+        $this->collectionSession = $_collectorSession;
         $this->product = $product;
         $this->cart = $cart;
         $this->formKey = $formKey;
@@ -133,7 +166,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                 $changed = true;
                 $updateFees = true;
             } else if ($_POST['field2'] == 'submit') {
-                if (isset($_SESSION['collector_applied_discount_code'])) {
+                if (!empty($this->collectionSession->getVariable('collector_applied_discount_code'))) {
                     $this->helper->unsetDiscountCode();
                 } else {
                     $this->helper->setDiscountCode($_POST['field3']);
@@ -144,9 +177,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
 
             } else if ($_POST['field2'] == 'newsletter') {
                 if ($_POST['field3'] == "true") {
-                    $_SESSION['newsletter_signup'] = true;
+                    $this->collectionSession->setVariable('newsletter_signup',true);
                 } else {
-                    $_SESSION['newsletter_signup'] = false;
+                    $this->collectionSession->setVariable('newsletter_signup',false);
                 }
             } else if ($_POST['field2'] == 'del') {
                 $allItems = $this->cart->getQuote()->getAllVisibleItems();
@@ -168,8 +201,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
             } else if ($_POST['field2'] == 'update') {
                 $changed = true;
             } else if ($_POST['field2'] == 'btype') {
-                $_SESSION['btype'] = $_POST['field3'];
-                unset($_SESSION['collector_public_token']);
+                $this->collectionSession->setVariable('btype',$_POST['field3']);
+                $this->collectionSession->setVariable('collector_public_token','');
                 $changeLanguage = true;
                 $changed = true;
                 $updateCart = true;
@@ -287,14 +320,14 @@ class Cajax extends \Magento\Framework\App\Action\Action
 
     private function getCheckoutData()
     {
-        $pid = $_SESSION['collector_private_id'];
+        $pid = $this->collectionSession->getVariable('collector_private_id');
         $pusername = $this->helper->getUsername();
         $psharedSecret = $this->helper->getPassword();
         $array = array();
         $array['countryCode'] = $this->helper->getCountryCode();
         $storeId = 0;
-        if (isset($_SESSION['btype'])) {
-            if ($_SESSION['btype'] == 'b2b') {
+        if (!empty($this->collectionSession->getVariable('btype'))) {
+            if ($this->collectionSession->getVariable('btype') == 'b2b') {
                 $storeId = $this->helper->getB2BStoreID();
             } else {
                 $storeId = $this->helper->getB2CStoreID();
@@ -302,15 +335,15 @@ class Cajax extends \Magento\Framework\App\Action\Action
         } else {
             switch ($this->getCustomerType()) {
                 case 1:
-                    $_SESSION['btype'] = 'b2c';
+                    $this->collectionSession->setVariable('btype', 'b2c');
                     $storeId = $this->helper->getB2CStoreID();
                     break;
                 case 2:
-                    $_SESSION['btype'] = 'b2b';
+                    $this->collectionSession->setVariable('btype', 'b2b');
                     $storeId = $this->helper->getB2BStoreID();
                     break;
                 case 3:
-                    $_SESSION['btype'] = 'b2c';
+                    $this->collectionSession->setVariable('btype', 'b2c');
                     $storeId = $this->helper->getB2CStoreID();
                     break;
             }

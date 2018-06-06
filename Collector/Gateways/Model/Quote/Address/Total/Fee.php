@@ -13,22 +13,36 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
      */
     protected $_helperData;
 
+    /**
+     * @var \Magento\Framework\UrlInterface
+     */
     protected $_urlInterface;
 
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
     protected $_config;
+
+    /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectorSession;
 
     /**
      * Fee constructor.
      * @param \Magento\Framework\UrlInterface $urlInterface
      * @param \Collector\Gateways\Helper\Data $helperData
+     * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      */
     public function __construct(
         \Magento\Framework\UrlInterface $urlInterface,
         \Collector\Gateways\Helper\Data $helperData,
+        \Collector\Base\Model\Session $_collectorSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $config
     )
     {
+        $this->collectorSession = $_collectorSession;
         $this->_config = $config;
         $this->_helperData = $helperData;
         $this->_urlInterface = $urlInterface;
@@ -45,51 +59,6 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
     public function collect(\Magento\Quote\Model\Quote $quote, \Magento\Quote\Api\Data\ShippingAssignmentInterface $shippingAssignment, \Magento\Quote\Model\Quote\Address\Total $total)
     {
         parent::collect($quote, $shippingAssignment, $total);
-        if (!count($shippingAssignment->getItems())) {
-            return $this;
-        }
-        $checkout = false;
-        if (strpos($this->_urlInterface->getCurrentUrl(), 'collectorcheckout') !== false) {
-            if (strpos($this->_urlInterface->getCurrentUrl(), 'success') !== false) {
-                $checkout = false;
-            } else {
-                $checkout = true;
-            }
-        }
-        /*	if (isset($_SESSION['col_paymentmethod'])){
-                if ($_SESSION['col_paymentmethod'] == 'collector_invoice'){
-
-                }
-                else {
-                    $checkout = true;
-                }
-            }
-            else {
-                $checkout = true;
-            }*/
-        $fee = 0;
-        if ($this->_helperData->canApply($quote) && !$checkout) {
-            if (is_null($quote->getShippingAddress()->getCity())) {
-                $fee = 0;
-            } else {
-                $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-                if (isset($_SESSION['btype'])) {
-                    if ($_SESSION['btype'] == 'b2b') {
-                        $fee = floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope));
-                    } else {
-                        $fee = floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope));
-                    }
-                } else {
-                    $fee = floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope));
-                }
-            }
-        }
-        /*	$total->setFeeAmount($fee);
-            $total->setBaseFeeAmount($fee);*/
-        /*	$total->setTotalAmount('fee_amount', $fee);
-            $total->setBaseTotalAmount('base_fee_amount', $fee);*/
-        /*	$total->setGrandTotal($total->getGrandTotal() + $total->getFeeAmount());
-            $total->setBaseGrandTotal($total->getBaseGrandTotal() + $total->getBaseFeeAmount());*/
         return $this;
     }
 
@@ -120,8 +89,8 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
                 ];
             } else {
                 $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-                if (isset($_SESSION['btype'])) {
-                    if ($_SESSION['btype'] == 'b2b') {
+                if (!empty($this->collectorSession->getVariable('btype'))) {
+                    if ($this->collectorSession->getVariable('btype') == 'b2b') {
                         $result = [
                             'code' => $this->getCode(),
                             'title' => __('Invoice Fee'),

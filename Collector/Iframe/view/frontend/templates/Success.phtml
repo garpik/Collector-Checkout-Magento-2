@@ -1,5 +1,5 @@
 <?php
-if (!isset($_SESSION['collector_public_token'])) {
+if (empty($block->getCollectorSession()->getVariable('collector_public_token'))) {
     $storeManager = $block->getStoreManagerObject();
     $url = $storeManager->getStore()->getBaseUrl();
     if (headers_sent()) {
@@ -8,11 +8,11 @@ if (!isset($_SESSION['collector_public_token'])) {
         die('<script>location.href="' . $url . '";</script>');
     }
 } else {
-    $url = $_SESSION['collector_url'];
-    $dataLang = $_SESSION['collector_language'];
-    $dataVariant = $_SESSION['collector_data_variant'];
-    $publicToken = $_SESSION['collector_public_token'];
-    unset($_SESSION['collector_public_token']);
+    $url = $block->getCollectorSession()->getVariable('collector_url');
+    $dataLang = $block->getCollectorSession()->getVariable('collector_language');
+    $dataVariant = $block->getCollectorSession()->getVariable('collector_data_variant');
+    $publicToken = $block->getCollectorSession()->getVariable('collector_public_token');
+    $block->getCollectorSession()->setVariable('collector_public_token','');
     ?>
 
     <script>

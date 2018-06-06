@@ -1,0 +1,13 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <virtualType name="Collector\Base\Model\Session\Storage" type="Magento\Framework\Session\Storage">
+        <arguments>
+            <argument name="namespace" xsi:type="string">collector_session</argument>
+        </arguments>
+    </virtualType>
+    <type name="Collector\Base\Model\Session">
+        <arguments>
+            <argument name="storage" xsi:type="object">Collector\Base\Model\Session\Storage</argument>
+        </arguments>
+    </type>
+</config>

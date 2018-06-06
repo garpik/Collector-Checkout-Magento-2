@@ -28,6 +28,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
     private $initialized = false;
 
     /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectorSession;
+    /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
@@ -48,16 +52,22 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\Pricing\Helper\Data $pricingData,
         \Collector\Iframe\Helper\Data $_helper,
+        \Collector\Base\Model\Session $_collectorSession,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->collectorSession = $_collectorSession;
         $this->storeManager = $context->getStoreManager();
         $this->pricingData = $pricingData;
         $this->scopeConfig = $scopeConfig;
         $this->helper = $_helper;
         $this->checkoutSession = $_checkoutSession;
         $this->init();
+    }
+
+    public function getCollectorSession() {
+        return $this->collectorSession;
     }
 
     public function getCheckoutSessionObject()
@@ -163,7 +173,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
     {
         $code = $this->checkoutSession->getQuote()->getCouponCode();
         if ($code) {
-            $_SESSION['collector_applied_discount_code'] = $code;
+            $this->collectorSession->setVariable('collector_applied_discount_code',$code);
             return true;
         }
         return false;

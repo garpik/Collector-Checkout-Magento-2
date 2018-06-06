@@ -80,10 +80,10 @@ $checkoutSession = $block->getCheckoutSessionObject();
                 <?php $code = "";
                 $discountCode = $checkoutSession->getQuote()->getCouponCode();
                 if ($discountCode) {
-                    $_SESSION['collector_applied_discount_code'] = $discountCode;
+                    $block->getCollectorSession()->setVariable('collector_applied_discount_code', $discountCode);
                 }
-                if (isset($_SESSION['collector_applied_discount_code'])) {
-                    $code = "(" . $_SESSION['collector_applied_discount_code'] . ")";
+                if (!empty($block->getCollectorSession()->getVariable('collector_applied_discount_code'))) {
+                    $code = "(" . $block->getCollectorSession()->getVariable('collector_applied_discount_code') . ")";
                 } ?>
                 <tr>
                     <td class="col-name"><?php echo __('Discount');
@@ -211,7 +211,7 @@ $checkoutSession = $block->getCheckoutSessionObject();
                 <form action="javascript:void(0);">
                     <?php if ($this->hasCoupon()) { ?>
                         <input type="text" name="code" id="col-code" class="col-code"
-                               value="<?php echo $_SESSION['collector_applied_discount_code']; ?>">
+                               value="<?php echo $block->getCollectorSession()->getVariable('collector_applied_discount_code'); ?>">
                         <input type="button" id="col-codeButton" class="col-codeButton"
                                value="<?php echo __('Cancel') ?>">
                     <?php } else { ?>

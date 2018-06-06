@@ -60,6 +60,11 @@ class Index extends \Magento\Framework\App\Action\Action {
     protected $subscriberFactory;
 
     /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectorSession;
+
+    /**
      * Index constructor.
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Magento\Framework\App\Action\Context $context
@@ -75,6 +80,7 @@ class Index extends \Magento\Framework\App\Action\Action {
      * @param \Magento\Framework\Event\Manager $eventManager
      * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
      * @param \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory
+     * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Iframe\Model\State $orderState
      */
 	public function __construct(
@@ -92,8 +98,10 @@ class Index extends \Magento\Framework\App\Action\Action {
 		\Magento\Framework\Event\Manager $eventManager,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory,
+        \Collector\Base\Model\Session $_collectorSession,
         \Collector\Iframe\Model\State $orderState
     ) {
+	    $this->collectorSession = $_collectorSession;
 	    $this->orderSender = $orderSender;
 	    $this->subscriberFactory = $subscriberFactory;
 	    $this->orderState = $orderState;
@@ -136,7 +144,7 @@ class Index extends \Magento\Framework\App\Action\Action {
                     $paymentMethod = 'collector_invoice';
                     break;
             }
-			$_SESSION['col_paymentmethod'] = $paymentMethod;
+            $this->collectorSession->setVariable('col_paymentmethod', $paymentMethod);
 			$exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
 			if ($exOrder->getIncrementId()){
 				return $resultPage;
@@ -178,11 +186,11 @@ class Index extends \Magento\Framework\App\Action\Action {
 			else {
 				$billingCountryId = $response['data']['countryCode'];
 			}
-			if (isset($_SESSION['collector_applied_discount_code'])){
-				$discountCode = $_SESSION['collector_applied_discount_code'];
+			if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))){
+				$discountCode = $this->collectorSession->getVariable('collector_applied_discount_code');
 			}
-			if (isset($_SESSION['curr_shipping_code'])){
-				$shippingCode = $_SESSION['curr_shipping_code'];
+			if (!empty($this->collectorSession->getVariable('curr_shipping_code'))){
+				$shippingCode = $this->collectorSession->getVariable('curr_shipping_code');
 			}
 			
 			$actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
@@ -216,8 +224,8 @@ class Index extends \Magento\Framework\App\Action\Action {
 						->setPassword($email);
 				$customer->save();
 			}
-			if (isset($_SESSION['newsletter_signup'])){
-				if ($_SESSION['newsletter_signup']){
+			if (!empty($this->collectorSession->getVariable('newsletter_signup'))){
+				if ($this->collectorSession->getVariable('newsletter_signup')){
 					$this->subscriberFactory>create()->subscribe($response['data']['customer']['email']);
 				}
 			}
@@ -228,7 +236,7 @@ class Index extends \Magento\Framework\App\Action\Action {
 			$customer = $this->customerRepository->getById($customer->getEntityId());
 			$actual_quote->setCurrency();
 			$actual_quote->assignCustomer($customer);
-			if (isset($_SESSION['collector_applied_discount_code'])){
+			if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))){
 				$actual_quote->setCouponCode($discountCode);
 			}
 			//Set Address to quote @todo add section in order data for seperate billing and handle it
@@ -326,11 +334,11 @@ class Index extends \Magento\Framework\App\Action\Action {
 			// Submit the quote and create the order
 			$actual_quote->save();
 
-			$_SESSION['is_iframe'] = 1;
+            $this->collectorSession->setVariable('is_iframe', 1);
             $order = $this->quoteManagement->submit($actual_quote);
             $this->orderSender->send($order);
 			$order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
-			if ($_SESSION['btype'] == 'b2b'){
+			if ($this->collectorSession->getVariable('btype') == 'b2b'){
 				$order->setData('collector_ssn', $response['data']['businessCustomer']['organizationNumber']);
 			}
 			$fee = 0;
