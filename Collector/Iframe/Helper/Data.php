@@ -113,32 +113,27 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getEnable()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getAcceptStatus()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/acceptstatus', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/acceptstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getHoldStatus()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/holdstatus', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/holdstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getDeniedStatus()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/deniedstatus', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/deniedstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getTestMode()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/testmode', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/testmode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getShowOptions()
@@ -148,56 +143,47 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getShippingTaxClass()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('tax/classes/shipping_tax_class', $storeScope);
+        return $this->scopeConfig->getValue('tax/classes/shipping_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2BInvoiceFeeTaxClass()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b_tax_class', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2CInvoiceFeeTaxClass()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c_tax_class', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getUsername()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/username', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/username', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getCustomerType()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/customer_type', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/customer_type', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getPassword()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/sharedkey', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/sharedkey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2CStoreID()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2c_storeid', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2c_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2BStoreID()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getCountryCode()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('general/country/default', $storeScope);
+        return $this->scopeConfig->getValue('general/country/default', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getSuccessPageUrl()
@@ -207,8 +193,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getTermsUrl()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/terms_url', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/terms_url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getNotificationUrl()
@@ -271,82 +256,53 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
+                    $shipMethod = [
+                        'first' => $first,
+                        'code' => $rate->getCode(),
+                        'content' => ''
+                    ];
                     if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
+                        $first = false;
                         if ($shippingTax == 0) {
-                            $shipMethod = array(
-                                'first' => true,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false)
-                            );
-                            $this->setShippingMethod($rate->getCode());
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
                         } else {
-                            $shipMethod = array(
-                                'first' => true,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false)
-                            );
-                            $this->setShippingMethod($rate->getCode());
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
                         }
+                        $this->setShippingMethod($rate->getCode());
                     } else {
                         if ($shippingTax == 0) {
-                            $shipMethod = array(
-                                'first' => false,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false)
-                            );
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
                         } else {
-                            $shipMethod = array(
-                                'first' => false,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false)
-                            );
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
                         }
                     }
+                    array_push($shippingMethods, $shipMethod);
                 }
             }
         } else {
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
+                    $shipMethod = [
+                        'first' => $first,
+                        'code' => $rate->getCode(),
+                        'content' => ''
+                    ];
                     if ($first) {
                         $first = false;
                         if ($shippingTax == 0) {
-                            $shipMethod = array(
-                                'first' => true,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false)
-                            );
-                            $this->setShippingMethod($rate->getCode());
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
                         } else {
-                            $shipMethod = array(
-                                'first' => true,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false)
-                            );
-                            $this->setShippingMethod($rate->getCode());
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
                         }
+                        $this->setShippingMethod($rate->getCode());
                     } else {
                         if ($shippingTax == 0) {
-                            $shipMethod = array(
-                                'first' => false,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false)
-                            );
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
                         } else {
-                            $shipMethod = array(
-                                'first' => false,
-                                'code' => $rate->getCode(),
-                                'content' => $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false)
-                            );
-                            array_push($shippingMethods, $shipMethod);
+                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
                         }
                     }
+                    array_push($shippingMethods, $shipMethod);
                 }
             }
         }
@@ -768,27 +724,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->collectorSession->setVariable('col_curr_fee', $array);
         }
         $storeId = 0;
-        if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                $storeId = $this->getB2BStoreID();
-            } else {
-                $storeId = $this->getB2CStoreID();
-            }
+        if ($this->collectorSession->getVariable('btype') == 'b2b'
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            $this->collectorSession->setVariable('btype', 'b2b');
+            $storeId = $this->getB2BStoreID();
         } else {
-            switch ($this->getCustomerType()) {
-                case 1:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-                case 2:
-                    $this->collectorSession->setVariable('btype', 'b2b');
-                    $storeId = $this->getB2BStoreID();
-                    break;
-                case 3:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-            }
+            $this->collectorSession->setVariable('btype', 'b2c');
+            $storeId = $this->getB2CStoreID();
         }
         $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/fees';
         $json = json_encode($array);
@@ -822,27 +764,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $array['countryCode'] = $this->getCountryCode();
         $array['items'] = $this->getProducts()['items'];
         $storeId = 0;
-        if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                $storeId = $this->getB2BStoreID();
-            } else {
-                $storeId = $this->getB2CStoreID();
-            }
+        if ($this->collectorSession->getVariable('btype') == 'b2b'
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            $this->collectorSession->setVariable('btype', 'b2b');
+            $storeId = $this->getB2BStoreID();
         } else {
-            switch ($this->getCustomerType()) {
-                case 1:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-                case 2:
-                    $this->collectorSession->setVariable('btype', 'b2b');
-                    $storeId = $this->getB2BStoreID();
-                    break;
-                case 3:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-            }
+            $this->collectorSession->setVariable('btype', 'b2c');
+            $storeId = $this->getB2CStoreID();
         }
         $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/cart';
         $json = json_encode($array);
@@ -876,27 +804,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $array['countryCode'] = $this->getCountryCode();
         $array['items'] = $this->getProducts()['items'];
         $storeId = 0;
-        if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                $storeId = $this->getB2BStoreID();
-            } else {
-                $storeId = $this->getB2CStoreID();
-            }
+
+
+        if ($this->collectorSession->getVariable('btype') == 'b2b'
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            $this->collectorSession->setVariable('btype', 'b2b');
+            $storeId = $this->getB2BStoreID();
         } else {
-            switch ($this->getCustomerType()) {
-                case 1:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-                case 2:
-                    $this->collectorSession->setVariable('btype', 'b2b');
-                    $storeId = $this->getB2BStoreID();
-                    break;
-                case 3:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $storeId = $this->getB2CStoreID();
-                    break;
-            }
+            $this->collectorSession->setVariable('btype', 'b2c');
+            $storeId = $this->getB2CStoreID();
         }
         $path = '/merchants/' . $storeId . '/checkouts/' . $pid;
         $hash = $pusername . ":" . hash("sha256", $path . $psharedSecret);
