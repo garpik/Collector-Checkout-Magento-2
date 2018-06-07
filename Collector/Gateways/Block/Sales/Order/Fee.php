@@ -7,127 +7,130 @@
 /**
  * Tax totals modification block. Can be used just as subblock of \Magento\Sales\Block\Order\Totals
  */
-namespace Collector\Gateways\Block\Sales\Order;
 
+namespace Collector\Gateways\Block\Sales\Order;
 
 
 class Fee extends \Magento\Framework\View\Element\Template
 {
-	/**
-	 * Tax configuration model
-	 *
-	 * @var \Magento\Tax\Model\Config
-	 */
-	protected $_config;
+    /**
+     * Tax configuration model
+     *
+     * @var \Magento\Tax\Model\Config
+     */
+    protected $_config;
 
-	/**
-	 * @var Order
-	 */
-	protected $_order;
+    /**
+     * @var Order
+     */
+    protected $_order;
 
-	/**
-	 * @var \Magento\Framework\DataObject
-	 */
-	protected $_source;
+    /**
+     * @var \Magento\Framework\DataObject
+     */
+    protected $_source;
 
-	/**
-	 * @param \Magento\Framework\View\Element\Template\Context $context
-	 * @param \Magento\Tax\Model\Config $taxConfig
-	 * @param array $data
-	 */
-	public function __construct(
-		\Magento\Framework\View\Element\Template\Context $context,
-		\Magento\Tax\Model\Config $taxConfig,
-		array $data = []
-	) {
-		$this->_config = $taxConfig;
-		parent::__construct($context, $data);
-	}
+    /**
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param \Magento\Tax\Model\Config $taxConfig
+     * @param array $data
+     */
+    public function __construct(
+        \Magento\Framework\View\Element\Template\Context $context,
+        \Magento\Tax\Model\Config $taxConfig,
+        array $data = []
+    )
+    {
+        $this->_config = $taxConfig;
+        parent::__construct($context, $data);
+    }
 
-	/**
-	 * Check if we nedd display full tax total info
-	 *
-	 * @return bool
-	 */
-	public function displayFullSummary()
-	{
-		return true;
-	}
+    /**
+     * Check if we nedd display full tax total info
+     *
+     * @return bool
+     */
+    public function displayFullSummary()
+    {
+        return true;
+    }
 
-	/**
-	 * Get data (totals) source model
-	 *
-	 * @return \Magento\Framework\DataObject
-	 */
-	public function getSource()
-	{
-		return $this->_source;
-	} 
-	public function getStore()
-	{
-		return $this->_order->getStore();
-	}
+    /**
+     * Get data (totals) source model
+     *
+     * @return \Magento\Framework\DataObject
+     */
+    public function getSource()
+    {
+        return $this->_source;
+    }
 
-	  /**
-	 * @return Order
-	 */
-	public function getOrder()
-	{
-		return $this->_order;
-	}
+    /**
+     * @return mixed
+     */
+    public function getStore()
+    {
+        return $this->_order->getStore();
+    }
 
-	/**
-	 * @return array
-	 */
-	public function getLabelProperties()
-	{
-		return $this->getParentBlock()->getLabelProperties();
-	}
+    /**
+     * @return Order
+     */
+    public function getOrder()
+    {
+        return $this->_order;
+    }
 
-	/**
-	 * @return array
-	 */
-	public function getValueProperties()
-	{
-		return $this->getParentBlock()->getValueProperties();
-	}
+    /**
+     * @return array
+     */
+    public function getLabelProperties()
+    {
+        return $this->getParentBlock()->getLabelProperties();
+    }
 
-	/**
-	 * Initialize all order totals relates with tax
-	 *
-	 * @return \Magento\Tax\Block\Sales\Order\Tax
-	 */
-	public function initTotals()
-	{
+    /**
+     * @return array
+     */
+    public function getValueProperties()
+    {
+        return $this->getParentBlock()->getValueProperties();
+    }
 
-	/*	$parent = $this->getParentBlock();
-		$this->_order = $parent->getOrder();
-		$this->_source = $parent->getSource();
-		$store = $this->getStore();
-		if(!$this->getSource()->getFeeAmount()) {
-            return $this;
-        }
-		$fee = new \Magento\Framework\DataObject(
-			[
-				'code' => 'fee',
-				'strong' => false,
-				'value' => $this->getSource()->getFeeAmount(),
-				'label' => __('Fee'),
-			]
-		);
+    /**
+     * @return $this
+     */
+    public function initTotals()
+    {
 
-			$parent->addTotal($fee, 'fee');
-		   // $this->_addTax('grand_total');
-			$parent->addTotal($fee, 'fee');
+        /*	$parent = $this->getParentBlock();
+            $this->_order = $parent->getOrder();
+            $this->_source = $parent->getSource();
+            $store = $this->getStore();
+            if(!$this->getSource()->getFeeAmount()) {
+                return $this;
+            }
+            $fee = new \Magento\Framework\DataObject(
+                [
+                    'code' => 'fee',
+                    'strong' => false,
+                    'value' => $this->getSource()->getFeeAmount(),
+                    'label' => __('Fee'),
+                ]
+            );
+
+                $parent->addTotal($fee, 'fee');
+               // $this->_addTax('grand_total');
+                $parent->addTotal($fee, 'fee');
 
 
-			return $this;
-			*/
-			
-		$parent = $this->getParentBlock();
+                return $this;
+                */
+
+        $parent = $this->getParentBlock();
         $this->_order = $parent->getOrder();
         $this->_source = $parent->getSource();
-        if(!$this->_source->getFeeAmount()) {
+        if (!$this->_source->getFeeAmount()) {
             return $this;
         }
         $fee = new \Magento\Framework\DataObject(
@@ -141,6 +144,6 @@ class Fee extends \Magento\Framework\View\Element\Template
 
         $parent->addTotal($fee, 'fee');
         return $this;
-	}
+    }
 
 }

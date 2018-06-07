@@ -75,7 +75,8 @@ class Cart extends \Magento\Checkout\Block\Onepage
         $this->init();
     }
 
-    public function getCollectorSession() {
+    public function getCollectorSession()
+    {
         return $this->collectorSession;
     }
 
@@ -106,7 +107,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
         }
         if ($this->checkoutSession->getQuote()->getShippingAddress()->getPostcode() !== null) {
         } else {
-            $this->checkoutSession->getQuote()->getBillingAddress()->addData(array(
+            $defaultData = [
                 'firstname' => 'Kalle',
                 'lastname' => 'Anka',
                 'street' => 'Ankgatan',
@@ -114,15 +115,9 @@ class Cart extends \Magento\Checkout\Block\Onepage
                 'country_id' => 'SE',
                 'postcode' => '12345',
                 'telephone' => '0123456789'
-            ));
-            $this->checkoutSession->getQuote()->getShippingAddress()->addData(array(
-                'firstname' => 'Kalle',
-                'lastname' => 'Anka',
-                'street' => 'Ankgatan',
-                'city' => 'Ankeborg',
-                'country_id' => 'SE',
-                'postcode' => '12345'
-            ));
+            ];
+            $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
+            $this->checkoutSession->getQuote()->getShippingAddress()->addData($defaultData);
             $this->checkoutSession->getQuote()->collectTotals();
         }
         $this->checkoutSession->getQuote()->save();
@@ -182,7 +177,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
     {
         $code = $this->checkoutSession->getQuote()->getCouponCode();
         if ($code) {
-            $this->collectorSession->setVariable('collector_applied_discount_code',$code);
+            $this->collectorSession->setVariable('collector_applied_discount_code', $code);
             return true;
         }
         return false;

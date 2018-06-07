@@ -9,8 +9,16 @@ class ActiveMethods
      */
     protected $paymentConfig;
 
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
     protected $scopeConfig;
 
+    /**
+     * ActiveMethods constructor.
+     * @param \Magento\Payment\Model\Config $config
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     */
     public function __construct(
         \Magento\Payment\Model\Config $config,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -27,13 +35,13 @@ class ActiveMethods
 
     public function toOptionArray()
     {
-        $methods = [['value'=>'', 'label'=>'']];
+        $methods = [['value' => '', 'label' => '']];
         $payments = $this->_getPaymentMethods();
 
         foreach ($payments as $paymentCode => $paymentModel) {
-            $paymentTitle = $this->scopeConfig->getValue('payment/'.$paymentCode.'/title');
+            $paymentTitle = $this->scopeConfig->getValue('payment/' . $paymentCode . '/title');
             $methods[$paymentCode] = [
-                'label'   => $paymentTitle,
+                'label' => $paymentTitle,
                 'value' => $paymentCode
             ];
         }

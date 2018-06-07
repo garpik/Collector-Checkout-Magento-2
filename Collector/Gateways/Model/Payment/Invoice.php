@@ -35,6 +35,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
      * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
+
     /**
      * Invoice constructor.
      * @param \Magento\Framework\Model\Context $context
@@ -87,35 +88,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         );
     }
 
-    public function canRefund()
-    {
-        return true;
-    }
-
-    public function canCapture()
-    {
-        return true;
-    }
-
-    public function canVoid()
-    {
-        return true;
-    }
-
-    public function isOffline()
-    {
-        return false;
-    }
-
-    public function canCancel()
-    {
-        return true;
-    }
-
-    public function canAuthorize()
-    {
-        return $this->_canAuthorize;
-    }
 
     public function getTitle()
     {
@@ -177,7 +149,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             }
             $client->__setSoapHeaders($headerList);
 
-            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $resp = $client->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -232,7 +204,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
-                $this->logger->info("capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+                $this->logger->info("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
 
@@ -284,7 +256,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                     try {
                         $resp = $client->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -393,7 +365,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $client->CreditInvoice($req);
             } catch (\Exception $e) {

@@ -49,20 +49,6 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
     }
 
     /**
-     * Collect totals process.
-     *
-     * @param \Magento\Quote\Model\Quote $quote
-     * @param \Magento\Quote\Api\Data\ShippingAssignmentInterface $shippingAssignment
-     * @param \Magento\Quote\Model\Quote\Address\Total $total
-     * @return $this
-     */
-    public function collect(\Magento\Quote\Model\Quote $quote, \Magento\Quote\Api\Data\ShippingAssignmentInterface $shippingAssignment, \Magento\Quote\Model\Quote\Address\Total $total)
-    {
-        parent::collect($quote, $shippingAssignment, $total);
-        return $this;
-    }
-
-    /**
      * Assign subtotal amount and label to address object
      *
      * @param \Magento\Quote\Model\Quote $quote
@@ -72,51 +58,19 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
      */
     public function fetch(\Magento\Quote\Model\Quote $quote, \Magento\Quote\Model\Quote\Address\Total $total)
     {
-        $checkout = false;
-        if (strpos($this->_urlInterface->getCurrentUrl(), 'collectorcheckout') !== false) {
-            if (strpos($this->_urlInterface->getCurrentUrl(), 'success') !== false) {
-                $checkout = false;
-            } else {
-                $checkout = true;
-            }
-        }
-        if ($this->_helperData->canApply($quote) && !$checkout) {
-            if (is_null($quote->getShippingAddress()->getCity())) {
-                $result = [
-                    'code' => $this->getCode(),
-                    'title' => __('Invoice Fee'),
-                    'value' => 0
-                ];
-            } else {
-                $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-                if (!empty($this->collectorSession->getVariable('btype'))) {
-                    if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                        $result = [
-                            'code' => $this->getCode(),
-                            'title' => __('Invoice Fee'),
-                            'value' => floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope))
-                        ];
-                    } else {
-                        $result = [
-                            'code' => $this->getCode(),
-                            'title' => __('Invoice Fee'),
-                            'value' => floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope))
-                        ];
-                    }
-                } else {
-                    $result = [
-                        'code' => $this->getCode(),
-                        'title' => __('Invoice Fee'),
-                        'value' => floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope))
-                    ];
-                }
-            }
-        } else {
-            $result = [
-                'code' => $this->getCode(),
-                'title' => __('Invoice Fee'),
-                'value' => 0
-            ];
+        $checkout = strpos($this->_urlInterface->getCurrentUrl(), 'collectorcheckout') !== false
+            && strpos($this->_urlInterface->getCurrentUrl(), 'success') == false;
+        $result = [
+            'code' => $this->getCode(),
+            'title' => __('Invoice Fee'),
+            'value' => 0
+        ];
+
+        if ($this->_helperData->canApply($quote) && !$checkout && !is_null($quote->getShippingAddress()->getCity())) {
+            $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
+            $result['value'] = $this->collectorSession->getVariable('btype') == 'b2b' ?
+                floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)) :
+                floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope));
         }
         return $result;
     }

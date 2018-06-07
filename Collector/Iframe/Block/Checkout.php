@@ -29,6 +29,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      * @var \Collector\Base\Model\Session
      */
     protected $collectorSession;
+
     /**
      * Checkout constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -69,17 +70,14 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     {
         if ($this->helper->getTestMode()) {
             $this->collectorSession->setVariable('collector_url', "https://checkout-uat.collector.se/collector-checkout-loader.js");
-            return "https://checkout-uat.collector.se/collector-checkout-loader.js";
         } else {
             $this->collectorSession->setVariable('collector_url', "https://checkout.collector.se/collector-checkout-loader.js");
-            return "https://checkout.collector.se/collector-checkout-loader.js";
         }
+        return $this->collectorSession->getVariable('collector_url');
     }
 
     public function getLanguage()
     {
-
-
         $lang = $this->helper->getCountryCode();
         if (!empty($this->languageArray[$lang])) {
             $this->collectorSession->setVariable('collector_language', $this->languageArray[$lang]);
@@ -90,28 +88,12 @@ class Checkout extends \Magento\Checkout\Block\Onepage
 
     public function getDataVariant()
     {
-        $dataVariant = '';
-        if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                $dataVariant = 'data-variant="b2b" async';
-            } else {
-                $dataVariant = ' async';
-            }
-        } else {
-            switch ($this->helper->getCustomerType()) {
-                case 1:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $dataVariant = ' async';
-                    break;
-                case 2:
-                    $this->collectorSession->setVariable('btype', 'b2b');
-                    $dataVariant = 'data-variant="b2b" async';
-                    break;
-                case 3:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $dataVariant = ' async';
-                    break;
-            }
+        $dataVariant = ' async';
+
+        if ($this->collectorSession->getVariable('btype') == 'b2b'
+            || empty($this->collectorSession->getVariable('btype'))
+            && $this->helper->getCustomerType() == 2) {
+            $dataVariant = ' data-variant="b2b" async';
         }
         $this->collectorSession->setVariable('collector_data_variant', $dataVariant);
         return $dataVariant;
@@ -132,29 +114,17 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         $sharedSecret = $this->helper->getPassword();
         $req = array();
 
+        if ($this->collectorSession->getVariable('btype') == 'b2b'
+            || empty($this->collectorSession->getVariable('btype'))
+            && $this->helper->getCustomerType() == 2) {
 
-        if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
-                $req['storeId'] = $this->helper->getB2BStoreID();
-            } else {
-                $req['storeId'] = $this->helper->getB2CStoreID();
-            }
+            $this->collectorSession->setVariable('btype', 'b2b');
+            $req['storeId'] = $this->helper->getB2BStoreID();
         } else {
-            switch ($this->helper->getCustomerType()) {
-                case 1:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $req['storeId'] = $this->helper->getB2CStoreID();
-                    break;
-                case 2:
-                    $this->collectorSession->setVariable('btype', 'b2b');
-                    $req['storeId'] = $this->helper->getB2BStoreID();
-                    break;
-                case 3:
-                    $this->collectorSession->setVariable('btype', 'b2c');
-                    $req['storeId'] = $this->helper->getB2CStoreID();
-                    break;
-            }
+            $this->collectorSession->setVariable('btype', 'b2c');
+            $req['storeId'] = $this->helper->getB2CStoreID();
         }
+
         $req['countryCode'] = $this->helper->getCountryCode();
         $req['reference'] = $this->cart->getQuote()->getReservedOrderId();
         $req['redirectPageUri'] = $this->helper->getSuccessPageUrl();

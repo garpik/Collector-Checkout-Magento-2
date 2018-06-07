@@ -26,8 +26,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getEnable()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function canApply($quote)
@@ -42,18 +41,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getInfoWSDL()
     {
-        if ($this->getTestMode())
-            return "https://ecommercetest.collector.se/v3.0/InformationService.svc?singleWsdl";
-
-        return "https://ecommerce.collector.se/v3.0/InformationService.svc?singleWsdl";
+        return $this->getTestMode() ?
+            "https://ecommercetest.collector.se/v3.0/InformationService.svc?singleWsdl" :
+            "https://ecommerce.collector.se/v3.0/InformationService.svc?singleWsdl";
     }
 
     public function getInvoiceWSDL()
     {
-        if ($this->getTestMode())
-            return "https://ecommercetest.collector.se/v3.0/InvoiceServiceV33.svc?singleWsdl";
-
-        return "https://ecommerce.collector.se/v3.0/InvoiceServiceV33.svc?singleWsdl";
+        return $this->getTestMode() ?
+            "https://ecommercetest.collector.se/v3.0/InvoiceServiceV33.svc?singleWsdl" :
+            "https://ecommerce.collector.se/v3.0/InvoiceServiceV33.svc?singleWsdl";
     }
 
     public function getHeaderUrl()
@@ -63,46 +60,39 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getUsername()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/username', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/username', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getCustomerType()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/customer_type', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/customer_type', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getPassword()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/sharedkey', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/sharedkey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getTestMode()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/testmode', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/testmode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2CStoreID()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2c_storeid', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2c_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getB2BStoreID()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', $storeScope);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getAgreementCode()
     {
-        if ($this->getTestMode())
-            return "TEST";
-
-        return "";
+        return $this->getTestMode() ?
+            "TEST" :
+            "";
     }
 
     public function getRemoteIp($payment)
@@ -112,8 +102,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getCountryCode()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        return $this->scopeConfig->getValue('general/country/default', $storeScope);
+        return $this->scopeConfig->getValue('general/country/default', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getInvoiceType()

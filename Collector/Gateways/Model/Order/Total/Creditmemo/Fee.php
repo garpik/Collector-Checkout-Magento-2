@@ -12,6 +12,8 @@ class Fee extends AbstractTotal
      */
     public function collect(\Magento\Sales\Model\Order\Creditmemo $creditmemo){
         $order = $creditmemo->getOrder();
+
+        
         if ($order->getFeeAmountInvoiced() > 0) {
             $feeAmountLeft     = $order->getFeeAmountInvoiced() - $order->getFeeAmountRefunded();
             $basefeeAmountLeft = $order->getBaseFeeAmountInvoiced() - $order->getBaseFeeAmountRefunded();
