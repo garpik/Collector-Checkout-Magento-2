@@ -32,6 +32,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
     protected $collectorSession;
 
     /**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $logger;
+    /**
      * Invoice constructor.
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\Registry $registry
@@ -39,9 +43,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
      * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Payment\Model\Method\Logger $logger
+     * @param \Magento\Payment\Model\Method\Logger $paymentLogger
      * @param \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory
      * @param \Collector\Gateways\Helper\Data $_helper
+     * @param \Collector\Base\Logger\Collector $logger
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param \Collector\Base\Model\Session $_collectorSession
@@ -54,15 +59,17 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Payment\Model\Method\Logger $logger,
+        \Magento\Payment\Model\Method\Logger $paymentLogger,
         \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
         \Collector\Gateways\Helper\Data $_helper,
+        \Collector\Base\Logger\Collector $logger,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         \Collector\Base\Model\Session $_collectorSession,
         array $data = []
     )
     {
+        $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
         $this->clientFactory = $clientFactory;
@@ -73,7 +80,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $customAttributeFactory,
             $paymentData,
             $scopeConfig,
-            $logger,
+            $paymentLogger,
             $resource,
             $resourceCollection,
             $data
@@ -170,9 +177,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             }
             $client->__setSoapHeaders($headerList);
 
-            ob_start();
-            print_r($req);
-            file_put_contents(BP . "/var/log/req.log", "auth " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
             try {
                 $resp = $client->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -183,11 +188,9 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                     $payment->setIsTransactionClosed(false);
                 }
             } catch (\Exception $e) {
-                ob_start();
-                print_r($e->getMessage());
-                echo "\n";
-                print_r($e->getTraceAsString());
-                file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
+
             }
         }
         $this->collectorSession->setVariable('is_iframe', false);
@@ -229,14 +232,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
-                ob_start();
-                var_dump($req);
-                file_put_contents(BP . "/var/log/req.log", "capture " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
-                ob_start();
-                print_r($e->getMessage());
-                echo "\n";
-                print_r($e->getTraceAsString());
-                file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+                $this->logger->info("capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
+
             }
         } else {
             foreach ($payment->getOrder()->getInvoiceCollection() as $invoice) {
@@ -285,9 +284,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    ob_start();
-                    print_r($req);
-                    file_put_contents(BP . "/var/log/req.log", "part-capture " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
                     try {
                         $resp = $client->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -298,11 +295,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                         $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
                         $order->setData('collector_invoice_id', $resp->NewInvoiceNo);
                     } catch (\Exception $e) {
-                        ob_start();
-                        print_r($e->getMessage());
-                        echo "\n";
-                        print_r($e->getTraceAsString());
-                        file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+                        $this->logger->error($e->getMessage());
+                        $this->logger->error($e->getTraceAsString());
                     }
                 }
             }
@@ -336,12 +330,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         try {
             $client->CancelInvoice($req);
         } catch (\Exception $e) {
-            ob_start();
-            print_r($e->getMessage());
-            echo "\n";
-            print_r($e->getTraceAsString());
-            file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
-
+            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getTraceAsString());
         }
     }
 
@@ -372,11 +362,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         try {
             $client->CancelInvoice($req);
         } catch (\Exception $e) {
-            ob_start();
-            print_r($e->getMessage());
-            echo "\n";
-            print_r($e->getTraceAsString());
-            file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getTraceAsString());
         }
     }
 
@@ -406,17 +393,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            ob_start();
-            print_r($req);
-            file_put_contents(BP . "/var/log/req.log", "refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
+            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
             try {
                 $client->CreditInvoice($req);
             } catch (\Exception $e) {
-                ob_start();
-                print_r($e->getMessage());
-                echo "\n";
-                print_r($e->getTraceAsString());
-                file_put_contents(BP . "/var/log/collector.log", "exception: " . ob_get_clean() . "\n", FILE_APPEND);
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
             }
         } else {
             //	while($payment->getCreditmemo() != null){}

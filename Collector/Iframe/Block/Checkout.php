@@ -22,6 +22,14 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     ];
 
     /**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $logger;
+    /**
+     * @var \Collector\Base\Model\Session
+     */
+    protected $collectorSession;
+    /**
      * Checkout constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
@@ -29,6 +37,8 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Magento\Checkout\Model\Cart $_cart
+     * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Collector\Base\Logger\Collector $logger
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -39,10 +49,12 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         \Collector\Iframe\Helper\Data $_helper,
         \Magento\Checkout\Model\Cart $_cart,
         \Collector\Base\Model\Session $_collectorSession,
+        \Collector\Base\Logger\Collector $logger,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
         $this->cart = $_cart;

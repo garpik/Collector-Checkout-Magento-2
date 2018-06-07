@@ -32,6 +32,11 @@ class Cart extends \Magento\Checkout\Block\Onepage
      */
     protected $collectorSession;
     /**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $logger;
+
+    /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
@@ -41,6 +46,8 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Framework\Pricing\Helper\Data $pricingData
      * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Collector\Base\Logger\Collector $logger
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -53,10 +60,12 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Magento\Framework\Pricing\Helper\Data $pricingData,
         \Collector\Iframe\Helper\Data $_helper,
         \Collector\Base\Model\Session $_collectorSession,
+        \Collector\Base\Logger\Collector $logger,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->storeManager = $context->getStoreManager();
         $this->pricingData = $pricingData;

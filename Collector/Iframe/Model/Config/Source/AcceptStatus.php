@@ -13,10 +13,21 @@ class AcceptStatus implements \Magento\Framework\Option\ArrayInterface
         StateConst::STATE_PROCESSING,
         StateConst::STATE_PENDING_PAYMENT,
     ];
+    /**
+     * @var \Magento\Sales\Model\ResourceModel\Order\Status\Collection
+     */
     protected $statusCollection;
 
+    /**
+     * @var
+     */
     protected $statusToStateCollection;
 
+    /**
+     * AcceptStatus constructor.
+     * @param \Collector\Iframe\Model\ResourceModel\State\CollectionFactory $statusToStateCollection
+     * @param \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection
+     */
     public function __construct(
         \Collector\Iframe\Model\ResourceModel\State\CollectionFactory $statusToStateCollection,
         \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection

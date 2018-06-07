@@ -16,6 +16,11 @@ class HoldStatus implements \Magento\Framework\Option\ArrayInterface
 
     protected $statusToStateCollection;
 
+    /**
+     * HoldStatus constructor.
+     * @param \Collector\Iframe\Model\ResourceModel\State\CollectionFactory $statusToStateCollection
+     * @param \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection
+     */
     public function __construct(
         \Collector\Iframe\Model\ResourceModel\State\CollectionFactory $statusToStateCollection,
         \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection
@@ -27,8 +32,6 @@ class HoldStatus implements \Magento\Framework\Option\ArrayInterface
     }
 
     /**
-     * Return array of options as value-label pairs, eg. value => label
-     *
      * @return array
      */
     public function toOptionArray()
@@ -42,6 +45,9 @@ class HoldStatus implements \Magento\Framework\Option\ArrayInterface
         return $this->statusArray;
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return $this->toOptionArray();

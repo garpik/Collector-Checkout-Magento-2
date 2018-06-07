@@ -48,7 +48,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Collector\Base\Model\Session
      */
     protected $collectorSession;
+    /**
+     * @var \Magento\Checkout\Model\Cart
+     */
     protected $cart;
+    /**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $logger;
     /**
      * @var \Magento\Tax\Model\Calculation
      */
@@ -68,6 +75,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\SalesRule\Model\Coupon $_coupon
      * @param \Magento\Catalog\Helper\Product\Configuration $_productConfigHelper
      * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Collector\Base\Logger\Collector $logger
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      */
     public function __construct(
@@ -83,9 +91,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\SalesRule\Model\Coupon $_coupon,
         \Magento\Catalog\Helper\Product\Configuration $_productConfigHelper,
         \Collector\Base\Model\Session $_collectorSession,
+        \Collector\Base\Logger\Collector $logger,
         \Magento\Framework\Message\ManagerInterface $_messageManager
     )
     {
+        $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->productRepository = $productRepository;
         $this->imageHelper = $imageHelper;
@@ -427,10 +437,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
                     if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
-                        $this->collectorSession->setVariable('curr_shipping_description',$rate->getMethodTitle());
-                        $this->collectorSession->setVariable('curr_shipping_tax_rate',$shippingTax);
-                        $this->collectorSession->setVariable('curr_shipping_price',$rate->getPrice());
-                        $this->collectorSession->setVariable('curr_shipping_tax',0);
+                        $this->collectorSession->setVariable('curr_shipping_description', $rate->getMethodTitle());
+                        $this->collectorSession->setVariable('curr_shipping_tax_rate', $shippingTax);
+                        $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
+                        $this->collectorSession->setVariable('curr_shipping_tax', 0);
 
                         $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
                         $this->shippingRate->setCode($rate->getCode())->getPrice();
@@ -443,7 +453,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $this->cart->getQuote()->save();
                         $this->cart->getQuote()->getTotals();
                         $this->setShippingMethod($rate->getCode());
-                        $this->collectorSession->setVariable('curr_shipping_code',$rate->getCode());
+                        $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
                         $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
                         $this->cart->getQuote()->save();
                         break;
@@ -454,10 +464,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
                     if ($first) {
-                        $this->collectorSession->setVariable('curr_shipping_description',$rate->getMethodTitle());
-                        $this->collectorSession->setVariable('curr_shipping_tax_rate',$shippingTax);
-                        $this->collectorSession->setVariable('curr_shipping_price',$rate->getPrice());
-                        $this->collectorSession->setVariable('curr_shipping_tax',0);
+                        $this->collectorSession->setVariable('curr_shipping_description', $rate->getMethodTitle());
+                        $this->collectorSession->setVariable('curr_shipping_tax_rate', $shippingTax);
+                        $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
+                        $this->collectorSession->setVariable('curr_shipping_tax', 0);
 
                         $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
                         $this->shippingRate->setCode($rate->getCode())->getPrice();
@@ -471,7 +481,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $this->cart->getQuote()->getTotals();
                         $first = false;
                         $this->setShippingMethod($rate->getCode());
-                        $this->collectorSession->setVariable('curr_shipping_code',$rate->getCode());
+                        $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
 
                         $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
                         $this->cart->getQuote()->save();
@@ -485,7 +495,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         if (empty($this->collectorSession->getVariable('curr_shipping_price'))) {
-            $this->collectorSession->getVariable('curr_shipping_price',0);
+            $this->collectorSession->getVariable('curr_shipping_price', 0);
         }
         if ($inclFormatting) {
             return $this->pricingHelper->currency($this->collectorSession->getVariable('curr_shipping_price'), true, false);
@@ -599,11 +609,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if (array_key_exists('value_incl_tax', $cartTotals['subtotal']->getData())) {
             $left = $this->cart->getQuote()->getGrandTotal();
             $right = ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']);
-            ob_start();
-            var_dump($left);
-            var_dump($right);
-            var_dump(abs(($left - $right) / $right) < 0.00001);
-            file_put_contents("var/log/colfdsa.log", ob_get_clean(), FILE_APPEND);
+
+            $this->logger->info(var_export($left, true));
+            $this->logger->info(var_export($right, true));
+            $this->logger->info(var_export(abs(($left - $right) / $right) < 0.00001, true));
+
+
             if ($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'])) {
                 if ($this->cart->getQuote()->getCouponCode() != null) {
                     $coupon = $this->cart->getQuote()->getCouponCode();
@@ -620,11 +631,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 array_push($items['items'], $code);
             }
         } else {
-            ob_start();
-            var_dump($this->cart->getQuote()->getGrandTotal());
-            var_dump(($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
-            var_dump($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
-            file_put_contents("var/log/colfdsa.log", ob_get_clean(), FILE_APPEND);
+            $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
+            $this->logger->info('Subtotal+unitPrice:' . ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
+            $this->logger->info(var_export($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']), true));
+
             if ($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'])) {
                 if ($this->cart->getQuote()->getCouponCode() != null) {
                     $coupon = $this->cart->getQuote()->getCouponCode();
@@ -751,11 +761,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 return;
             } else {
                 $array = $this->getFees();
-                $this->collectorSession->setVariable('col_curr_fee',$array);
+                $this->collectorSession->setVariable('col_curr_fee', $array);
             }
         } else {
             $array = $this->getFees();
-            $this->collectorSession->setVariable('col_curr_fee',$array);
+            $this->collectorSession->setVariable('col_curr_fee', $array);
         }
         $storeId = 0;
         if (!empty($this->collectorSession->getVariable('btype'))) {
@@ -767,15 +777,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             switch ($this->getCustomerType()) {
                 case 1:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
                 case 2:
-                    $this->collectorSession->setVariable('btype','b2b');
+                    $this->collectorSession->setVariable('btype', 'b2b');
                     $storeId = $this->getB2BStoreID();
                     break;
                 case 3:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
             }
@@ -821,15 +831,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             switch ($this->getCustomerType()) {
                 case 1:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
                 case 2:
-                    $this->collectorSession->setVariable('btype','b2b');
+                    $this->collectorSession->setVariable('btype', 'b2b');
                     $storeId = $this->getB2BStoreID();
                     break;
                 case 3:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
             }
@@ -867,7 +877,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $array['items'] = $this->getProducts()['items'];
         $storeId = 0;
         if (!empty($this->collectorSession->getVariable('btype'))) {
-            if ($this->collectorSession->getVariable('btype')== 'b2b') {
+            if ($this->collectorSession->getVariable('btype') == 'b2b') {
                 $storeId = $this->getB2BStoreID();
             } else {
                 $storeId = $this->getB2CStoreID();
@@ -875,15 +885,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             switch ($this->getCustomerType()) {
                 case 1:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
                 case 2:
-                    $this->collectorSession->setVariable('btype','b2b');
+                    $this->collectorSession->setVariable('btype', 'b2b');
                     $storeId = $this->getB2BStoreID();
                     break;
                 case 3:
-                    $this->collectorSession->setVariable('btype','b2c');
+                    $this->collectorSession->setVariable('btype', 'b2c');
                     $storeId = $this->getB2CStoreID();
                     break;
             }

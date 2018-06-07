@@ -62,6 +62,10 @@ class Cajax extends \Magento\Framework\App\Action\Action
     protected $collectionSession;
 
     /**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $logger;
+    /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -84,10 +88,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
         \Magento\Checkout\Model\Cart $cart,
         \Magento\Catalog\Model\Product $product,
         \Collector\Base\Model\Session $_collectorSession,
+        \Collector\Base\Logger\Collector $logger,
         \Magento\Framework\Json\Helper\Data $jsonHelper
     )
     {
         parent::__construct($context);
+        $this->logger = $logger;
         $this->collectionSession = $_collectorSession;
         $this->product = $product;
         $this->cart = $cart;
