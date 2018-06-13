@@ -108,9 +108,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         if (empty($this->cart->getQuote()->getReservedOrderId())) {
             $this->cart->getQuote()->reserveOrderId()->save();
         }
-        $username = $this->helper->getUsername();
-        $path = '/checkout';
-        $sharedSecret = $this->helper->getPassword();
         $req = array();
 
         if ($this->collectorSession->getVariable('btype') == 'b2b'
@@ -131,25 +128,18 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         $req['notificationUri'] = $this->helper->getNotificationUrl();
         $req["cart"] = $this->helper->getProducts();
         $req["fees"] = $this->helper->getFees();
-        $json = json_encode($req);
-        $hash = $username . ":" . hash("sha256", $json . $path . $sharedSecret);
-        $hashstr = 'SharedKey ' . base64_encode($hash);
-        $ch = curl_init($this->helper->getWSDL() . "checkout");
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        $output = curl_exec($ch);
-        $result = json_decode($output, true);
+
+
+        $result = $this->helper->getTokenRequest($req);
+
+
+
         $this->collectorSession->setVariable('collector_public_token', $result["data"]["publicToken"]);
         $this->collectorSession->setVariable('collector_private_id', $result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_btype', $this->collectorSession->getVariable('btype'));
         $this->cart->getQuote()->save();
-        curl_close($ch);
+
         return $publicToken = $result["data"]["publicToken"];
     }
 }

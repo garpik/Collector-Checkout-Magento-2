@@ -491,7 +491,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
                 $options .= '</dl>';
             }
-
             array_push($items, array(
                 'name' => $cartItem->getName(),
                 'options' => $options,
@@ -607,9 +606,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $cartTotals = $this->cart->getQuote()->getTotals();
         $currentStore = $this->storeManager->getStore();
         $currentStoreId = $currentStore->getId();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $shippingTaxClass = $this->getShippingTaxClass();
-        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
+        //$request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
+        //$shippingTaxClass = $this->getShippingTaxClass();
+        //$shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         if (empty($cartTotals['shipping']->getData()['title']->getArguments())) {
             if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
                 if ($this->collectorSession->getVariable('curr_shipping_code') == 0) {
@@ -687,22 +686,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getWSDL()
     {
         if ($this->getTestMode()) {
-            return "https://checkout-api-uat.collector.se/";
+            return "https://checkout-api-uat.collector.se";
         } else {
-            return "https://checkout-api.collector.se/";
+            return "https://checkout-api.collector.se";
         }
     }
 
     public function updateFees()
     {
-        $quote = $this->cart->getQuote();
-        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
-            $pid = $this->collectorSession->getVariable('collector_private_id');
-        } else {
-            $pid = $quote->getData('collector_private_id');
-        }
-        $pusername = $this->getUsername();
-        $psharedSecret = $this->getPassword();
+
         if (!empty($this->collectorSession->getVariable('col_curr_fee'))) {
             if ($this->collectorSession->getVariable('col_curr_fee') == $this->getFees()) {
                 return;
@@ -714,97 +706,34 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $array = $this->getFees();
             $this->collectorSession->setVariable('col_curr_fee', $array);
         }
-        $storeId = 0;
-        if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
-            $this->collectorSession->setVariable('btype', 'b2b');
-            $storeId = $this->getB2BStoreID();
-        } else {
-            $this->collectorSession->setVariable('btype', 'b2c');
-            $storeId = $this->getB2CStoreID();
-        }
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/fees';
-        $json = json_encode($array);
-        $hash = $pusername . ":" . hash("sha256", $json . $path . $psharedSecret);
-        $hashstr = 'SharedKey ' . base64_encode($hash);
-        $ch = curl_init($this->getWSDL() . "merchants/" . $storeId . "/checkouts/" . $pid . "/fees");
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_exec($ch);
-        curl_close($ch);
+        $this->callCheckoutsFees($array);
+
     }
 
     public function updateCart()
     {
-        $quote = $this->cart->getQuote();
-        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
-            $pid = $this->collectorSession->getVariable('collector_private_id');
-        } else {
-            $pid = $quote->getData('collector_private_id');
-        }
-        $pusername = $this->getUsername();
-        $psharedSecret = $this->getPassword();
-        $array = array();
-        $array['countryCode'] = $this->getCountryCode();
-        $array['items'] = $this->getProducts()['items'];
-        $storeId = 0;
+        $this->callCheckoutsCart([
+            'countryCode' => $this->getCountryCode(),
+            'items' => $this->getProducts()['items']
+        ]);
+    }
+
+    public function getB2BrB2CStore()
+    {
         if ($this->collectorSession->getVariable('btype') == 'b2b'
             || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $this->collectorSession->setVariable('btype', 'b2b');
-            $storeId = $this->getB2BStoreID();
-        } else {
-            $this->collectorSession->setVariable('btype', 'b2c');
-            $storeId = $this->getB2CStoreID();
+            return $this->getB2BStoreID();
         }
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/cart';
-        $json = json_encode($array);
-        $hash = $pusername . ":" . hash("sha256", $json . $path . $psharedSecret);
-        $hashstr = 'SharedKey ' . base64_encode($hash);
-        $ch = curl_init($this->getWSDL() . "merchants/" . $storeId . "/checkouts/" . $pid . "/cart");
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_exec($ch);
-        curl_close($ch);
+        $this->collectorSession->setVariable('btype', 'b2c');
+        return $this->getB2CStoreID();
+
     }
 
     public function getOrderResponse()
     {
-        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
-            $pid = $this->collectorSession->getVariable('collector_private_id');
-        } else {
-            $pid = $this->cart->getQuote()->getData('collector_private_id');
-        }
-        $storeId = 0;
-        if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
-            $this->collectorSession->setVariable('btype', 'b2b');
-            $storeId = $this->getB2BStoreID();
-        } else {
-            $this->collectorSession->setVariable('btype', 'b2c');
-            $storeId = $this->getB2CStoreID();
-        }
-        $path = "merchants/" . $storeId . "/checkouts/" . $pid;
-        $hash = $this->getUsername() . ":" . hash("sha256", "/{$path}" . $this->getPassword());
 
-        $ch = curl_init($this->getWSDL() . $path);
-        curl_setopt($ch, CURLOPT_HTTPGET, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:SharedKey ' . base64_encode($hash)));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-
-        $output = curl_exec($ch);
-        $data = json_decode($output, true);
-
+        $data = $this->callCheckouts();
         if ($data["data"]) {
             $result['code'] = 1;
             $result['id'] = $data["id"];
@@ -815,5 +744,101 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $result['error'] = $data["error"];
         }
         return $result;
+    }
+
+    private function getPID()
+    {
+        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
+            return $this->collectorSession->getVariable('collector_private_id');
+        }
+        return $this->cart->getQuote()->getData('collector_private_id');
+    }
+
+
+    public function getHash($path, $json = '')
+    {
+        return base64_encode($this->getUsername() . ":" . hash("sha256", $json . $path . $this->getPassword()));
+    }
+
+    public function callCheckouts()
+    {
+        $pid = $this->getPID();
+        $storeId = $this->getB2BrB2CStore();
+        $path = "/merchants/" . $storeId . "/checkouts/" . $pid;
+        $ch = curl_init($this->getWSDL() . $path);
+        $this->setCurlGET($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:SharedKey ' . $this->getHash($path)));
+        $output = curl_exec($ch);
+        return json_decode($output, true);
+    }
+
+    public function callCheckoutsCart($params)
+    {
+        $pid = $this->getPID();
+        $storeId = $this->getB2BrB2CStore();
+        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/cart';
+        $json = json_encode($params);
+        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
+        $ch = curl_init($this->getWSDL() . $path);
+        $this->setCurlPUT($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
+    public function callCheckoutsFees($params)
+    {
+        $pid = $this->getPID();
+        $storeId = $this->getB2BrB2CStore();
+        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/fees';
+        $json = json_encode($params);
+        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
+        $ch = curl_init($this->getWSDL() . $path);
+        $this->setCurlPUT($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
+    public function getTokenRequest($params)
+    {
+        $path = '/checkout';
+        $json = json_encode($params);
+        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
+        $ch = curl_init($this->getWSDL() . $path);
+        $this->setCurlPOST($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+        $output = curl_exec($ch);
+        curl_close($ch);
+        return json_decode($output, true);
+    }
+
+    private function setCurlGET(&$ch)
+    {
+        curl_setopt($ch, CURLOPT_HTTPGET, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    }
+
+    private function setCurlPUT(&$ch)
+    {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    }
+
+    private function setCurlPOST(&$ch)
+    {
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
     }
 }
