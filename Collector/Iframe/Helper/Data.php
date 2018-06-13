@@ -104,11 +104,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->taxCalculation = $taxCalculation;
         $this->shippingRate = $_shippingRate;
         $this->checkoutSession = $_checkoutSession;
-        parent::__construct($context);
         $this->productConfigHelper = $_productConfigHelper;
         $this->messageManager = $_messageManager;
         $this->storeManager = $_storeManager;
         $this->coupon = $_coupon;
+        return parent::__construct($context);
     }
 
     public function getEnable()
@@ -468,12 +468,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $items = array();
 
-        $imgs = array();
-        foreach ($cartItems as $item) {
-            $product = $item->getProduct();
-            array_push($imgs, $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl());
-        }
-        $i = 0;
         foreach ($cartItems as $cartItem) {
             $product = $cartItem->getProduct();
             $taxClassId = $product->getTaxClassId();
@@ -494,8 +488,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $options .= $option['value'][0]['title'];
                         $options .= "</dd>";
                     }
-                } else {
-
                 }
                 $options .= '</dl>';
             }
@@ -507,9 +499,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'unitPrice' => $this->pricingHelper->currency(($cartItem->getPrice() * (1 + ($percent / 100))), true, false),
                 'qty' => $cartItem->getQty(),
                 'sum' => $this->pricingHelper->currency(($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100))), true, false),
-                'img' => $imgs[$i]
+                'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
             ));
-            $i++;
         }
         return $items;
     }
@@ -725,7 +716,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
         $storeId = 0;
         if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $this->collectorSession->setVariable('btype', 'b2b');
             $storeId = $this->getB2BStoreID();
         } else {
@@ -744,9 +735,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        $output = curl_exec($ch);
-
-        $data = json_decode($output, true);
+        curl_exec($ch);
         curl_close($ch);
     }
 
@@ -765,7 +754,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $array['items'] = $this->getProducts()['items'];
         $storeId = 0;
         if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $this->collectorSession->setVariable('btype', 'b2b');
             $storeId = $this->getB2BStoreID();
         } else {
@@ -784,43 +773,32 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-        $output = curl_exec($ch);
-        $data = json_decode($output, true);
+        curl_exec($ch);
         curl_close($ch);
     }
 
     public function getOrderResponse()
     {
-        $quote = $this->cart->getQuote();
-
         if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
             $pid = $this->collectorSession->getVariable('collector_private_id');
         } else {
-            $pid = $quote->getData('collector_private_id');
+            $pid = $this->cart->getQuote()->getData('collector_private_id');
         }
-        $pusername = $this->getUsername();
-        $psharedSecret = $this->getPassword();
-        $array = array();
-        $array['countryCode'] = $this->getCountryCode();
-        $array['items'] = $this->getProducts()['items'];
         $storeId = 0;
-
-
         if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == 2) {
+            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $this->collectorSession->setVariable('btype', 'b2b');
             $storeId = $this->getB2BStoreID();
         } else {
             $this->collectorSession->setVariable('btype', 'b2c');
             $storeId = $this->getB2CStoreID();
         }
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid;
-        $hash = $pusername . ":" . hash("sha256", $path . $psharedSecret);
-        $hashstr = 'SharedKey ' . base64_encode($hash);
+        $path = "merchants/" . $storeId . "/checkouts/" . $pid;
+        $hash = $this->getUsername() . ":" . hash("sha256", "/{$path}" . $this->getPassword());
 
-        $ch = curl_init($this->getWSDL() . "merchants/" . $storeId . "/checkouts/" . $pid);
+        $ch = curl_init($this->getWSDL() . $path);
         curl_setopt($ch, CURLOPT_HTTPGET, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:' . $hashstr));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:SharedKey ' . base64_encode($hash)));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 

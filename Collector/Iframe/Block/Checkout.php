@@ -89,10 +89,9 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     public function getDataVariant()
     {
         $dataVariant = ' async';
-
         if ($this->collectorSession->getVariable('btype') == 'b2b'
             || empty($this->collectorSession->getVariable('btype'))
-            && $this->helper->getCustomerType() == 2) {
+            && $this->helper->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $dataVariant = ' data-variant="b2b" async';
         }
         $this->collectorSession->setVariable('collector_data_variant', $dataVariant);
@@ -116,7 +115,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage
 
         if ($this->collectorSession->getVariable('btype') == 'b2b'
             || empty($this->collectorSession->getVariable('btype'))
-            && $this->helper->getCustomerType() == 2) {
+            && $this->helper->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
 
             $this->collectorSession->setVariable('btype', 'b2b');
             $req['storeId'] = $this->helper->getB2BStoreID();

@@ -5,9 +5,9 @@ define([
 		call:function(ajaxUrl){
 			$(document).on('click', '.col-inc', function() {
 				var param = {
-					field1 : "ajax", 
-					field2 : "inc",
-					field3 : this.id
+					is_ajax: true,
+                    id: this.id,
+                    type: "inc"
 				};
 				var qty = 'qty_' + (this.id).split("_")[1];
 				var sum = 'sum_' + (this.id).split("_")[1];
@@ -41,9 +41,9 @@ define([
 			});
 			$(document).on('click', '.col-sub', function() {
 				var param = {
-					field1 : "ajax", 
-					field2 : "sub",
-					field3 : this.id
+                    is_ajax: true,
+                    id: this.id,
+                    type: "sub"
 				};
 				var qty = 'qty_' + (this.id).split("_")[1];
 				var sum = 'sum_' + (this.id).split("_")[1];
@@ -77,9 +77,9 @@ define([
 			});
 			$(document).on('click', '.newsletter', function(){
 				var param = {
-					field1 : "ajax",
-					field2 : "newsletter",
-					field3 : document.getElementById('newsletter-checkbox').checked
+                    is_ajax: true,
+                    value: document.getElementById('newsletter-checkbox').checked,
+                    type: "newsletter"
 				};
 				$.ajax({
 					url: ajaxUrl,
@@ -101,9 +101,9 @@ define([
 			});
 			$(document).on('click', '.col-del', function() {
 				var param = {
-					field1 : "ajax",
-					field2 : "del",
-					field3 : this.id
+                    is_ajax: true,
+                    id: this.id,
+                    type: "del"
 				};
 				$.ajax({
 					url: ajaxUrl,
@@ -144,9 +144,9 @@ define([
 			});
 			$(document).on('click', '.col-radio', function() {
 				var param = {
-					field1 : "ajax", 
-					field2 : "radio",
-					field3 : this.id
+                    is_ajax: true,
+                    id: this.id,
+                    type: "radio"
 				};
 				$.ajax({
 					url: ajaxUrl,
@@ -175,9 +175,9 @@ define([
 			});
 			$(document).on('click', '.col-codeButton', function(){
 				var param = {
-					field1 : "ajax",
-					field2 : "submit",
-					field3 : document.getElementById("col-code").value
+                    is_ajax: true,
+                    value: document.getElementById("col-code").value,
+                    type: "submit"
 				};
 				$.ajax({
 					url: ajaxUrl,
@@ -214,9 +214,9 @@ define([
 					type:'POST',
 					dataType: 'json',
 					data: {
-						field1 : "ajax", 
-						field2 : "btype",
-						field3 : ctype
+                        is_ajax: true,
+                        value: ctype,
+                        type: "btype"
 					},
 					beforeSend: function() {
 						// Suspend the Checkout, showing a spinner...

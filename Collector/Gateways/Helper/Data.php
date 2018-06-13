@@ -29,12 +29,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function canApply($quote)
+    public function canApply($quote = null)
     {
         return true;
     }
 
-    public function getFee($quote)
+    public function getFee($quote = null)
     {
         return 1;
     }
@@ -86,13 +86,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getB2BStoreID()
     {
         return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getAgreementCode()
-    {
-        return $this->getTestMode() ?
-            "TEST" :
-            "";
     }
 
     public function getRemoteIp($payment)

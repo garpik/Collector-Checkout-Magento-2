@@ -65,6 +65,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
+
     /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
@@ -118,176 +119,156 @@ class Cajax extends \Magento\Framework\App\Action\Action
         $changeLanguage = false;
         if ($this->getRequest()->isAjax()) {
             $changed = false;
-            if ($_POST['field2'] == 'sub') {
-                $allItems = $this->cart->getQuote()->getAllVisibleItems();
-                $id = explode('_', $_POST['field3'])[1];
-                foreach ($allItems as $item) {
-                    if ($item->getId() == $id) {
-                        $qty = $item->getQty();
-                        if ($qty > 1) {
-                            $item->setQty($qty - 1);
-                        } else {
-                            if (count($allItems) == 1) {
-                                $this->helper->clearSession();
-                                return $result->setData("redirect");
+            switch ($this->getRequest()->getParam('type')) {
+                case "sub":
+                    $allItems = $this->cart->getQuote()->getAllVisibleItems();
+                    $id = explode('_', $this->getRequest()->getParam('id'))[1];
+                    foreach ($allItems as $item) {
+                        if ($item->getId() == $id) {
+                            $qty = $item->getQty();
+                            if ($qty > 1) {
+                                $item->setQty($qty - 1);
                             } else {
                                 $this->cart->getQuote()->removeItem($item->getId());
+                                if (count($allItems) == 1) {
+                                    return $result->setData("redirect");
+                                }
                             }
+                            $updateCart = true;
+                            $updateFees = true;
+                            $changed = true;
                         }
-                        $this->cart->save();
-                        $updateCart = true;
-                        $updateFees = true;
-                        $changed = true;
                     }
-                }
-            } else if ($_POST['field2'] == 'inc') {
-                $allItems = $this->cart->getQuote()->getAllVisibleItems();
-                $id = explode('_', $_POST['field3'])[1];
-                foreach ($allItems as $item) {
-                    if ($item->getId() == $id) {
-                        if ($item->getProduct()->getTypeId() == 'configurable') {
-                            $params = array(
-                                'form_key' => $this->formKey->getFormKey(),
-                                'product' => $item->getProduct()->getId(),
-                                'super_attribute' => $item->getBuyRequest()->getData()['super_attribute'],
-                                'qty' => 1,
-                                'price' => $item->getProduct()->getPrice()
-                            );
-                        } else {
-                            $params = array(
-                                'form_key' => $this->formKey->getFormKey(),
-                                'product' => $item->getProduct()->getId(),
-                                'qty' => 1,
-                                'price' => $item->getProduct()->getPrice()
-                            );
+                    $this->cart->save();
+                    break;
+                case "inc":
+                    $allItems = $this->cart->getQuote()->getAllVisibleItems();
+                    $id = explode('_', $this->getRequest()->getParam('id'))[1];
+                    foreach ($allItems as $item) {
+                        if ($item->getId() == $id) {
+                            $item->setQty($item->getQty() + 1);
+                            $changed = true;
+                            $updateCart = true;
+                            $updateFees = true;
                         }
-                        $this->cart->addProduct($item->getProduct(), $params);
-                        $this->cart->save();
-                        $changed = true;
-                        $updateCart = true;
-                        $updateFees = true;
                     }
-                }
-            } else if ($_POST['field2'] == 'radio') {
-                $changed = true;
-                $updateFees = true;
-            } else if ($_POST['field2'] == 'submit') {
-                if (!empty($this->collectionSession->getVariable('collector_applied_discount_code'))) {
-                    $this->helper->unsetDiscountCode();
-                } else {
-                    $this->helper->setDiscountCode($_POST['field3']);
-                }
-                $changed = true;
-                $updateCart = true;
-                $updateFees = true;
-
-            } else if ($_POST['field2'] == 'newsletter') {
-                if ($_POST['field3'] == "true") {
-                    $this->collectionSession->setVariable('newsletter_signup',true);
-                } else {
-                    $this->collectionSession->setVariable('newsletter_signup',false);
-                }
-            } else if ($_POST['field2'] == 'del') {
-                $allItems = $this->cart->getQuote()->getAllVisibleItems();
-                $id = explode('_', $_POST['field3'])[1];
-                foreach ($allItems as $item) {
-                    if ($item->getId() == $id) {
-                        if (count($allItems) == 1) {
-                            $this->cart->removeItem($item->getId())->save();
-                            return $result->setData("redirect");
-                        } else {
-                            $this->cart->getQuote()->removeItem($item->getId());
-                        }
-                        $this->cart->save();
-                        $changed = true;
-                        $updateCart = true;
-                        $updateFees = true;
-                    }
-                }
-            } else if ($_POST['field2'] == 'update') {
-                $changed = true;
-            } else if ($_POST['field2'] == 'btype') {
-                $this->collectionSession->setVariable('btype',$_POST['field3']);
-                $this->collectionSession->setVariable('collector_public_token','');
-                $changeLanguage = true;
-                $changed = true;
-                $updateCart = true;
-                $updateFees = true;
-            } else if ($_POST['field2'] == 'updatecustomer') {
-                try {
-                    $resp = $this->getCheckoutData();
-                    if (isset($resp['data']['businessCustomer']['invoiceAddress'])) {
-                        $scompany = $resp['data']['businessCustomer']['deliveryAddress']['companyName'];
-                        $sfirstname = $resp['data']['businessCustomer']['firstName'];
-                        $slastname = $resp['data']['businessCustomer']['lastName'];
-                        if (isset($resp['data']['businessCustomer']['deliveryAddress']['address'])) {
-                            $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['address'];
-                        } else {
-                            $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
-                        }
-                        $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['address'];
-                        $scity = $resp['data']['businessCustomer']['deliveryAddress']['city'];
-                        $spostcode = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
-                        $stelephone = $resp['data']['businessCustomer']['mobilePhoneNumber'];
-
-                        $bcompany = $resp['data']['businessCustomer']['invoiceAddress']['companyName'];
-                        $bfirstname = $resp['data']['businessCustomer']['firstName'];
-                        $blastname = $resp['data']['businessCustomer']['lastName'];
-                        if (isset($resp['data']['businessCustomer']['invoiceAddress']['address'])) {
-                            $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['address'];
-                        } else {
-                            $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
-                        }
-                        $bcity = $resp['data']['businessCustomer']['invoiceAddress']['city'];
-                        $bpostcode = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
-                        $btelephone = $resp['data']['businessCustomer']['mobilePhoneNumber'];
+                    $this->cart->save();
+                    break;
+                case "radio":
+                    $changed = true;
+                    $updateFees = true;
+                    break;
+                case "submit":
+                    if (!empty($this->collectionSession->getVariable('collector_applied_discount_code'))) {
+                        $this->helper->unsetDiscountCode();
                     } else {
-                        $scompany = '';
-                        $sfirstname = $resp['data']['customer']['deliveryAddress']['firstName'];
-                        $slastname = $resp['data']['customer']['deliveryAddress']['lastName'];
-                        $sstreet = $resp['data']['customer']['deliveryAddress']['address'];
-                        $scity = $resp['data']['customer']['deliveryAddress']['city'];
-                        $spostcode = $resp['data']['customer']['deliveryAddress']['postalCode'];
-                        $stelephone = $resp['data']['customer']['mobilePhoneNumber'];
-
-                        $bcompany = '';
-                        $bfirstname = $resp['data']['customer']['billingAddress']['firstName'];
-                        $blastname = $resp['data']['customer']['billingAddress']['lastName'];
-                        $bstreet = $resp['data']['customer']['billingAddress']['address'];
-                        $bcity = $resp['data']['customer']['billingAddress']['city'];
-                        $bpostcode = $resp['data']['customer']['billingAddress']['postalCode'];
-                        $btelephone = $resp['data']['customer']['mobilePhoneNumber'];
+                        $this->helper->setDiscountCode($this->getRequest()->getParam('value'));
                     }
-                    $this->cart->getQuote()->getBillingAddress()->addData(array(
-                        'firstname' => $bfirstname,
-                        'lastname' => $blastname,
-                        'street' => $bstreet,
-                        'city' => $bcity,
-                        'postcode' => $bpostcode,
-                        'telephone' => $btelephone
-                    ));
-                    $this->cart->getQuote()->getShippingAddress()->addData(array(
-                        'firstname' => $sfirstname,
-                        'lastname' => $slastname,
-                        'street' => $sstreet,
-                        'city' => $scity,
-                        'postcode' => $spostcode
-                    ));
-                    $this->cart->getQuote()->getShippingAddress()->save();
-                    $this->cart->getQuote()->collectTotals();
-                    $this->cart->getQuote()->save();
-                    $this->helper->getShippingMethods();
+                    $changed = true;
                     $updateCart = true;
                     $updateFees = true;
-                } catch (\Exception $e) {
-                }
+                    break;
+                case "newsletter":
+                    $this->collectionSession->setVariable('newsletter_signup', $this->getRequest()->getParam('id') == "true");
+                    break;
+                case "del":
+                    $allItems = $this->cart->getQuote()->getAllVisibleItems();
+                    $id = explode('_', $this->getRequest()->getParam('id'))[1];
+                    foreach ($allItems as $item) {
+                        if ($item->getId() == $id) {
+                            $this->cart->removeItem($item->getId());
+                            if (count($allItems) == 1) {
+                                return $result->setData("redirect");
+                            }
+                            $changed = true;
+                            $updateCart = true;
+                            $updateFees = true;
+                        }
+                    }
+                    $this->cart->save();
+                    break;
+                case "update":
+                    $changed = true;
+                    break;
+                case "btype":
+                    $this->collectionSession->setVariable('btype', $this->getRequest()->getParam('value'));
+                    $this->collectionSession->setVariable('collector_public_token', '');
+                    $changeLanguage = true;
+                    $changed = true;
+                    $updateCart = true;
+                    $updateFees = true;
+                    break;
+                case "updatecustomer":
+                    try {
+                        $resp = $this->getCheckoutData();
+                        if (isset($resp['data']['businessCustomer']['invoiceAddress'])) {
+                            $sfirstname = $resp['data']['businessCustomer']['firstName'];
+                            $slastname = $resp['data']['businessCustomer']['lastName'];
+                            if (isset($resp['data']['businessCustomer']['deliveryAddress']['address'])) {
+                                $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['address'];
+                            } else {
+                                $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
+                            }
+                            $scity = $resp['data']['businessCustomer']['deliveryAddress']['city'];
+                            $spostcode = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
+
+                            $bfirstname = $resp['data']['businessCustomer']['firstName'];
+                            $blastname = $resp['data']['businessCustomer']['lastName'];
+                            if (isset($resp['data']['businessCustomer']['invoiceAddress']['address'])) {
+                                $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['address'];
+                            } else {
+                                $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
+                            }
+                            $bcity = $resp['data']['businessCustomer']['invoiceAddress']['city'];
+                            $bpostcode = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
+                            $btelephone = $resp['data']['businessCustomer']['mobilePhoneNumber'];
+                        } else {
+                            $sfirstname = $resp['data']['customer']['deliveryAddress']['firstName'];
+                            $slastname = $resp['data']['customer']['deliveryAddress']['lastName'];
+                            $sstreet = $resp['data']['customer']['deliveryAddress']['address'];
+                            $scity = $resp['data']['customer']['deliveryAddress']['city'];
+                            $spostcode = $resp['data']['customer']['deliveryAddress']['postalCode'];
+
+                            $bfirstname = $resp['data']['customer']['billingAddress']['firstName'];
+                            $blastname = $resp['data']['customer']['billingAddress']['lastName'];
+                            $bstreet = $resp['data']['customer']['billingAddress']['address'];
+                            $bcity = $resp['data']['customer']['billingAddress']['city'];
+                            $bpostcode = $resp['data']['customer']['billingAddress']['postalCode'];
+                            $btelephone = $resp['data']['customer']['mobilePhoneNumber'];
+                        }
+                        $this->cart->getQuote()->getBillingAddress()->addData(array(
+                            'firstname' => $bfirstname,
+                            'lastname' => $blastname,
+                            'street' => $bstreet,
+                            'city' => $bcity,
+                            'postcode' => $bpostcode,
+                            'telephone' => $btelephone
+                        ));
+                        $this->cart->getQuote()->getShippingAddress()->addData(array(
+                            'firstname' => $sfirstname,
+                            'lastname' => $slastname,
+                            'street' => $sstreet,
+                            'city' => $scity,
+                            'postcode' => $spostcode
+                        ));
+                        $this->cart->getQuote()->getShippingAddress()->save();
+                        $this->cart->getQuote()->collectTotals();
+                        $this->cart->getQuote()->save();
+                        $this->helper->getShippingMethods();
+                        $updateCart = true;
+                        $updateFees = true;
+                    } catch (\Exception $e) {
+                    }
+                    break;
+
+
             }
             if ($changed) {
                 if ($updateCart) {
-                    $this->updateCart();
+                    $this->helper->updateCart();
                 }
                 if ($updateFees) {
-                    $this->updateFees();
+                    $this->helper->updateFees();
                 }
                 $page = $this->resultPageFactory->create();
                 $layout = $page->getLayout();
@@ -311,18 +292,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
                 }
             }
         }
-        return $result->setData("testing");
+        return $result->setData("");
     }
 
-    private function updateCart()
-    {
-        $this->helper->updateCart();
-    }
-
-    private function updateFees()
-    {
-        $this->helper->updateFees();
-    }
 
     private function getCheckoutData()
     {
@@ -340,15 +312,15 @@ class Cajax extends \Magento\Framework\App\Action\Action
             }
         } else {
             switch ($this->getCustomerType()) {
-                case 1:
+                case \Collector\Iframe\Model\Config\Source\Customertype::PRIVATE_CUSTOMER:
                     $this->collectionSession->setVariable('btype', 'b2c');
                     $storeId = $this->helper->getB2CStoreID();
                     break;
-                case 2:
+                case \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER:
                     $this->collectionSession->setVariable('btype', 'b2b');
                     $storeId = $this->helper->getB2BStoreID();
                     break;
-                case 3:
+                case \Collector\Iframe\Model\Config\Source\Customertype::PRIVATE_BUSINESS_CUSTOMER:
                     $this->collectionSession->setVariable('btype', 'b2c');
                     $storeId = $this->helper->getB2CStoreID();
                     break;

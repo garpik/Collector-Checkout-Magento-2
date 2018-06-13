@@ -44,13 +44,14 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
      * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Payment\Model\Method\Logger $paymentLogger
-     * @param \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory
+     * @param \Magento\Payment\Model\Method\Logger $logger
+     * @param \Magento\Directory\Helper\Data|null $directory
      * @param \Collector\Gateways\Helper\Data $_helper
-     * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Logger\Collector $collectorLogger
+     * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
-     * @param \Collector\Base\Model\Session $_collectorSession
      * @param array $data
      */
     public function __construct(
@@ -60,17 +61,17 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Payment\Model\Method\Logger $paymentLogger,
-        \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
+        \Magento\Payment\Model\Method\Logger $logger,
+        \Magento\Directory\Helper\Data $directory = null,
         \Collector\Gateways\Helper\Data $_helper,
-        \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Logger\Collector $collectorLogger,
+        \Collector\Base\Model\Session $_collectorSession,
+        \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        \Collector\Base\Model\Session $_collectorSession,
         array $data = []
-    )
-    {
-        $this->logger = $logger;
+    ){
+        $this->logger = $collectorLogger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
         $this->clientFactory = $clientFactory;
@@ -81,13 +82,13 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $customAttributeFactory,
             $paymentData,
             $scopeConfig,
-            $paymentLogger,
+            $logger,
             $resource,
             $resourceCollection,
-            $data
+            $data,
+            $directory
         );
     }
-
 
     public function getTitle()
     {
@@ -96,11 +97,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
 
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-        //create soapclient, get details
-        //get details
-        //send addinvoice request
-        //if error throw error
-        //spara, corelation id och invoice id
         $info = $this->getInfoInstance();
         $paymentInfo = $info->getAdditionalInformation();
         $order = $payment->getOrder();
@@ -372,32 +368,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
             }
-        } else {
-            //	while($payment->getCreditmemo() != null){}
-            /*	$req = array(
-                    'CorrelationId' => $order->getIncrementId(),
-                    'CountryCode' => $this->helper->getCountryCode(),
-                    'InvoiceNo' => $order->getData('collector_invoice_id'),
-                    'StoreId' => $storeID,
-                    'CreditDate' => date("Y-m-d"),
-                    'ArticleList' => array()
-                );
-                foreach ($payment->getCreditmemo()->getItemsCollection() as $item){
-                    $article = array(
-                        'ArticleId' => $item->getSku(),
-                        'Description' => $item->getName(),
-                        'Quantity' => $item->getQty()
-                    );
-                    array_push($req['ArticleList'], $article);
-                }
-                ob_start();
-                print_r($req);
-                file_put_contents(BP . "/var/log/req", "part refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
-                try {
-                    $client->PartCreditInvoice($req);
-                }
-                catch (\Exception $e){
-                }*/
         }
     }
 }

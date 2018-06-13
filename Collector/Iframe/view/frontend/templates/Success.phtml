@@ -1,18 +1,17 @@
 <?php
-if (empty($block->getCollectorSession()->getVariable('collector_public_token'))) {
-    $storeManager = $block->getStoreManagerObject();
-    $url = $storeManager->getStore()->getBaseUrl();
+if (empty($block->getCollectorVariable('collector_public_token'))) {
+    $url = $block->getStoreBaseUrl();
     if (headers_sent()) {
         echo '<script>location.href="' . $url . '";</script>';
     } else {
         die('<script>location.href="' . $url . '";</script>');
     }
 } else {
-    $url = $block->getCollectorSession()->getVariable('collector_url');
-    $dataLang = $block->getCollectorSession()->getVariable('collector_language');
-    $dataVariant = $block->getCollectorSession()->getVariable('collector_data_variant');
-    $publicToken = $block->getCollectorSession()->getVariable('collector_public_token');
-    $block->getCollectorSession()->setVariable('collector_public_token','');
+    $url = $block->getCollectorVariable('collector_url');
+    $dataLang = $block->getCollectorVariable('collector_language');
+    $dataVariant = $block->getCollectorVariable('collector_data_variant');
+    $publicToken = $block->getCollectorVariable('collector_public_token');
+    $block->setCollectorVariable('collector_public_token','');
     ?>
 
     <script>

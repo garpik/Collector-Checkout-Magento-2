@@ -4,9 +4,9 @@ define([
 	document.addEventListener('collectorCheckoutCustomerUpdated', function(event){
 		if (shouldUpdateCustomer){
 			var param = {
-				field1 : "ajax", 
-				field2 : "updatecustomer",
-				field3 : null
+                is_ajax: true,
+                value: null,
+                type: "updatecustomer"
 			};
 			$.ajax({
 				url: cajaxurl,

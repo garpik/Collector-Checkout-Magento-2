@@ -70,6 +70,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
+
     /**
      * Index constructor.
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -90,6 +91,17 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Iframe\Model\State $orderState
      */
+
+    protected $paymentToMethod = [
+        'DirectInvoice' => 'collector_invoice',
+        'PartPayment' => 'collector_partpay',
+        'Account' => 'collector_account',
+        'Card' => 'collector_card',
+        'Bank' => 'collector_bank',
+
+
+    ];
+
     public function __construct(
         \Collector\Iframe\Helper\Data $_helper,
         \Magento\Framework\App\Action\Context $context,
@@ -129,33 +141,24 @@ class Index extends \Magento\Framework\App\Action\Action
         parent::__construct($context);
     }
 
+    protected function getPaymentMethodByName($name)
+    {
+        if (isset($this->paymentToMethod[$name])) {
+            return $this->paymentToMethod[$name];
+        }
+        return 'collector_invoice';
+    }
+
     public function execute()
     {
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
         try {
-            $paymentMethod = '';
-            switch ($response['data']['purchase']['paymentName']) {
-                case 'DirectInvoice':
-                    $paymentMethod = 'collector_invoice';
-                    break;
-                case 'PartPayment':
-                    $paymentMethod = 'collector_partpay';
-                    break;
-                case 'Account':
-                    $paymentMethod = 'collector_account';
-                    break;
-                case 'Card':
-                    $paymentMethod = 'collector_card';
-                    break;
-                case 'Bank':
-                    $paymentMethod = 'collector_bank';
-                    break;
-                default:
-                    $paymentMethod = 'collector_invoice';
-                    break;
-            }
+
+            $paymentMethod = $this->getPaymentMethodByName($response['data']['purchase']['paymentName']);
+            //set session variable
             $this->collectorSession->setVariable('col_paymentmethod', $paymentMethod);
+
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {
                 return $resultPage;
@@ -166,12 +169,6 @@ class Index extends \Magento\Framework\App\Action\Action
 
             if ($shippingCountryId == '' || $billingCountryId == '') {
                 return $resultPage;
-            }
-            if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))) {
-                $discountCode = $this->collectorSession->getVariable('collector_applied_discount_code');
-            }
-            if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
-                $shippingCode = $this->collectorSession->getVariable('curr_shipping_code');
             }
 
             $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
@@ -192,6 +189,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 $firstname = $response['data']['customer']['billingAddress']['firstName'];
                 $lastname = $response['data']['customer']['billingAddress']['lastName'];
             }
+
             $customer->loadByEmail($email); // load customer by email address
             //check the customer
             if (!$customer->getEntityId()) {
@@ -206,33 +204,38 @@ class Index extends \Magento\Framework\App\Action\Action
             }
             if (!empty($this->collectorSession->getVariable('newsletter_signup'))) {
                 if ($this->collectorSession->getVariable('newsletter_signup')) {
-                    $this->subscriberFactory > create()->subscribe($response['data']['customer']['email']);
+                    $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
                 }
             }
-            $customer->setEmail($response['data']['customer']['email']);
+            $customer->setEmail($email);
             $customer->save();
-            $actual_quote->setCustomerEmail($response['data']['customer']['email']);
-            $actual_quote->setStore($store);
+
+            //$actual_quote->setCustomerEmail($email);
+            //$actual_quote->setStore($store);
             $customer = $this->customerRepository->getById($customer->getEntityId());
-            $actual_quote->setCurrency();
+            //$actual_quote->setCurrency();
             $actual_quote->assignCustomer($customer);
-            if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))) {
-                $actual_quote->setCouponCode($discountCode);
-            }
+
+            //set quote coupon code from session
+//            if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))) {
+//                $actual_quote->setCouponCode($this->collectorSession->getVariable('collector_applied_discount_code'));
+//            }
+
+
             //Set Address to quote @todo add section in order data for seperate billing and handle it
             if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
-                $scompany = $response['data']['businessCustomer']['deliveryAddress']['companyName'];
-                $sfirstname = $response['data']['businessCustomer']['firstName'];
-                $slastname = $response['data']['businessCustomer']['lastName'];
-                if (isset($response['data']['businessCustomer']['deliveryAddress']['address'])) {
-                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
-                } else {
-                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
-                }
-                $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
-                $scity = $response['data']['businessCustomer']['deliveryAddress']['city'];
-                $spostcode = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
-                $stelephone = $response['data']['businessCustomer']['mobilePhoneNumber'];
+//                $scompany = $response['data']['businessCustomer']['deliveryAddress']['companyName'];
+//                $sfirstname = $response['data']['businessCustomer']['firstName'];
+//                $slastname = $response['data']['businessCustomer']['lastName'];
+//                if (isset($response['data']['businessCustomer']['deliveryAddress']['address'])) {
+//                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
+//                } else {
+//                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
+//                }
+//                $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
+//                $scity = $response['data']['businessCustomer']['deliveryAddress']['city'];
+//                $spostcode = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
+//                $stelephone = $response['data']['businessCustomer']['mobilePhoneNumber'];
 
                 $bcompany = $response['data']['businessCustomer']['invoiceAddress']['companyName'];
                 $bfirstname = $response['data']['businessCustomer']['firstName'];
@@ -246,13 +249,13 @@ class Index extends \Magento\Framework\App\Action\Action
                 $bpostcode = $response['data']['businessCustomer']['invoiceAddress']['postalCode'];
                 $btelephone = $response['data']['businessCustomer']['mobilePhoneNumber'];
             } else {
-                $scompany = '';
-                $sfirstname = $response['data']['customer']['deliveryAddress']['firstName'];
-                $slastname = $response['data']['customer']['deliveryAddress']['lastName'];
-                $sstreet = $response['data']['customer']['deliveryAddress']['address'];
-                $scity = $response['data']['customer']['deliveryAddress']['city'];
-                $spostcode = $response['data']['customer']['deliveryAddress']['postalCode'];
-                $stelephone = $response['data']['customer']['mobilePhoneNumber'];
+//                $scompany = '';
+//                $sfirstname = $response['data']['customer']['deliveryAddress']['firstName'];
+//                $slastname = $response['data']['customer']['deliveryAddress']['lastName'];
+//                $sstreet = $response['data']['customer']['deliveryAddress']['address'];
+//                $scity = $response['data']['customer']['deliveryAddress']['city'];
+//                $spostcode = $response['data']['customer']['deliveryAddress']['postalCode'];
+//                $stelephone = $response['data']['customer']['mobilePhoneNumber'];
 
                 $bcompany = '';
                 $bfirstname = $response['data']['customer']['billingAddress']['firstName'];
@@ -274,33 +277,36 @@ class Index extends \Magento\Framework\App\Action\Action
                 'postcode' => $bpostcode,
                 'telephone' => $btelephone
             );
-            $shippingAddressArr = array(
-                'company' => $scompany,
-                'firstname' => $sfirstname,
-                'lastname' => $slastname,
-                'street' => $sstreet,
-                'city' => $scity,
-                'country_id' => $response['data']['countryCode'],
-                'postcode' => $spostcode,
-                'telephone' => $stelephone
-            );
+//            $shippingAddressArr = array(
+//                'company' => $scompany,
+//                'firstname' => $sfirstname,
+//                'lastname' => $slastname,
+//                'street' => $sstreet,
+//                'city' => $scity,
+//                'country_id' => $response['data']['countryCode'],
+//                'postcode' => $spostcode,
+//                'telephone' => $stelephone
+//            );
             $actual_quote->getBillingAddress()->addData($billingAddress);
-            $actual_quote->getShippingAddress()->addData($shippingAddressArr);
+            //$actual_quote->getShippingAddress()->addData($shippingAddressArr);
+
 
             // Collect Rates and Set Shipping & Payment Method
-            $this->shippingRate->setCode($shippingCode)->getPrice();
-            $shippingAddress = $actual_quote->getShippingAddress();
+            $this->shippingRate->setCode($this->collectorSession->getVariable('curr_shipping_code'))->getPrice();
+            //$shippingAddress = $actual_quote->getShippingAddress();
             //@todo set in order data
-            $shippingAddress->setCollectShippingRates(true)
-                ->collectShippingRates()
-                ->setShippingMethod($shippingCode); //shipping method
-            $actual_quote->getShippingAddress()->addShippingRate($this->shippingRate);
+//            $shippingAddress->setCollectShippingRates(true)
+//                ->collectShippingRates()
+//                ->setShippingMethod($this->collectorSession->getVariable('curr_shipping_code')); //shipping method
+
+//            $actual_quote->getShippingAddress()->addShippingRate($this->shippingRate);
+
             $actual_quote->setPaymentMethod($paymentMethod); //payment method
             $actual_quote->getPayment()->importData(['method' => $paymentMethod]);
             $actual_quote->setReservedOrderId($response['data']['reference']);
 
-            $actual_quote->getBillingAddress()->setEmail($response['data']['customer']['email']);
-            $actual_quote->getShippingAddress()->setEmail($response['data']['customer']['email']);
+            //$actual_quote->getBillingAddress()->setEmail($response['data']['customer']['email']);
+            //$actual_quote->getShippingAddress()->setEmail($response['data']['customer']['email']);
             $actual_quote->getBillingAddress()->setCustomerId($customer->getId());
             $actual_quote->getShippingAddress()->setCustomerId($customer->getId());
 
@@ -310,9 +316,10 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->setIsActive(0);
             // Submit the quote and create the order
             $actual_quote->save();
-
             $this->collectorSession->setVariable('is_iframe', 1);
             $order = $this->quoteManagement->submit($actual_quote);
+
+
             $this->orderSender->send($order);
             $order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
             if ($this->collectorSession->getVariable('btype') == 'b2b') {
@@ -329,21 +336,10 @@ class Index extends \Magento\Framework\App\Action\Action
 
             $order->setGrandTotal($order->getGrandTotal() + $fee);
             $order->setBaseGrandTotal($order->getBaseGrandTotal() + $fee);
-            switch ($response["data"]["purchase"]["result"]) {
-                case "OnHold":
-                    $status = $this->helper->getHoldStatus();
-                    $state = $this->orderState->load($status)->getState();
-                    break;
-                case "Preliminary":
-                    $status = $this->helper->getAcceptStatus();
-                    $state = $this->orderState->load($status)->getState();
-                    break;
-                default:
-                    $status = $this->helper->getDeniedStatus();
-                    $state = $this->orderState->load($status)->getState();
-                    break;
-            }
-            $order->setState($state)->setStatus($status);
+
+
+            $this->setOrderStatusState($order, $response["data"]["purchase"]["result"]);
+
             $order->save();
             $this->eventManager->dispatch(
                 'checkout_onepage_controller_success_action',
@@ -358,6 +354,30 @@ class Index extends \Magento\Framework\App\Action\Action
             $this->logger->error($e->getTraceAsString());
             return $resultPage;
         }
+    }
+
+    private function setOrderStatusState(&$order, $result = '')
+    {
+        try {
+            switch ($result) {
+                case "OnHold":
+                    $status = $this->helper->getHoldStatus();
+                    $state = $this->orderState->load($status)->getState();
+                    break;
+                case "Preliminary":
+                    $status = $this->helper->getAcceptStatus();
+                    $state = $this->orderState->load($status)->getState();
+                    break;
+                default:
+                    $status = $this->helper->getDeniedStatus();
+                    $state = $this->orderState->load($status)->getState();
+                    break;
+            }
+            $order->setState($state)->setStatus($status);
+        } catch (\Exception $e) {
+            return false;
+        }
+        return true;
     }
 
     private function getCountryCodeByName($name, $default)
