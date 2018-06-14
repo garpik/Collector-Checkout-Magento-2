@@ -35,7 +35,10 @@ class ActiveMethods
 
     public function toOptionArray()
     {
-        $methods = [['value' => '', 'label' => '']];
+        $methods = [[
+            'value' => '',
+            'label' => ''
+        ]];
         $payments = $this->_getPaymentMethods();
 
         foreach ($payments as $paymentCode => $paymentModel) {

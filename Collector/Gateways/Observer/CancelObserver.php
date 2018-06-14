@@ -49,16 +49,15 @@ class CancelObserver extends AbstractDataAssignObserver
         $payment = $order->getPayment();
         $method = $payment->getMethodInstance();
         if (strpos($method->getCode(), "collector") !== false) {
-            $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), ['soap_version' => SOAP_1_1,
-                'exceptions' => 1, 'trace' => true
+            $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), [
+                'soap_version' => SOAP_1_1,
+                'exceptions' => 1,
+                'trace' => true
             ]);
-            $header['Username'] = $this->helper->getUsername();
-            $header['Password'] = $this->helper->getPassword();
-            $headerList = array();
-            foreach ($header as $k => $v) {
-                $headerList[] = new \SoapHeader($this->helper->getHeaderUrl(), $k, $v);
-            }
-            $storeId = 0;
+            $headerList = [
+                new \SoapHeader($this->helper->getHeaderUrl(), 'Username', $this->helper->getUsername()),
+                new \SoapHeader($this->helper->getHeaderUrl(), 'Password', $this->helper->getPassword())
+            ];
             if ($this->helper->getEnable()) {
                 if ($order->getData('collector_ssn') !== null) {
                     $storeId = $this->helper->getB2BStoreID();
@@ -69,12 +68,12 @@ class CancelObserver extends AbstractDataAssignObserver
                 $storeId = $this->helper->getB2CStoreID();
             }
             $client->__setSoapHeaders($headerList);
-            $req = array(
+            $req = [
                 'CorrelationId' => $order->getIncrementId(),
                 'CountryCode' => $this->helper->getCountryCode(),
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeId,
-            );
+            ];
             $this->logger->info(var_export($req));
             try {
                 $client->CancelInvoice($req);

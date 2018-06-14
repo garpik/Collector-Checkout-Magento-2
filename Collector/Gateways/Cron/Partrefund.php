@@ -64,15 +64,16 @@ class Partrefund
         if (count($memos) == 0) {
             return;
         }
-        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), ['soap_version' => SOAP_1_1,
-            'exceptions' => 1, 'trace' => true
+        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), [
+            'soap_version' => SOAP_1_1,
+            'exceptions' => 1,
+            'trace' => true
         ]);
-        $header['Username'] = $this->helper->getUsername();
-        $header['Password'] = $this->helper->getPassword();
-        $headerList = array();
-        foreach ($header as $k => $v) {
-            $headerList[] = new \SoapHeader($this->helper->getHeaderUrl(), $k, $v);
-        }
+        $headerList = [
+            new \SoapHeader($this->helper->getHeaderUrl(), 'Username', $this->helper->getUsername()),
+            new \SoapHeader($this->helper->getHeaderUrl(), 'Password', $this->helper->getPassword())
+        ];
+
         $client->__setSoapHeaders($headerList);
         foreach ($memos as $memo) {
             $order = $memo->getOrder();
@@ -81,14 +82,14 @@ class Partrefund
             } else {
                 $storeID = $this->helper->getB2CStoreID();
             }
-            $req = array(
+            $req = [
                 'CorrelationId' => $memo->getOrder()->getIncrementId(),
                 'CountryCode' => $this->helper->getCountryCode(),
                 'InvoiceNo' => explode('-', $memo->getTransactionId())[0],
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d"),
-                'ArticleList' => array()
-            );
+                'ArticleList' => []
+            ];
             $bundlesWithFixedPrice = array();
             foreach ($memo->getItemsCollection() as $item) {
                 if ($item->getProductType() == 'configurable') {
@@ -103,27 +104,25 @@ class Partrefund
                         continue;
                     }
                 }
-                array_push($req['ArticleList'], array(
+                array_push($req['ArticleList'], [
                     'ArticleId' => $item->getSku(),
                     'Description' => $item->getName(),
                     'Quantity' => $item->getQty()
-                ));
+                ]);
             }
             if ($memo->getShippingAmount() > 0) {
-                $shipping = array(
+                array_push($req['ArticleList'], [
                     'ArticleId' => 'shipping',
                     'Description' => $order->getShippingMethod(),
                     'Quantity' => 1
-                );
-                array_push($req['ArticleList'], $shipping);
+                ]);
             }
             if ($order->getData('fee_amount_invoiced') > 0 && $order->getData('fee_amount_invoiced') > $order->getData('fee_amount_refunded')) {
-                $fee = array(
+                array_push($req['ArticleList'], [
                     'ArticleId' => 'invoice_fee',
                     'Description' => 'Invoice Fee',
                     'Quantity' => 1
-                );
-                array_push($req['ArticleList'], $fee);
+                ]);
             }
             $this->logger->info("part-credit " . $memo->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
@@ -143,5 +142,3 @@ class Partrefund
         }
     }
 }
-
-?>

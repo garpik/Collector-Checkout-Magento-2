@@ -102,31 +102,6 @@ class Fee extends \Magento\Framework\View\Element\Template
      */
     public function initTotals()
     {
-
-        /*	$parent = $this->getParentBlock();
-            $this->_order = $parent->getOrder();
-            $this->_source = $parent->getSource();
-            $store = $this->getStore();
-            if(!$this->getSource()->getFeeAmount()) {
-                return $this;
-            }
-            $fee = new \Magento\Framework\DataObject(
-                [
-                    'code' => 'fee',
-                    'strong' => false,
-                    'value' => $this->getSource()->getFeeAmount(),
-                    'label' => __('Fee'),
-                ]
-            );
-
-                $parent->addTotal($fee, 'fee');
-               // $this->_addTax('grand_total');
-                $parent->addTotal($fee, 'fee');
-
-
-                return $this;
-                */
-
         $parent = $this->getParentBlock();
         $this->_order = $parent->getOrder();
         $this->_source = $parent->getSource();

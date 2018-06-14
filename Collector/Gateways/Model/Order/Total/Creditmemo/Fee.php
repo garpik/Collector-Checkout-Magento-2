@@ -10,12 +10,11 @@ class Fee extends AbstractTotal
      * @param \Magento\Sales\Model\Order\Creditmemo $creditmemo
      * @return $this
      */
-    public function collect(\Magento\Sales\Model\Order\Creditmemo $creditmemo){
+    public function collect(\Magento\Sales\Model\Order\Creditmemo $creditmemo)
+    {
         $order = $creditmemo->getOrder();
-
-        
         if ($order->getFeeAmountInvoiced() > 0) {
-            $feeAmountLeft     = $order->getFeeAmountInvoiced() - $order->getFeeAmountRefunded();
+            $feeAmountLeft = $order->getFeeAmountInvoiced() - $order->getFeeAmountRefunded();
             $basefeeAmountLeft = $order->getBaseFeeAmountInvoiced() - $order->getBaseFeeAmountRefunded();
             if ($basefeeAmountLeft > 0) {
                 $creditmemo->setGrandTotal($creditmemo->getGrandTotal() + $feeAmountLeft);
@@ -23,9 +22,8 @@ class Fee extends AbstractTotal
                 $creditmemo->setFeeAmount($feeAmountLeft);
                 $creditmemo->setBaseFeeAmount($basefeeAmountLeft);
             }
-        } 
-		else {
-            $feeAmount     = $order->getFeeAmountInvoiced();
+        } else {
+            $feeAmount = $order->getFeeAmountInvoiced();
             $basefeeAmount = $order->getBaseFeeAmountInvoiced();
             $creditmemo->setGrandTotal($creditmemo->getGrandTotal() + $feeAmount);
             $creditmemo->setBaseGrandTotal($creditmemo->getBaseGrandTotal() + $basefeeAmount);

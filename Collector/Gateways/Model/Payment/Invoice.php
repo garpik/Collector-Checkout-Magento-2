@@ -70,7 +70,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
-    ){
+    )
+    {
         $this->logger = $collectorLogger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
@@ -167,15 +168,15 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
     public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
         $order = $payment->getOrder();
-        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), ['soap_version' => SOAP_1_1,
-            'exceptions' => 1, 'trace' => true
+        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), [
+            'soap_version' => SOAP_1_1,
+            'exceptions' => 1,
+            'trace' => true
         ]);
-        $header['Username'] = $this->helper->getUsername();
-        $header['Password'] = $this->helper->getPassword();
-        $headerList = array();
-        foreach ($header as $k => $v) {
-            $headerList[] = new \SoapHeader($this->helper->getHeaderUrl(), $k, $v);
-        }
+        $headerList = [
+            new \SoapHeader($this->helper->getHeaderUrl(), 'Username', $this->helper->getUsername()),
+            new \SoapHeader($this->helper->getHeaderUrl(), 'Password', $this->helper->getPassword())
+        ];
         $client->__setSoapHeaders($headerList);
 
         if ($order->getBillingAddress()->getCompany()) {

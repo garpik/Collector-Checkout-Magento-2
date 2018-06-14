@@ -53,17 +53,6 @@ class Partpay extends \Magento\Payment\Model\Method\AbstractMethod
 
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-      
-        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), ['soap_version' => SOAP_1_1,
-            'exceptions' => 1, 'trace' => true
-        ]);
-
-        $header = array(
-            'Username' => $this->helper->getUsername(),
-            'Password' => $this->helper->getPassword(),
-            'ClientIpAddress' => $this->helper->getRemoteIp($payment)
-        );
-
 
     }
 

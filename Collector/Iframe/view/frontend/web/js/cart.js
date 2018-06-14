@@ -3,15 +3,41 @@ define([
 ], function ($, collectorajax) {
 	return {
 		call:function(ajaxUrl){
+            $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
+                var param = {
+                    is_ajax: true,
+                    type: 'shippingAddress',
+                    name: $(this).attr('name'),
+                    value: $(this).val()
+                }
+                $.ajax({
+                    url: ajaxUrl,
+                    data: param,
+                    type: "POST",
+                    dataType: 'json',
+                    beforeSend: function () {
+                        //jQuery('body').addClass('is-suspended');
+                        window.collector.checkout.api.suspend();
+                    },
+                    complete: function () {
+                        //jQuery('body').removeClass('is-suspended');
+                        window.collector.checkout.api.resume();
+                        require([
+                            'Magento_Customer/js/customer-data'
+                        ], function (customerData) {
+                            var sections = ['cart'];
+                            customerData.invalidate(sections);
+                            customerData.reload(sections, true);
+                        });
+                    }
+                });
+            });
 			$(document).on('click', '.col-inc', function() {
 				var param = {
 					is_ajax: true,
                     id: this.id,
                     type: "inc"
 				};
-				var qty = 'qty_' + (this.id).split("_")[1];
-				var sum = 'sum_' + (this.id).split("_")[1];
-				var price = 'price_' + (this.id).split("_")[1];
 				$.ajax({
 					url: ajaxUrl,
 					data: param,
@@ -45,9 +71,6 @@ define([
                     id: this.id,
                     type: "sub"
 				};
-				var qty = 'qty_' + (this.id).split("_")[1];
-				var sum = 'sum_' + (this.id).split("_")[1];
-				var price = 'price_' + (this.id).split("_")[1];
 				$.ajax({
 					url: ajaxUrl,
 					data: param,

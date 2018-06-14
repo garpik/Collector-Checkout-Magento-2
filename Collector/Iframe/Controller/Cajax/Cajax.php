@@ -120,6 +120,35 @@ class Cajax extends \Magento\Framework\App\Action\Action
         if ($this->getRequest()->isAjax()) {
             $changed = false;
             switch ($this->getRequest()->getParam('type')) {
+                case "shippingAddress":
+                    $customizeAttribute = ['street_1', 'street_2'];
+                    $name = $this->getRequest()->getParam('name');
+                    $value = $this->getRequest()->getParam('value');
+                    if (empty($name)) {
+                        return $result->setData(false);
+                    }
+                    if (in_array($name, $customizeAttribute)) {
+                        switch ($name) {
+                            case 'street_1':
+                                $street = $this->cart->getQuote()->getShippingAddress()->getStreet();
+                                $street[0] = $value;
+                                $this->cart->getQuote()->getShippingAddress()->setStreet($street);
+                                break;
+                            case 'street_2':
+                                $street = $this->cart->getQuote()->getShippingAddress()->getStreet();
+                                $street[1] = $value;
+                                $this->cart->getQuote()->getShippingAddress()->setStreet($street);
+                                break;
+                        }
+                    } else {
+                        $this->cart->getQuote()->getShippingAddress()->setData($name, $value);
+                    }
+                    $this->cart->getQuote()->getShippingAddress()->save();
+                    $this->cart->getQuote()->getBillingAddress()->save();
+                    $this->cart->getQuote()->collectTotals();
+                    $this->cart->getQuote()->save();
+                    return $result->setData(true);
+                    break;
                 case "sub":
                     $allItems = $this->cart->getQuote()->getAllVisibleItems();
                     $id = explode('_', $this->getRequest()->getParam('id'))[1];
@@ -202,56 +231,50 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     try {
                         $resp = $this->getCheckoutData();
                         if (isset($resp['data']['businessCustomer']['invoiceAddress'])) {
-                            $sfirstname = $resp['data']['businessCustomer']['firstName'];
-                            $slastname = $resp['data']['businessCustomer']['lastName'];
+
+                            $shipping = [
+                                'firstname' => $resp['data']['customer']['businessCustomer']['firstName'],
+                                'lastname' => $resp['data']['customer']['businessCustomer']['lastName'],
+                                'city' => $resp['data']['customer']['businessCustomer']['city'],
+                                'postcode' => $resp['data']['customer']['businessCustomer']['postalCode']
+                            ];
+
                             if (isset($resp['data']['businessCustomer']['deliveryAddress']['address'])) {
-                                $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['address'];
+                                $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['address'];
                             } else {
-                                $sstreet = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
+                                $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
                             }
-                            $scity = $resp['data']['businessCustomer']['deliveryAddress']['city'];
-                            $spostcode = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
 
-                            $bfirstname = $resp['data']['businessCustomer']['firstName'];
-                            $blastname = $resp['data']['businessCustomer']['lastName'];
+                            $billing = ['firstname' => $resp['data']['businessCustomer']['firstName'],
+                                'lastname' => $resp['data']['businessCustomer']['lastName'],
+                                'city' => $resp['data']['businessCustomer']['invoiceAddress']['city'],
+                                'postcode' => $resp['data']['businessCustomer']['invoiceAddress']['postalCode'],
+                                'telephone' => $resp['data']['businessCustomer']['mobilePhoneNumber']
+                            ];
                             if (isset($resp['data']['businessCustomer']['invoiceAddress']['address'])) {
-                                $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['address'];
+                                $billing['street'] = $resp['data']['businessCustomer']['invoiceAddress']['address'];
                             } else {
-                                $bstreet = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
+                                $billing['street'] = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
                             }
-                            $bcity = $resp['data']['businessCustomer']['invoiceAddress']['city'];
-                            $bpostcode = $resp['data']['businessCustomer']['invoiceAddress']['postalCode'];
-                            $btelephone = $resp['data']['businessCustomer']['mobilePhoneNumber'];
                         } else {
-                            $sfirstname = $resp['data']['customer']['deliveryAddress']['firstName'];
-                            $slastname = $resp['data']['customer']['deliveryAddress']['lastName'];
-                            $sstreet = $resp['data']['customer']['deliveryAddress']['address'];
-                            $scity = $resp['data']['customer']['deliveryAddress']['city'];
-                            $spostcode = $resp['data']['customer']['deliveryAddress']['postalCode'];
+                            $shipping = [
+                                'firstname' => $resp['data']['customer']['deliveryAddress']['firstName'],
+                                'lastname' => $resp['data']['customer']['deliveryAddress']['lastName'],
+                                'street' => $resp['data']['customer']['deliveryAddress']['address'],
+                                'city' => $resp['data']['customer']['deliveryAddress']['city'],
+                                'postcode' => $resp['data']['customer']['deliveryAddress']['postalCode']
+                            ];
 
-                            $bfirstname = $resp['data']['customer']['billingAddress']['firstName'];
-                            $blastname = $resp['data']['customer']['billingAddress']['lastName'];
-                            $bstreet = $resp['data']['customer']['billingAddress']['address'];
-                            $bcity = $resp['data']['customer']['billingAddress']['city'];
-                            $bpostcode = $resp['data']['customer']['billingAddress']['postalCode'];
-                            $btelephone = $resp['data']['customer']['mobilePhoneNumber'];
+                            $billing = ['firstname' => $resp['data']['customer']['billingAddress']['firstName'],
+                                'lastname' => $resp['data']['customer']['billingAddress']['lastName'],
+                                'street' => $resp['data']['customer']['billingAddress']['address'],
+                                'city' => $resp['data']['customer']['billingAddress']['city'],
+                                'postcode' => $resp['data']['customer']['billingAddress']['postalCode'],
+                                'telephone' => $resp['data']['customer']['mobilePhoneNumber']
+                            ];
                         }
-                        $this->cart->getQuote()->getBillingAddress()->addData(array(
-                            'firstname' => $bfirstname,
-                            'lastname' => $blastname,
-                            'street' => $bstreet,
-                            'city' => $bcity,
-                            'postcode' => $bpostcode,
-                            'telephone' => $btelephone
-                        ));
-                        $this->cart->getQuote()->getShippingAddress()->addData(array(
-                            'firstname' => $sfirstname,
-                            'lastname' => $slastname,
-                            'street' => $sstreet,
-                            'city' => $scity,
-                            'postcode' => $spostcode
-                        ));
-                        $this->cart->getQuote()->getShippingAddress()->save();
+                        $this->cart->getQuote()->getBillingAddress()->addData($billing)->save();
+                        $this->cart->getQuote()->getShippingAddress()->addData($shipping)->save();
                         $this->cart->getQuote()->collectTotals();
                         $this->cart->getQuote()->save();
                         $this->helper->getShippingMethods();
@@ -260,8 +283,6 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     } catch (\Exception $e) {
                     }
                     break;
-
-
             }
             if ($changed) {
                 if ($updateCart) {
