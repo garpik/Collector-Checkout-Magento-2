@@ -298,44 +298,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
 
     private function getCheckoutData()
     {
-        $pid = $this->collectionSession->getVariable('collector_private_id');
-        $pusername = $this->helper->getUsername();
-        $psharedSecret = $this->helper->getPassword();
-        $array = array();
-        $array['countryCode'] = $this->helper->getCountryCode();
-        $storeId = 0;
-        if (!empty($this->collectionSession->getVariable('btype'))) {
-            if ($this->collectionSession->getVariable('btype') == 'b2b') {
-                $storeId = $this->helper->getB2BStoreID();
-            } else {
-                $storeId = $this->helper->getB2CStoreID();
-            }
-        } else {
-            switch ($this->getCustomerType()) {
-                case \Collector\Iframe\Model\Config\Source\Customertype::PRIVATE_CUSTOMER:
-                    $this->collectionSession->setVariable('btype', 'b2c');
-                    $storeId = $this->helper->getB2CStoreID();
-                    break;
-                case \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER:
-                    $this->collectionSession->setVariable('btype', 'b2b');
-                    $storeId = $this->helper->getB2BStoreID();
-                    break;
-                case \Collector\Iframe\Model\Config\Source\Customertype::PRIVATE_BUSINESS_CUSTOMER:
-                    $this->collectionSession->setVariable('btype', 'b2c');
-                    $storeId = $this->helper->getB2CStoreID();
-                    break;
-            }
-        }
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid;
-        $hash = $pusername . ":" . hash("sha256", $path . $psharedSecret);
-        $hashstr = 'SharedKey ' . base64_encode($hash);
-        $ch = curl_init($this->helper->getWSDL() . "merchants/" . $storeId . "/checkouts/" . $pid);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $output = curl_exec($ch);
-        $data = json_decode($output, true);
-        curl_close($ch);
-        return $data;
+        return $this->helper->callCheckouts();
     }
 
     /**

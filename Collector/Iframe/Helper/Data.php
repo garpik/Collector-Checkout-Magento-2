@@ -732,7 +732,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getOrderResponse()
     {
-
         $data = $this->callCheckouts();
         if ($data["data"]) {
             $result['code'] = 1;
