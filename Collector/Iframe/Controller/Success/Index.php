@@ -71,6 +71,17 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     protected $logger;
 
+
+    protected $paymentToMethod = [
+        'DirectInvoice' => 'collector_invoice',
+        'PartPayment' => 'collector_partpay',
+        'Account' => 'collector_account',
+        'Card' => 'collector_card',
+        'Bank' => 'collector_bank',
+
+
+    ];
+
     /**
      * Index constructor.
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -86,22 +97,14 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory
      * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
      * @param \Magento\Framework\Event\Manager $eventManager
+     * @param \Magento\Framework\Message\ManagerInterface $messageManager
      * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
      * @param \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Iframe\Model\State $orderState
+     * @param \Magento\Framework\App\Response\Http $response
+     * @param \Magento\Framework\App\Response\RedirectInterface $redirect
      */
-
-    protected $paymentToMethod = [
-        'DirectInvoice' => 'collector_invoice',
-        'PartPayment' => 'collector_partpay',
-        'Account' => 'collector_account',
-        'Card' => 'collector_card',
-        'Bank' => 'collector_bank',
-
-
-    ];
-
     public function __construct(
         \Collector\Iframe\Helper\Data $_helper,
         \Magento\Framework\App\Action\Context $context,
@@ -116,12 +119,19 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
         \Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
         \Magento\Framework\Event\Manager $eventManager,
+        \Magento\Framework\Message\ManagerInterface $messageManager,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
         \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory,
         \Collector\Base\Model\Session $_collectorSession,
-        \Collector\Iframe\Model\State $orderState
+        \Collector\Iframe\Model\State $orderState,
+        \Magento\Framework\App\Response\Http $response,
+        \Magento\Framework\App\Response\RedirectInterface $redirect
+
     )
     {
+        $this->response = $response;
+        $this->redirect = $redirect;
+        $this->messageManager = $messageManager;
         $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->orderSender = $orderSender;
@@ -155,7 +165,8 @@ class Index extends \Magento\Framework\App\Action\Action
         $resultPage = $this->resultPageFactory->create();
         if ($response["code"] == 0) {
             $this->logger->error($response['error']);
-            return $resultPage;
+            $this->messageManager->addError(__('Can not place order.'));
+            return $this->redirect->redirect($this->response, '/');
         }
 
         try {
@@ -165,36 +176,49 @@ class Index extends \Magento\Framework\App\Action\Action
 
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {
-                return $resultPage;
+                $this->messageManager->addError(__('This order is already exists'));
+                return $this->redirect->redirect($this->response, '/');
             }
 
             $shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
             $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
 
-            if ($shippingCountryId == '' || $billingCountryId == '') {
-                return $resultPage;
+
+            //isShippingAddressEnabled
+
+            if ((!$this->helper->isShippingAddressEnabled() && empty($shippingCountryId)) || empty($billingCountryId)) {
+                $this->messageManager->addError(__('Country code is not specified'));
+                return $this->redirect->redirect($this->response, '/');
             }
+
 
             $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
 
             //init the store id and website id @todo pass from array
             $store = $this->storeManager->getStore();
             $websiteId = $this->storeManager->getStore()->getWebsiteId();
+
+
             //init the customer
             $customer = $this->customerFactory->create();
             $customer->setWebsiteId($websiteId);
             $email = "";
+            $firstname = "";
+            $lastname = "";
             if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
                 $email = $response['data']['businessCustomer']['email'];
                 $firstname = $response['data']['businessCustomer']['firstName'];
                 $lastname = $response['data']['businessCustomer']['lastName'];
-            } else {
+            } else if (isset($response['data']['customer']['billingAddress'])) {
                 $email = $response['data']['customer']['email'];
                 $firstname = $response['data']['customer']['billingAddress']['firstName'];
                 $lastname = $response['data']['customer']['billingAddress']['lastName'];
+            } else {
+                $this->messageManager->addError(__('Undefined user data'));
+                return $this->redirect->redirect($this->response, '/');
             }
-
-            $customer->loadByEmail($email); // load customer by email address
+            //load customer by email address
+            $customer->loadByEmail($email);
             //check the customer
             if (!$customer->getEntityId()) {
                 //If not avilable then create this customer
@@ -356,7 +380,8 @@ class Index extends \Magento\Framework\App\Action\Action
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
-            return $resultPage;
+            $this->messageManager->addError($e->getMessage());
+            return $this->redirect->redirect($this->response, '/');
         }
     }
 
