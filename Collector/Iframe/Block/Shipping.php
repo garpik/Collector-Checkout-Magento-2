@@ -11,6 +11,10 @@ class Shipping extends \Magento\Framework\View\Element\Template
      */
     protected $collectorSession;
 
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
 
     protected $serializer = null;
     /**
@@ -40,11 +44,13 @@ class Shipping extends \Magento\Framework\View\Element\Template
         array $data = [],
         \Magento\Checkout\Model\Session $_checkoutSession,
         \Collector\Base\Model\Session $_collectorSession,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\App\Cache\Type\Config $configCacheType,
         \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
     )
     {
         parent::__construct($context, $data);
+        $this->scopeConfig = $scopeConfig;
         $this->configCacheType = $configCacheType;
         $this->countryCollectionFactory = $countryCollectionFactory;
         $this->checkoutSession = $_checkoutSession;
@@ -56,6 +62,15 @@ class Shipping extends \Magento\Framework\View\Element\Template
     {
         $street = $this->getAddress()->getStreet();
         return isset($street[$lineNumber - 1]) ? $street[$lineNumber - 1] : '';
+    }
+
+
+    public function isVisible()
+    {
+        $isVisible = $this->scopeConfig->getValue('collector_collectorcheckout/general/shippingaddress', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        if (empty($isVisible))
+            return false;
+        return $isVisible;
     }
 
     public function getAddress()

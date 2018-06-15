@@ -4,49 +4,60 @@ define([
 ], function ($, collectorajax, validation) {
     return {
         call: function (ajaxUrl) {
-            $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
-                var param = {
-                    is_ajax: true,
-                    type: 'shippingAddress',
-                    name: $(this).attr('name'),
-                    value: $(this).val()
-                }
 
-                if (!$('.form-shipping-address').valid()) {
-                    $('div.mage-error').remove();
-                    $('.collector-checkout-wrapper').addClass('disabled');
-                }
-                else {
-                    $('.collector-checkout-wrapper').removeClass('disabled');
-                }
+            if(window.showCollectorShipping) {
+                $(document).on('hover', '.collector-checkout-wrapper', function () {
+                    if (!$('.form-shipping-address').valid()) {
+                        $('.collector-checkout').addClass('disabled');
+                    }
+                    else {
+                        $('.collector-checkout').removeClass('disabled');
+                    }
+                });
+                $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
+                    var param = {
+                        is_ajax: true,
+                        type: 'shippingAddress',
+                        name: $(this).attr('name'),
+                        value: $(this).val()
+                    }
 
-                if ($(this).hasClass('validate')) {
-                    $(this).mage('validation', {});
-                }
-                if ($(this).valid()) {
-                    $.ajax({
-                        url: ajaxUrl,
-                        data: param,
-                        type: "POST",
-                        dataType: 'json',
-                        beforeSend: function () {
-                            //jQuery('body').addClass('is-suspended');
-                            window.collector.checkout.api.suspend();
-                        },
-                        complete: function () {
-                            //jQuery('body').removeClass('is-suspended');
-                            window.collector.checkout.api.resume();
-                            require([
-                                'Magento_Customer/js/customer-data'
-                            ], function (customerData) {
-                                var sections = ['cart'];
-                                customerData.invalidate(sections);
-                                customerData.reload(sections, true);
-                            });
-                        }
-                    });
-                }
-            });
+                    if (!$('.form-shipping-address').valid()) {
+                        $('div.mage-error').remove();
+                        $('.collector-checkout').addClass('disabled');
+                    }
+                    else {
+                        $('.collector-checkout').removeClass('disabled');
+                    }
+
+                    if ($(this).hasClass('validate')) {
+                        $(this).mage('validation', {});
+                    }
+                    if ($(this).valid()) {
+                        $.ajax({
+                            url: ajaxUrl,
+                            data: param,
+                            type: "POST",
+                            dataType: 'json',
+                            beforeSend: function () {
+                                //jQuery('body').addClass('is-suspended');
+                                window.collector.checkout.api.suspend();
+                            },
+                            complete: function () {
+                                //jQuery('body').removeClass('is-suspended');
+                                window.collector.checkout.api.resume();
+                                require([
+                                    'Magento_Customer/js/customer-data'
+                                ], function (customerData) {
+                                    var sections = ['cart'];
+                                    customerData.invalidate(sections);
+                                    customerData.reload(sections, true);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
             $(document).on('click', '.col-inc', function () {
                 var param = {
                     is_ajax: true,
@@ -164,6 +175,15 @@ define([
                             window.location.href = window.location.protocol + "//" + window.location.host + "/";
                         }
                         if (data.cart) {
+                            if(window.showCollectorShipping) {
+                                if (!$('.form-shipping-address').valid()) {
+                                    $('div.mage-error').remove();
+                                    $('.collector-checkout').addClass('disabled');
+                                }
+                                else {
+                                    $('.collector-checkout').removeClass('disabled');
+                                }
+                            }
                             jQuery('div.collector-cart').replaceWith(data.cart);
                         }
                     },
@@ -197,6 +217,15 @@ define([
                         window.collector.checkout.api.suspend();
                     },
                     success: function (data) {
+                        if(window.showCollectorShipping) {
+                            if (!$('.form-shipping-address').valid()) {
+                                $('div.mage-error').remove();
+                                $('.collector-checkout').addClass('disabled');
+                            }
+                            else {
+                                $('.collector-checkout').removeClass('disabled');
+                            }
+                        }
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
                         }

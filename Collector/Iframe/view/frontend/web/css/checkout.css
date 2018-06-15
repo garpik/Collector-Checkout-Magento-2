@@ -691,7 +691,7 @@ td.col-price.col-grand {
         color: #333 !important;
     }
 
-.collector-checkout-wrapper.disabled {
+.collector-checkout.disabled {
     opacity: 0.3;
     pointer-events: none;
 }
