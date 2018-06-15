@@ -208,7 +208,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function hasDiscount()
     {
-        return ($this->cart->getQuote()->getSubtotal() != $this->cart->getQuote()->getSubtotalWithDiscount());
+        return $this->cart->getQuote()->getSubtotal() != $this->cart->getQuote()->getSubtotalWithDiscount();
     }
 
     public function getTax()
@@ -347,8 +347,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($methods as $method) {
             foreach ($method as $rate) {
                 if ($rate->getCode() == $methodInput) {
-                    $this->collectorSession->setVariable('curr_shipping_description', $rate->getMethodTitle());
-                    $this->collectorSession->setVariable('curr_shipping_tax_rate', $shippingTax);
                     $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
                     $this->collectorSession->setVariable('curr_shipping_tax', 0);
 
@@ -386,15 +384,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $methods = $shippingAddress->getGroupedAllShippingRates();
         $shippingTaxClass = $this->getShippingTaxClass();
-        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $first = true;
 
         if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
                     if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
-                        $this->collectorSession->setVariable('curr_shipping_description', $rate->getMethodTitle());
-                        $this->collectorSession->setVariable('curr_shipping_tax_rate', $shippingTax);
                         $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
                         $this->collectorSession->setVariable('curr_shipping_tax', 0);
 
@@ -420,8 +415,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
                     if ($first) {
-                        $this->collectorSession->setVariable('curr_shipping_description', $rate->getMethodTitle());
-                        $this->collectorSession->setVariable('curr_shipping_tax_rate', $shippingTax);
                         $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
                         $this->collectorSession->setVariable('curr_shipping_tax', 0);
 
@@ -743,6 +736,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $result['error'] = $data["error"];
         }
         return $result;
+    }
+
+    public function isShippingAddressEnabled()
+    {
+        $isEnabled = $this->scopeConfig->getValue('collector_collectorcheckout/general/shippingaddress', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        if (empty($isEnabled))
+            return false;
+        return $isEnabled;
     }
 
     private function getPID()

@@ -29,6 +29,10 @@ class Shipping extends \Magento\Framework\View\Element\Template
      * @var \Magento\Checkout\Model\Session
      */
     protected $checkoutSession;
+    /**
+     * @var \Collector\Iframe\Helper\Data
+     */
+    protected $helper;
 
     /**
      * Shipping constructor.
@@ -36,6 +40,8 @@ class Shipping extends \Magento\Framework\View\Element\Template
      * @param array $data
      * @param \Magento\Checkout\Model\Session $_checkoutSession
      * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Collector\Iframe\Helper\Data $helper
      * @param \Magento\Framework\App\Cache\Type\Config $configCacheType
      * @param \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
      */
@@ -45,11 +51,13 @@ class Shipping extends \Magento\Framework\View\Element\Template
         \Magento\Checkout\Model\Session $_checkoutSession,
         \Collector\Base\Model\Session $_collectorSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Collector\Iframe\Helper\Data $helper,
         \Magento\Framework\App\Cache\Type\Config $configCacheType,
         \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
     )
     {
         parent::__construct($context, $data);
+        $this->helper = $helper;
         $this->scopeConfig = $scopeConfig;
         $this->configCacheType = $configCacheType;
         $this->countryCollectionFactory = $countryCollectionFactory;
@@ -67,10 +75,7 @@ class Shipping extends \Magento\Framework\View\Element\Template
 
     public function isVisible()
     {
-        $isVisible = $this->scopeConfig->getValue('collector_collectorcheckout/general/shippingaddress', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        if (empty($isVisible))
-            return false;
-        return $isVisible;
+        return $this->helper->isShippingAddressEnabled();
     }
 
     public function getAddress()

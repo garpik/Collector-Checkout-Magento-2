@@ -153,11 +153,15 @@ class Index extends \Magento\Framework\App\Action\Action
     {
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
+        if ($response["code"] == 0) {
+            $this->logger->error($response['error']);
+            return $resultPage;
+        }
+
         try {
 
+            //set payment method
             $paymentMethod = $this->getPaymentMethodByName($response['data']['purchase']['paymentName']);
-            //set session variable
-            $this->collectorSession->setVariable('col_paymentmethod', $paymentMethod);
 
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {

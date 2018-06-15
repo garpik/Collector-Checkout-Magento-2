@@ -31,6 +31,7 @@ class Success extends \Magento\Checkout\Block\Onepage {
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param array $layoutProcessors
      */

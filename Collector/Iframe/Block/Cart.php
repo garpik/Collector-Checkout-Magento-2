@@ -105,21 +105,22 @@ class Cart extends \Magento\Checkout\Block\Onepage
         if ($this->initialized) {
             return;
         }
-        if ($this->checkoutSession->getQuote()->getShippingAddress()->getPostcode() !== null) {
+        $defaultData = [
+            'firstname' => 'Kalle',
+            'lastname' => 'Anka',
+            'street' => 'Ankgatan',
+            'city' => 'Ankeborg',
+            'country_id' => 'SE',
+            'postcode' => '12345',
+            'telephone' => '0123456789'
+        ];
+        if($this->helper->isShippingAddressEnabled()) {
+            $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
         } else {
-            $defaultData = [
-                'firstname' => 'Kalle',
-                'lastname' => 'Anka',
-                'street' => 'Ankgatan',
-                'city' => 'Ankeborg',
-                'country_id' => 'SE',
-                'postcode' => '12345',
-                'telephone' => '0123456789'
-            ];
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
             $this->checkoutSession->getQuote()->getShippingAddress()->addData($defaultData);
-            $this->checkoutSession->getQuote()->collectTotals();
         }
+        $this->checkoutSession->getQuote()->collectTotals();
         $this->checkoutSession->getQuote()->save();
     }
 
