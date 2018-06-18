@@ -61,6 +61,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $taxCalculation;
 
+
+    public $allowedCountries = [
+        'NO',
+        'SE',
+        'FI',
+        'DE'
+    ];
+
     /**
      * Data constructor.
      * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
@@ -720,7 +728,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
         $this->collectorSession->setVariable('btype', 'b2c');
         return $this->getB2CStoreID();
-
     }
 
     public function getOrderResponse()

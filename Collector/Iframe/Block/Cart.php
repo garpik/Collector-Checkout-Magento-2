@@ -13,7 +13,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
      */
     protected $checkoutSession;
 
-    protected $storeManager;
+    protected $storeManager = null;
     /**
      * @var \Magento\Framework\Pricing\Helper\Data
      */
@@ -22,11 +22,6 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $scopeConfig;
-    /**
-     * @var bool
-     */
-    private $initialized = false;
-
     /**
      * @var \Collector\Base\Model\Session
      */
@@ -102,9 +97,6 @@ class Cart extends \Magento\Checkout\Block\Onepage
 
     public function init()
     {
-        if ($this->initialized) {
-            return;
-        }
         $defaultData = [
             'firstname' => 'Kalle',
             'lastname' => 'Anka',
@@ -114,7 +106,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
             'postcode' => '12345',
             'telephone' => '0123456789'
         ];
-        if($this->helper->isShippingAddressEnabled()) {
+        if ($this->helper->isShippingAddressEnabled()) {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
         } else {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);

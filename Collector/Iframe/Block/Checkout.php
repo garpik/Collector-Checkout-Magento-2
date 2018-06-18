@@ -108,38 +108,21 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         if (empty($this->cart->getQuote()->getReservedOrderId())) {
             $this->cart->getQuote()->reserveOrderId()->save();
         }
-        $req = array();
-
-        if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype'))
-            && $this->helper->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
-
-            $this->collectorSession->setVariable('btype', 'b2b');
-            $req['storeId'] = $this->helper->getB2BStoreID();
-        } else {
-            $this->collectorSession->setVariable('btype', 'b2c');
-            $req['storeId'] = $this->helper->getB2CStoreID();
-        }
-
-        $req['countryCode'] = $this->helper->getCountryCode();
-        $req['reference'] = $this->cart->getQuote()->getReservedOrderId();
-        $req['redirectPageUri'] = $this->helper->getSuccessPageUrl();
-        $req['merchantTermsUri'] = $this->helper->getTermsUrl();
-        $req['notificationUri'] = $this->helper->getNotificationUrl();
-        $req["cart"] = $this->helper->getProducts();
-        $req["fees"] = $this->helper->getFees();
-
-
-        $result = $this->helper->getTokenRequest($req);
-
-
-
+        $result = $this->helper->getTokenRequest([
+            'storeId' => $this->helper->getB2BrB2CStore(),
+            'countryCode' => $this->helper->getCountryCode(),
+            'reference' => $this->cart->getQuote()->getReservedOrderId(),
+            'redirectPageUri' => $this->helper->getSuccessPageUrl(),
+            'merchantTermsUri' => $this->helper->getTermsUrl(),
+            'notificationUri' => $this->helper->getNotificationUrl(),
+            "cart" => $this->helper->getProducts(),
+            "fees" => $this->helper->getFees()
+        ]);
         $this->collectorSession->setVariable('collector_public_token', $result["data"]["publicToken"]);
         $this->collectorSession->setVariable('collector_private_id', $result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_btype', $this->collectorSession->getVariable('btype'));
         $this->cart->getQuote()->save();
-
         return $publicToken = $result["data"]["publicToken"];
     }
 }

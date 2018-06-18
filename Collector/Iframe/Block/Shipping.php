@@ -105,38 +105,35 @@ class Shipping extends \Magento\Framework\View\Element\Template
 
     public function getCountryHtmlSelect($defValue = null, $name = 'country_id', $id = 'country', $title = 'Country')
     {
-        \Magento\Framework\Profiler::start('TEST: ' . __METHOD__, ['group' => 'TEST', 'method' => __METHOD__]);
         if ($defValue === null) {
             $defValue = $this->getAddress()->getCountryId();
         }
-        $cacheKey = 'DIRECTORY_COUNTRY_SELECT_STORE_' . $this->storeManager->getStore()->getCode();
+        $cacheKey = 'COLLECTOR_DIRECTORY_COUNTRY_SELECT_STORE_' . $this->storeManager->getStore()->getCode();
         $cache = $this->configCacheType->load($cacheKey);
+        $options = [];
         if ($cache) {
             $options = $this->getSerializer()->unserialize($cache);
         } else {
-            $options = $this->getCountryCollection()
+            $options_source = $this->getCountryCollection()
                 ->setForegroundCountries($this->getTopDestinations())
                 ->toOptionArray();
+            foreach ($options_source as $option) {
+                if (in_array($option['value'], $this->helper->allowedCountries) || $option['value'] == '') {
+                    $options[] = $option;
+                }
+            }
             $this->configCacheType->save($this->getSerializer()->serialize($options), $cacheKey);
         }
-        $html = $this->getLayout()->createBlock(
-            \Magento\Framework\View\Element\Html\Select::class
-        )->setName(
-            $name
-        )->setId(
-            $id
-        )->setTitle(
-            __($title)
-        )->setValue(
-            $defValue
-        )->setOptions(
-            $options
-        )->setExtraParams(
-            'data-validate="{\'validate-select\':true}"'
-        )->getHtml();
 
-        \Magento\Framework\Profiler::stop('TEST: ' . __METHOD__);
-        return $html;
+        return $this->getLayout()
+            ->createBlock(\Magento\Framework\View\Element\Html\Select::class)
+            ->setName($name)
+            ->setId($id)
+            ->setTitle(__($title))
+            ->setValue($defValue)
+            ->setOptions($options)
+            ->setExtraParams('data-validate="{\'validate-select\':true}"')
+            ->getHtml();
     }
 
 

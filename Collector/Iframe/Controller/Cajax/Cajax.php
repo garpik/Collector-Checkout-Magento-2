@@ -231,20 +231,17 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     try {
                         $resp = $this->getCheckoutData();
                         if (isset($resp['data']['businessCustomer']['invoiceAddress'])) {
-
                             $shipping = [
                                 'firstname' => $resp['data']['customer']['businessCustomer']['firstName'],
                                 'lastname' => $resp['data']['customer']['businessCustomer']['lastName'],
                                 'city' => $resp['data']['customer']['businessCustomer']['city'],
                                 'postcode' => $resp['data']['customer']['businessCustomer']['postalCode']
                             ];
-
                             if (isset($resp['data']['businessCustomer']['deliveryAddress']['address'])) {
                                 $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['address'];
                             } else {
                                 $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
                             }
-
                             $billing = ['firstname' => $resp['data']['businessCustomer']['firstName'],
                                 'lastname' => $resp['data']['businessCustomer']['lastName'],
                                 'city' => $resp['data']['businessCustomer']['invoiceAddress']['city'],
@@ -264,7 +261,6 @@ class Cajax extends \Magento\Framework\App\Action\Action
                                 'city' => $resp['data']['customer']['deliveryAddress']['city'],
                                 'postcode' => $resp['data']['customer']['deliveryAddress']['postalCode']
                             ];
-
                             $billing = ['firstname' => $resp['data']['customer']['billingAddress']['firstName'],
                                 'lastname' => $resp['data']['customer']['billingAddress']['lastName'],
                                 'street' => $resp['data']['customer']['billingAddress']['address'],
