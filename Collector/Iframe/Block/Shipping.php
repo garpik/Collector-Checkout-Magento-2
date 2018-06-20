@@ -102,6 +102,15 @@ class Shipping extends \Magento\Framework\View\Element\Template
         return $this->serializer;
     }
 
+    protected function getTopDestinations()
+    {
+        $destinations = (string)$this->scopeConfig->getValue(
+            'general/country/destinations',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+        return !empty($destinations) ? explode(',', $destinations) : [];
+    }
+
 
     public function getCountryHtmlSelect($defValue = null, $name = 'country_id', $id = 'country', $title = 'Country')
     {
@@ -124,7 +133,6 @@ class Shipping extends \Magento\Framework\View\Element\Template
             }
             $this->configCacheType->save($this->getSerializer()->serialize($options), $cacheKey);
         }
-
         return $this->getLayout()
             ->createBlock(\Magento\Framework\View\Element\Html\Select::class)
             ->setName($name)

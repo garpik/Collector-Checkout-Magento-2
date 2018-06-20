@@ -14,7 +14,7 @@ class Url
         $this->helper = $helper;
     }
 
-    public function afterGetCheckoutUrl($subject, $result)
+    public function afterGetCheckoutUrl($subject = null, $result)
     {
         if ($this->helper->getEnable()) {
             return $this->urlBuilder->getUrl('collectorcheckout');

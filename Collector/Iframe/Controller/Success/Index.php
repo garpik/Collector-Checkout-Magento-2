@@ -168,12 +168,10 @@ class Index extends \Magento\Framework\App\Action\Action
             $this->messageManager->addError(__('Can not place order.'));
             return $this->redirect->redirect($this->response, '/');
         }
-
         try {
-
             //set payment method
             $paymentMethod = $this->getPaymentMethodByName($response['data']['purchase']['paymentName']);
-
+            
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {
                 $this->messageManager->addError(__('This order is already exists'));

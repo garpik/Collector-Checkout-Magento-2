@@ -120,6 +120,15 @@ class Cajax extends \Magento\Framework\App\Action\Action
         if ($this->getRequest()->isAjax()) {
             $changed = false;
             switch ($this->getRequest()->getParam('type')) {
+                case "shippingValidate":
+                    $errors = $this->cart->getQuote()->getShippingAddress()->validate();
+                    if ($errors == true) {
+                        $errors = [];
+                    }
+                    if (!in_array($this->cart->getQuote()->getShippingAddress()->getCountryId(), $this->helper->allowedCountries)) {
+                        $errors[] = ('This country is not allowed');
+                    }
+                    return $result->setData(['error' => count($errors) > 0 ? 1 : 0, 'messages' => implode("\n", $errors)]);
                 case "shippingAddress":
                     $customizeAttribute = ['street_1', 'street_2'];
                     $name = $this->getRequest()->getParam('name');

@@ -5,13 +5,40 @@ define([
     return {
         call: function (ajaxUrl) {
 
-            if(window.showCollectorShipping) {
-                $(document).on('hover', '.collector-checkout-wrapper', function () {
-                    if (!$('.form-shipping-address').valid()) {
-                        $('.collector-checkout').addClass('disabled');
-                    }
-                    else {
-                        $('.collector-checkout').removeClass('disabled');
+            if (window.showCollectorShipping) {
+                $(document).on('mouseover', '.collector-checkout-wrapper', function () {
+                    if ($('.collector-checkout.disabled').length > 0) {
+                        if (!$('.form-shipping-address').valid()) {
+                            $('.collector-checkout').addClass('disabled');
+                        }
+                        else {
+                            var param = {
+                                is_ajax: true,
+                                type: 'shippingValidate'
+                            }
+                            $.ajax({
+                                url: ajaxUrl,
+                                data: param,
+                                type: "POST",
+                                dataType: 'json',
+                                beforeSend: function () {
+                                    //jQuery('body').addClass('is-suspended');
+                                    window.collector.checkout.api.suspend();
+                                },
+                                success: function (data) {
+                                    if (data.error === 0) {
+                                        $('.collector-checkout').removeClass('disabled');
+                                    } else {
+                                        alert(data.messages);
+                                        event.preventDefault();
+                                    }
+                                },
+                                complete: function () {
+                                    //jQuery('body').removeClass('is-suspended');
+                                    window.collector.checkout.api.resume();
+                                }
+                            });
+                        }
                     }
                 });
                 $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
@@ -21,14 +48,7 @@ define([
                         name: $(this).attr('name'),
                         value: $(this).val()
                     }
-
-                    if (!$('.form-shipping-address').valid()) {
-                        $('div.mage-error').remove();
-                        $('.collector-checkout').addClass('disabled');
-                    }
-                    else {
-                        $('.collector-checkout').removeClass('disabled');
-                    }
+                    $('.collector-checkout').addClass('disabled');
 
                     if ($(this).hasClass('validate')) {
                         $(this).mage('validation', {});
@@ -52,6 +72,34 @@ define([
                                     var sections = ['cart'];
                                     customerData.invalidate(sections);
                                     customerData.reload(sections, true);
+                                });
+                            },
+                            success: function () {
+                                var param = {
+                                    is_ajax: true,
+                                    type: 'shippingValidate'
+                                }
+                                $.ajax({
+                                    url: ajaxUrl,
+                                    data: param,
+                                    type: "POST",
+                                    dataType: 'json',
+                                    beforeSend: function () {
+                                        //jQuery('body').addClass('is-suspended');
+                                        window.collector.checkout.api.suspend();
+                                    },
+                                    success: function (data) {
+                                        if (data.error === 0) {
+                                            $('.collector-checkout').removeClass('disabled');
+                                        } else {
+                                            alert(data.messages);
+                                            event.preventDefault();
+                                        }
+                                    },
+                                    complete: function () {
+                                        //jQuery('body').removeClass('is-suspended');
+                                        window.collector.checkout.api.resume();
+                                    }
                                 });
                             }
                         });
@@ -175,7 +223,7 @@ define([
                             window.location.href = window.location.protocol + "//" + window.location.host + "/";
                         }
                         if (data.cart) {
-                            if(window.showCollectorShipping) {
+                            if (window.showCollectorShipping) {
                                 if (!$('.form-shipping-address').valid()) {
                                     $('div.mage-error').remove();
                                     $('.collector-checkout').addClass('disabled');
@@ -217,7 +265,7 @@ define([
                         window.collector.checkout.api.suspend();
                     },
                     success: function (data) {
-                        if(window.showCollectorShipping) {
+                        if (window.showCollectorShipping) {
                             if (!$('.form-shipping-address').valid()) {
                                 $('div.mage-error').remove();
                                 $('.collector-checkout').addClass('disabled');
