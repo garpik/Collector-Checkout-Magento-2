@@ -25,19 +25,26 @@ class CancelObserver extends AbstractDataAssignObserver
      * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
+    protected $collectorConfig;
 
     /**
      * CancelObserver constructor.
      * @param \Collector\Gateways\Helper\Data $_helper
      * @param \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
+     * @param \Collector\Base\Model\Config $collectorConfig
      */
     public function __construct(
         \Collector\Gateways\Helper\Data $_helper,
         \Magento\Framework\Webapi\Soap\ClientFactory $clientFactory,
-        \Collector\Base\Logger\Collector $logger
+        \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Model\ApiRequest $apiRequest,
+        \Collector\Base\Model\Config $collectorConfig
     )
     {
+        $this->apiRequest = $apiRequest;
+        $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
         $this->helper = $_helper;
         $this->clientFactory = $clientFactory;
@@ -49,28 +56,19 @@ class CancelObserver extends AbstractDataAssignObserver
         $payment = $order->getPayment();
         $method = $payment->getMethodInstance();
         if (strpos($method->getCode(), "collector") !== false) {
-            $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), [
-                'soap_version' => SOAP_1_1,
-                'exceptions' => 1,
-                'trace' => true
-            ]);
-            $headerList = [
-                new \SoapHeader($this->helper->getHeaderUrl(), 'Username', $this->helper->getUsername()),
-                new \SoapHeader($this->helper->getHeaderUrl(), 'Password', $this->helper->getPassword())
-            ];
-            if ($this->helper->getEnable()) {
+            $client = $this->apiRequest->getInvoiceSOAP();
+            if ($this->collectorConfig->getEnable()) {
                 if ($order->getData('collector_ssn') !== null) {
-                    $storeId = $this->helper->getB2BStoreID();
+                    $storeId = $this->collectorConfig->getB2BStoreID();
                 } else {
-                    $storeId = $this->helper->getB2CStoreID();
+                    $storeId = $this->collectorConfig->getB2CStoreID();
                 }
             } else {
-                $storeId = $this->helper->getB2CStoreID();
+                $storeId = $this->collectorConfig->getB2CStoreID();
             }
-            $client->__setSoapHeaders($headerList);
             $req = [
                 'CorrelationId' => $order->getIncrementId(),
-                'CountryCode' => $this->helper->getCountryCode(),
+                'CountryCode' => $this->collectorConfig->getCountryCode(),
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeId,
             ];

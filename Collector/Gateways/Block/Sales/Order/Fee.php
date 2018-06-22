@@ -31,6 +31,7 @@ class Fee extends \Magento\Framework\View\Element\Template
     protected $_source;
 
     /**
+     * Fee constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param \Magento\Tax\Model\Config $taxConfig
      * @param array $data

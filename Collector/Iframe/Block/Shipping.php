@@ -34,6 +34,12 @@ class Shipping extends \Magento\Framework\View\Element\Template
      */
     protected $helper;
 
+
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+
     /**
      * Shipping constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -42,6 +48,7 @@ class Shipping extends \Magento\Framework\View\Element\Template
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Collector\Iframe\Helper\Data $helper
+     * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Magento\Framework\App\Cache\Type\Config $configCacheType
      * @param \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
      */
@@ -52,11 +59,13 @@ class Shipping extends \Magento\Framework\View\Element\Template
         \Collector\Base\Model\Session $_collectorSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Collector\Iframe\Helper\Data $helper,
+        \Collector\Base\Model\Config $collectorConfig,
         \Magento\Framework\App\Cache\Type\Config $configCacheType,
         \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
     )
     {
         parent::__construct($context, $data);
+        $this->collectorConfig = $collectorConfig;
         $this->helper = $helper;
         $this->scopeConfig = $scopeConfig;
         $this->configCacheType = $configCacheType;
@@ -72,10 +81,9 @@ class Shipping extends \Magento\Framework\View\Element\Template
         return isset($street[$lineNumber - 1]) ? $street[$lineNumber - 1] : '';
     }
 
-
-    public function isVisible()
+    public function isVisible(): bool
     {
-        return $this->helper->isShippingAddressEnabled();
+        return $this->collectorConfig->isShippingAddressEnabled();
     }
 
     public function getAddress()

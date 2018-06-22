@@ -42,9 +42,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $pricingHelper;
     /**
-     * @var \Magento\Checkout\Model\Cart
-     */
-    /**
      * @var \Collector\Base\Model\Session
      */
     protected $collectorSession;
@@ -61,7 +58,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $taxCalculation;
 
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
 
+    /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
     public $allowedCountries = [
         'NO',
         'SE',
@@ -84,7 +89,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Catalog\Helper\Product\Configuration $_productConfigHelper
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
+     * @param \Collector\Base\Model\Config $collectorConfig
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -100,9 +107,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Catalog\Helper\Product\Configuration $_productConfigHelper,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
-        \Magento\Framework\Message\ManagerInterface $_messageManager
+        \Collector\Base\Model\ApiRequest $apiRequest,
+        \Magento\Framework\Message\ManagerInterface $_messageManager,
+        \Collector\Base\Model\Config $collectorConfig
     )
     {
+        $this->apiRequest = $apiRequest;
+        $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->productRepository = $productRepository;
@@ -119,89 +130,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return parent::__construct($context);
     }
 
-    public function getEnable()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getAcceptStatus()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/acceptstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getHoldStatus()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/holdstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getDeniedStatus()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/deniedstatus', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getTestMode()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/testmode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getShowOptions()
-    {
-        return true;
-    }
-
-    public function getShippingTaxClass()
-    {
-        return $this->scopeConfig->getValue('tax/classes/shipping_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getB2BInvoiceFeeTaxClass()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getB2CInvoiceFeeTaxClass()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c_tax_class', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getUsername()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/username', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getCustomerType()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/customer_type', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getPassword()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/sharedkey', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getB2CStoreID()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2c_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getB2BStoreID()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/b2b_storeid', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
-
-    public function getCountryCode()
-    {
-        return $this->scopeConfig->getValue('general/country/default', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-    }
 
     public function getSuccessPageUrl()
     {
         return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/success";
-    }
-
-    public function getTermsUrl()
-    {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/terms_url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getNotificationUrl()
@@ -228,7 +160,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getGrandTotal()
     {
-
         if (empty($this->collectorSession->getVariable('curr_shipping_tax'))) {
             $this->getShippingPrice();
         }
@@ -238,14 +169,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getShippingMethods()
     {
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
+        $currentStoreId = $this->storeManager->getStore()->getId();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
         $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
-        $shippingTaxClass = $this->getShippingTaxClass();
+        $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
         $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
-        $shippingMethods = array();
+        $shippingMethods = [];
         $first = true;
         $methods = $shippingAddress->getGroupedAllShippingRates();
         $selectedIsActive = false;
@@ -261,57 +191,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if (!$selectedIsActive) {
             $this->collectorSession->setVariable('curr_shipping_code', '');
         }
-        if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
-            foreach ($methods as $method) {
-                foreach ($method as $rate) {
-                    $shipMethod = [
-                        'first' => $first,
-                        'code' => $rate->getCode(),
-                        'content' => ''
-                    ];
-                    if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
-                        $first = false;
-                        if ($shippingTax == 0) {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                        } else {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
-                        }
-                        $this->setShippingMethod($rate->getCode());
-                    } else {
-                        if ($shippingTax == 0) {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                        } else {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
-                        }
-                    }
-                    array_push($shippingMethods, $shipMethod);
+
+        foreach ($methods as $method) {
+            foreach ($method as $rate) {
+                $shipMethod = [
+                    'first' => $first,
+                    'code' => $rate->getCode(),
+                    'content' => ''
+                ];
+                if (!$selectedIsActive && $first
+                    || $selectedIsActive && $rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')
+                ) {
+                    $first = false;
+                    $this->setShippingMethod($rate->getCode());
                 }
-            }
-        } else {
-            foreach ($methods as $method) {
-                foreach ($method as $rate) {
-                    $shipMethod = [
-                        'first' => $first,
-                        'code' => $rate->getCode(),
-                        'content' => ''
-                    ];
-                    if ($first) {
-                        $first = false;
-                        if ($shippingTax == 0) {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                        } else {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
-                        }
-                        $this->setShippingMethod($rate->getCode());
-                    } else {
-                        if ($shippingTax == 0) {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                        } else {
-                            $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
-                        }
-                    }
-                    array_push($shippingMethods, $shipMethod);
+                if ($shippingTax == 0) {
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
+                } else {
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
                 }
+                array_push($shippingMethods, $shipMethod);
             }
         }
         return $shippingMethods;
@@ -349,8 +248,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
         $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $methods = $shippingAddress->getGroupedAllShippingRates();
-        $shippingTaxClass = $this->getShippingTaxClass();
-        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
+        $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
+        $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $first = true;
         foreach ($methods as $method) {
             foreach ($method as $rate) {
@@ -385,13 +284,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getShippingPrice($inclFormatting = true)
     {
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
+        //$currentStore = $this->storeManager->getStore();
+        //$currentStoreId = $currentStore->getId();
+        //$request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
         $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $methods = $shippingAddress->getGroupedAllShippingRates();
-        $shippingTaxClass = $this->getShippingTaxClass();
+        //$shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
         $first = true;
 
         if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
@@ -473,25 +372,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $product = $cartItem->getProduct();
             $taxClassId = $product->getTaxClassId();
             $percent = $this->taxCalculation->getRate($request->setProductClassId($taxClassId));
-            $options = "";
-            if ($this->getShowOptions()) {
-                $options = "<dl>";
-                $op = $cartItem->getProduct()->getTypeInstance(true)->getOrderOptions($cartItem->getProduct());
-                if ($cartItem->getProductType() == 'configurable') {
-                    foreach ($op['attributes_info'] as $option) {
-                        $options .= "<dd>";
-                        $options .= $option['label'] . ": " . $option['value'];
-                        $options .= "</dd>";
-                    }
-                } else if ($cartItem->getProductType() == 'bundle') {
-                    foreach ($op['bundle_options'] as $option) {
-                        $options .= "<dd>";
-                        $options .= $option['value'][0]['title'];
-                        $options .= "</dd>";
-                    }
+            $options = "<dl>";
+            $op = $cartItem->getProduct()->getTypeInstance(true)->getOrderOptions($cartItem->getProduct());
+            if ($cartItem->getProductType() == 'configurable') {
+                foreach ($op['attributes_info'] as $option) {
+                    $options .= "<dd>";
+                    $options .= $option['label'] . ": " . $option['value'];
+                    $options .= "</dd>";
                 }
-                $options .= '</dl>';
+            } else if ($cartItem->getProductType() == 'bundle') {
+                foreach ($op['bundle_options'] as $option) {
+                    $options .= "<dd>";
+                    $options .= $option['value'][0]['title'];
+                    $options .= "</dd>";
+                }
             }
+            $options .= '</dl>';
             array_push($items, array(
                 'name' => $cartItem->getName(),
                 'options' => $options,
@@ -512,8 +408,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $currentStoreId = $currentStore->getId();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $cartTotals = $this->cart->getQuote()->getTotals();
-        $items = array('items' => array());
-        $bundlesWithFixedPrice = array();
+        $items = [];
+        $bundlesWithFixedPrice = [];
 
         foreach ($cartItems as $cartItem) {
             if ($cartItem->getProductType() == 'configurable') {
@@ -541,7 +437,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             if ($cartItem->getPriceInclTax() == 0) {
                 $price = $cartItem->getParentItem()->getPriceInclTax();
             }
-            array_push($items['items'], array(
+            array_push($items, array(
                 'id' => $cartItem->getSku(),
                 'description' => $cartItem->getName(),
                 'unitPrice' => round($price, 2),
@@ -575,7 +471,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - ($cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'])),
                     'vat' => '25',
                 );
-                array_push($items['items'], $code);
+                array_push($items, $code);
             }
         } else {
             $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
@@ -595,7 +491,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'])),
                     'vat' => '25',
                 );
-                array_push($items['items'], $code);
+                array_push($items, $code);
             }
         }
         return $items;
@@ -605,8 +501,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
+        $currentStoreId = $this->storeManager->getStore()->getId();
         //$request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         //$shippingTaxClass = $this->getShippingTaxClass();
         //$shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
@@ -651,10 +546,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 )
             );
         }
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-        $fee = $this->scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope);
+        $fee = $this->collectorConfig->getInvoiceB2BFee();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $feeTaxClass = $this->getB2CInvoiceFeeTaxClass();
+        $feeTaxClass = $this->collectorConfig->getB2CInvoiceFeeTaxClass();
         $feeTax = $this->taxCalculation->getRate($request->setProductClassId($feeTaxClass));
         if ($fee > 0) {
             $iFee = array(
@@ -672,10 +566,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
+        $currentStoreId = $this->storeManager->getStore()->getId();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $shippingTaxClass = $this->getShippingTaxClass();
+        $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
         $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $ret = array(
             'description' => $cartTotals['shipping']->getData()['title']->getArguments(),
@@ -684,60 +577,33 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $ret;
     }
 
-    public function getWSDL()
-    {
-        if ($this->getTestMode()) {
-            return "https://checkout-api-uat.collector.se";
-        } else {
-            return "https://checkout-api.collector.se";
-        }
-    }
 
     public function updateFees()
     {
-
-        if (!empty($this->collectorSession->getVariable('col_curr_fee'))) {
-            if ($this->collectorSession->getVariable('col_curr_fee') == $this->getFees()) {
-                return;
-            } else {
-                $array = $this->getFees();
-                $this->collectorSession->setVariable('col_curr_fee', $array);
-            }
-        } else {
-            $array = $this->getFees();
-            $this->collectorSession->setVariable('col_curr_fee', $array);
+        $fees = $this->getFees();
+        if ($this->collectorSession->getVariable('col_curr_fee') == $fees) {
+            return;
         }
-        $this->callCheckoutsFees($array);
-
+        $this->collectorSession->setVariable('col_curr_fee', $fees);
+        $this->apiRequest->callCheckoutsFees($fees, $this->cart);
     }
 
     public function updateCart()
     {
-        $this->callCheckoutsCart([
-            'countryCode' => $this->getCountryCode(),
-            'items' => $this->getProducts()['items']
-        ]);
+        $this->apiRequest->callCheckoutsCart([
+            'countryCode' => $this->collectorConfig->getCountryCode(),
+            'items' => $this->getProducts()
+        ], $this->cart);
     }
 
-    public function getB2BrB2CStore()
-    {
-        if ($this->collectorSession->getVariable('btype') == 'b2b'
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
-            $this->collectorSession->setVariable('btype', 'b2b');
-            return $this->getB2BStoreID();
-        }
-        $this->collectorSession->setVariable('btype', 'b2c');
-        return $this->getB2CStoreID();
-    }
 
     public function getOrderResponse()
     {
-        $data = $this->callCheckouts();
+        $data = $this->apiRequest->callCheckouts($this->cart);
         if ($data["data"]) {
             $result['code'] = 1;
             $result['id'] = $data["id"];
             $result['data'] = $data["data"];
-
         } else {
             $result['code'] = 0;
             $result['error'] = $data["error"];
@@ -745,107 +611,4 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $result;
     }
 
-    public function isShippingAddressEnabled()
-    {
-        $isEnabled = $this->scopeConfig->getValue('collector_collectorcheckout/general/shippingaddress', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        if (empty($isEnabled))
-            return false;
-        return $isEnabled;
-    }
-
-    private function getPID()
-    {
-        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
-            return $this->collectorSession->getVariable('collector_private_id');
-        }
-        return $this->cart->getQuote()->getData('collector_private_id');
-    }
-
-
-    public function getHash($path, $json = '')
-    {
-        return base64_encode($this->getUsername() . ":" . hash("sha256", $json . $path . $this->getPassword()));
-    }
-
-    public function callCheckouts()
-    {
-        $pid = $this->getPID();
-        $storeId = $this->getB2BrB2CStore();
-        $path = "/merchants/" . $storeId . "/checkouts/" . $pid;
-        $ch = curl_init($this->getWSDL() . $path);
-        $this->setCurlGET($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:SharedKey ' . $this->getHash($path)));
-        $output = curl_exec($ch);
-        return json_decode($output, true);
-    }
-
-    public function callCheckoutsCart($params)
-    {
-        $pid = $this->getPID();
-        $storeId = $this->getB2BrB2CStore();
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/cart';
-        $json = json_encode($params);
-        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
-        $ch = curl_init($this->getWSDL() . $path);
-        $this->setCurlPUT($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_exec($ch);
-        curl_close($ch);
-    }
-
-    public function callCheckoutsFees($params)
-    {
-        $pid = $this->getPID();
-        $storeId = $this->getB2BrB2CStore();
-        $path = '/merchants/' . $storeId . '/checkouts/' . $pid . '/fees';
-        $json = json_encode($params);
-        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
-        $ch = curl_init($this->getWSDL() . $path);
-        $this->setCurlPUT($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_exec($ch);
-        curl_close($ch);
-    }
-
-    public function getTokenRequest($params)
-    {
-        $path = '/checkout';
-        $json = json_encode($params);
-        $hashstr = 'SharedKey ' . $this->getHash($path, $json);
-        $ch = curl_init($this->getWSDL() . $path);
-        $this->setCurlPOST($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        return json_decode($output, true);
-    }
-
-    private function setCurlGET(&$ch)
-    {
-        curl_setopt($ch, CURLOPT_HTTPGET, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-    }
-
-    private function setCurlPUT(&$ch)
-    {
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-    }
-
-    private function setCurlPOST(&$ch)
-    {
-
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-    }
 }

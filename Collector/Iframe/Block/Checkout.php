@@ -30,6 +30,17 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      */
     protected $collectorSession;
 
+
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+
+    /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
+
     /**
      * Checkout constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -38,8 +49,10 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Magento\Checkout\Model\Cart $_cart
+     * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -49,12 +62,16 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
         \Collector\Iframe\Helper\Data $_helper,
         \Magento\Checkout\Model\Cart $_cart,
+        \Collector\Base\Model\Config $collectorConfig,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Model\ApiRequest $apiRequest,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->apiRequest = $apiRequest;
+        $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
@@ -68,7 +85,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage
 
     public function getCheckoutUrl()
     {
-        if ($this->helper->getTestMode()) {
+        if ($this->collectorConfig->getTestMode()) {
             $this->collectorSession->setVariable('collector_url', "https://checkout-uat.collector.se/collector-checkout-loader.js");
         } else {
             $this->collectorSession->setVariable('collector_url', "https://checkout.collector.se/collector-checkout-loader.js");
@@ -78,7 +95,7 @@ class Checkout extends \Magento\Checkout\Block\Onepage
 
     public function getLanguage()
     {
-        $lang = $this->helper->getCountryCode();
+        $lang = $this->collectorConfig->getCountryCode();
         if (!empty($this->languageArray[$lang])) {
             $this->collectorSession->setVariable('collector_language', $this->languageArray[$lang]);
             return $this->languageArray[$lang];
@@ -89,9 +106,9 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     public function getDataVariant()
     {
         $dataVariant = ' async';
-        if ($this->collectorSession->getVariable('btype') == 'b2b'
+        if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B
             || empty($this->collectorSession->getVariable('btype'))
-            && $this->helper->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
+            && $this->collectorConfig->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $dataVariant = ' data-variant="b2b" async';
         }
         $this->collectorSession->setVariable('collector_data_variant', $dataVariant);
@@ -108,14 +125,14 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         if (empty($this->cart->getQuote()->getReservedOrderId())) {
             $this->cart->getQuote()->reserveOrderId()->save();
         }
-        $result = $this->helper->getTokenRequest([
-            'storeId' => $this->helper->getB2BrB2CStore(),
-            'countryCode' => $this->helper->getCountryCode(),
+        $result = $this->apiRequest->getTokenRequest([
+            'storeId' => $this->collectorConfig->getB2BrB2CStore(),
+            'countryCode' => $this->collectorConfig->getCountryCode(),
             'reference' => $this->cart->getQuote()->getReservedOrderId(),
             'redirectPageUri' => $this->helper->getSuccessPageUrl(),
-            'merchantTermsUri' => $this->helper->getTermsUrl(),
+            'merchantTermsUri' => $this->collectorConfig->getTermsUrl(),
             'notificationUri' => $this->helper->getNotificationUrl(),
-            "cart" => $this->helper->getProducts(),
+            "cart" => ['items' => $this->helper->getProducts()],
             "fees" => $this->helper->getFees()
         ]);
         $this->collectorSession->setVariable('collector_public_token', $result["data"]["publicToken"]);

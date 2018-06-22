@@ -17,7 +17,26 @@ class Index extends \Magento\Framework\App\Action\Action {
     protected $checkoutSession;
 	protected $cartRepositoryInterface;
 	protected $cartManagementInterface;
-	
+
+    /**
+     * Index constructor.
+     * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
+     * @param \Collector\Iframe\Helper\Data $_helper
+     * @param \Magento\Framework\App\Action\Context $context
+     * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
+     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
+     * @param \Magento\Quote\Api\CartRepositoryInterface $_cartRepositoryInterface
+     * @param \Magento\Quote\Api\CartManagementInterface $_cartManagementInterface
+     * @param \Magento\Framework\Data\Form\FormKey $formKey
+     * @param \Magento\Store\Model\StoreManagerInterface $_storeManager
+     * @param \Magento\Customer\Api\CustomerRepositoryInterface $_customerRepository
+     * @param \Magento\Checkout\Model\Session $_checkoutSession
+     * @param \Magento\Customer\Model\CustomerFactory $_customerFactory
+     * @param \Magento\Sales\Api\Data\OrderInterface $_orderInterface
+     * @param \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory
+     * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
+     * @param \Magento\Framework\Json\Helper\Data $jsonHelper
+     */
 	public function __construct(
 		\Magento\Framework\View\Result\LayoutFactory $_layoutFactory,
 		\Collector\Iframe\Helper\Data $_helper,

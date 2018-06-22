@@ -112,8 +112,10 @@
                 <legend class="legend"><span><?= $block->escapeHtml(__('Contact Information')) ?></span></legend>
                 <br>
                 <?= $block->getBlockHtml('formkey') ?>
-                <input type="hidden" name="success_url" value="<?= $block->escapeUrl($block->getSuccessUrl()) ?>">
-                <input type="hidden" name="error_url" value="<?= $block->escapeUrl($block->getErrorUrl()) ?>">
+                <input type="hidden" data-mage-init='{"validation":{}}' name="success_url"
+                       value="<?= $block->escapeUrl($block->getSuccessUrl()) ?>">
+                <input type="hidden" data-mage-init='{"validation":{}}' name="error_url"
+                       value="<?= $block->escapeUrl($block->getErrorUrl()) ?>">
                 <?= $block->getNameBlockHtml() ?>
 
 
@@ -185,6 +187,7 @@
             }
         }
     }
+
 
     </script>
     <script type="text/javascript">window.showCollectorShipping = true;</script>

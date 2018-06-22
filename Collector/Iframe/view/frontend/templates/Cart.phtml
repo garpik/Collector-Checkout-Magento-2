@@ -1,14 +1,10 @@
-<?php $this->getShippingMethods();
+<?php
 $priceHelper = $block->getPricingObject();
-$scopeConfig = $block->getConfigObject();
-$config = $scopeConfig->getValue('collector_collectorcheckout/general/customer_type');
-$storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-$storeManager = $block->getStoreManagerObject();
-$url = $storeManager->getStore()->getBaseUrl();
-$storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-$updateCustomer = $scopeConfig->getValue('collector_collectorcheckout/general/updatecustomer', $storeScope);
-$showDiscount = $scopeConfig->getValue('collector_collectorcheckout/styling/showdiscount', $storeScope);
-$checkoutSession = $block->getCheckoutSessionObject();
+$collectorConfig = $block->getCollectorConfig();
+$customerType = $collectorConfig->getCustomerType();
+$url = $block->getBaseUrl();
+$updateCustomer = $collectorConfig->getUpdateCustomer();
+$showDiscount = $collectorConfig->getShowDiscount();
 ?>
 <script>
     var cajaxurl = "<?php echo $url . "collectorcheckout/cajax/cajax"; ?>";
@@ -19,7 +15,7 @@ $checkoutSession = $block->getCheckoutSessionObject();
     <?php endif; ?>
 </script>
 <div class="collector-cart" id="collector-cart">
-    <?php if ($config == 3): ?>
+    <?php if ($customerType == \Collector\Iframe\Model\Config\Source\Customertype::PRIVATE_BUSINESS_CUSTOMER): ?>
         <div id="col-businesstypes" style="float:right;">
             <a class="col-btype col-active" id="b2c"><?php echo __('Private'); ?></a> | <a
                     class="col-btype col-inactive" id="b2b"><?php echo __('Company'); ?></a>
@@ -78,12 +74,9 @@ $checkoutSession = $block->getCheckoutSessionObject();
         <table class="col-totals">
             <?php if ($this->hasDiscount()): ?>
                 <?php $code = "";
-                $discountCode = $checkoutSession->getQuote()->getCouponCode();
-                if ($discountCode) {
-                    $block->getCollectorSession()->setVariable('collector_applied_discount_code', $discountCode);
-                }
-                if (!empty($block->getCollectorSession()->getVariable('collector_applied_discount_code'))) {
-                    $code = "(" . $block->getCollectorSession()->getVariable('collector_applied_discount_code') . ")";
+                $discountCode = $block->getQuoteCouponCode();
+                if (!empty($discountCode)) {
+                    $code = "(" . $discountCode . ")";
                 } ?>
                 <tr>
                     <td class="col-name"><?php echo __('Discount');
@@ -156,30 +149,30 @@ $checkoutSession = $block->getCheckoutSessionObject();
                             echo $this->getShippingPrice();
                         } else if ($total->getData()['code'] == 'grand_total') {
                             if (empty($totals['shipping']->getData()['title']->getArguments())) {
-                                echo $priceHelper->currency($total->getData()['value'] + $this->getShippingPriceExclFormatting() + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                echo $priceHelper->currency($total->getData()['value'] + $this->getShippingPriceExclFormatting() + $collectorConfig->getInvoiceB2BFee(), true, false);
                             } else {
                                 if (array_key_exists('value_incl_tax', $total->getData())) {
                                     if (isset($total->getData()['value_incl_tax'])) {
-                                        echo $priceHelper->currency($total->getData()['value_incl_tax'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                        echo $priceHelper->currency($total->getData()['value_incl_tax'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                     } else {
-                                        echo $priceHelper->currency($total->getData()['value'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                        echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                     }
                                 } else {
-                                    echo $priceHelper->currency($total->getData()['value'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                    echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                 }
                             }
                         } else if ($total->getData()['code'] == 'fee_amount') {
                             if (array_key_exists('value_incl_tax', $total->getData())) {
                                 if (isset($total->getData()['value_incl_tax'])) {
-                                    echo $priceHelper->currency($total->getData()['value_incl_tax'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                    echo $priceHelper->currency($total->getData()['value_incl_tax'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                 } else {
                                     if ($total->getData()['value'] > 0) {
-                                        echo $priceHelper->currency($total->getData()['value'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                        echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                     }
                                 }
                             } else {
                                 if ($total->getData()['value'] > 0) {
-                                    echo $priceHelper->currency($total->getData()['value'] + floatval($scopeConfig->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)), true, false);
+                                    echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
                                 }
                             }
                         } else {
@@ -211,7 +204,7 @@ $checkoutSession = $block->getCheckoutSessionObject();
                 <form action="javascript:void(0);">
                     <?php if ($this->hasCoupon()) { ?>
                         <input type="text" name="code" id="col-code" class="col-code"
-                               value="<?php echo $block->getCollectorSession()->getVariable('collector_applied_discount_code'); ?>">
+                               value="<?php echo $block->getQuoteCouponCode();; ?>">
                         <input type="button" id="col-codeButton" class="col-codeButton"
                                value="<?php echo __('Cancel') ?>">
                     <?php } else { ?>

@@ -4,11 +4,22 @@ namespace Collector\Gateways\Cron;
 
 class Partrefund
 {
-
-    protected $clientFactory;
-    protected $helper;
+    /**
+     * @var \Magento\Sales\Api\CreditmemoRepositoryInterface
+     */
     protected $creditmemoRepositoryInterface;
+    /**
+     * @var \Magento\Framework\Api\SearchCriteriaBuilder
+     */
     protected $searchCriteriaBuilder;
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+    /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
     /**
      * @var \Collector\Base\Logger\Collector
      */
@@ -16,30 +27,30 @@ class Partrefund
 
     /**
      * Partrefund constructor.
-     * @param \Collector\Gateways\Helper\Data $_helper
-     * @param \Magento\Framework\Webapi\Soap\ClientFactory $_clientFactory
      * @param \Magento\Sales\Api\CreditmemoRepositoryInterface $_creditmemoRepositoryInterface
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $_searchCriteriaBuilder
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
+     * @param \Collector\Base\Model\Config $collectorConfig
      */
     public function __construct(
-        \Collector\Gateways\Helper\Data $_helper,
-        \Magento\Framework\Webapi\Soap\ClientFactory $_clientFactory,
         \Magento\Sales\Api\CreditmemoRepositoryInterface $_creditmemoRepositoryInterface,
         \Magento\Framework\Api\SearchCriteriaBuilder $_searchCriteriaBuilder,
-        \Collector\Base\Logger\Collector $logger
+        \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Model\ApiRequest $apiRequest,
+        \Collector\Base\Model\Config $collectorConfig
     )
     {
+        $this->collectorConfig = $collectorConfig;
+        $this->apiRequest = $apiRequest;
         $this->logger = $logger;
-        $this->helper = $_helper;
-        $this->clientFactory = $_clientFactory;
         $this->searchCriteriaBuilder = $_searchCriteriaBuilder;
         $this->creditmemoRepositoryInterface = $_creditmemoRepositoryInterface;
     }
 
     private function getCreditmemos()
     {
-        $results = array();
+        $results = [];
         $searchCriteria = $this->searchCriteriaBuilder->addFilter('collector_refunded', '0', 'eq')->create();
         $creditmemos = $this->creditmemoRepositoryInterface->getList($searchCriteria)->getItems();
         foreach ($creditmemos as $creditmemo) {
@@ -61,40 +72,21 @@ class Partrefund
     public function execute()
     {
         $memos = $this->getCreditmemos();
-        if (count($memos) == 0) {
-            return;
-        }
-        $client = $this->clientFactory->create($this->helper->getInvoiceWSDL(), [
-            'soap_version' => SOAP_1_1,
-            'exceptions' => 1,
-            'trace' => true
-        ]);
-        $headerList = [
-            new \SoapHeader($this->helper->getHeaderUrl(), 'Username', $this->helper->getUsername()),
-            new \SoapHeader($this->helper->getHeaderUrl(), 'Password', $this->helper->getPassword())
-        ];
-
-        $client->__setSoapHeaders($headerList);
+        $client = $this->apiRequest->getInvoiceSOAP();
         foreach ($memos as $memo) {
             $order = $memo->getOrder();
-            if ($order->getBillingAddress()->getCompany()) {
-                $storeID = $this->helper->getB2BStoreID();
-            } else {
-                $storeID = $this->helper->getB2CStoreID();
-            }
+            $storeID = !empty($order->getBillingAddress()->getCompany()) ? $this->collectorConfig->getB2BStoreID() : $this->collectorConfig->getB2CStoreID();
             $req = [
                 'CorrelationId' => $memo->getOrder()->getIncrementId(),
-                'CountryCode' => $this->helper->getCountryCode(),
+                'CountryCode' => $this->collectorConfig->getCountryCode(),
                 'InvoiceNo' => explode('-', $memo->getTransactionId())[0],
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d"),
                 'ArticleList' => []
             ];
-            $bundlesWithFixedPrice = array();
+            $bundlesWithFixedPrice = [];
             foreach ($memo->getItemsCollection() as $item) {
-                if ($item->getProductType() == 'configurable') {
-                    continue;
-                } elseif (in_array($item->getParentItemId(), $bundlesWithFixedPrice)) {
+                if ($item->getProductType() == 'configurable' || in_array($item->getParentItemId(), $bundlesWithFixedPrice)) {
                     continue;
                 } elseif ($item->getProductType() == 'bundle') {
                     $product = $item->getProduct();
@@ -130,15 +122,12 @@ class Partrefund
                 $memo->setData('fee_amount', $order->getData('fee_amount_invoiced'));
                 $memo->setData('base_fee_amount', $order->getData('fee_amount_invoiced'));
                 $order->setData('fee_amount_refunded', $order->getData('fee_amount_invoiced'));
-                $memo->setData('collector_refunded', '1');
-                $memo->save();
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
-
-                $memo->setData('collector_refunded', '1');
-                $memo->save();
             }
+            $memo->setData('collector_refunded', '1');
+            $memo->save();
         }
     }
 }

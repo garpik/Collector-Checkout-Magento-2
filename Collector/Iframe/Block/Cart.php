@@ -32,6 +32,11 @@ class Cart extends \Magento\Checkout\Block\Onepage
     protected $logger;
 
     /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+
+    /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
@@ -43,6 +48,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\Config $collectorConfig
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -56,10 +62,12 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Collector\Iframe\Helper\Data $_helper,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Model\Config $collectorConfig,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->storeManager = $context->getStoreManager();
@@ -70,19 +78,23 @@ class Cart extends \Magento\Checkout\Block\Onepage
         $this->init();
     }
 
-    public function getCollectorSession()
+    public function getQuoteCouponCode()
     {
-        return $this->collectorSession;
+        $code = $this->checkoutSession->getQuote()->getCouponCode();
+        if (!empty($code)) {
+            $this->collectorSession->setVariable('collector_applied_discount_code', $code);
+        }
+        return $code;
     }
 
-    public function getCheckoutSessionObject()
+    public function getBaseUrl()
     {
-        return $this->checkoutSession;
+        return $this->storeManager->getStore()->getBaseUrl();
     }
 
-    public function getStoreManagerObject()
+    public function getCollectorConfig()
     {
-        return $this->storeManager;
+        return $this->collectorConfig;
     }
 
     public function getPricingObject()
@@ -106,7 +118,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
             'postcode' => '12345',
             'telephone' => '0123456789'
         ];
-        if ($this->helper->isShippingAddressEnabled()) {
+        if ($this->collectorConfig->isShippingAddressEnabled()) {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
         } else {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);

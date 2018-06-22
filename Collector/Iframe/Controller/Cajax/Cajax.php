@@ -67,6 +67,11 @@ class Cajax extends \Magento\Framework\App\Action\Action
     protected $logger;
 
     /**
+     * @var \Collector\Base\Model\ApiRequest 
+     */
+    protected $apiRequest;
+
+    /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -77,6 +82,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @param \Magento\Checkout\Model\Cart $cart
      * @param \Magento\Catalog\Model\Product $product
      * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
      */
     public function __construct(
@@ -90,10 +97,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
         \Magento\Catalog\Model\Product $product,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
+        \Collector\Base\Model\ApiRequest $apiRequest,
         \Magento\Framework\Json\Helper\Data $jsonHelper
     )
     {
         parent::__construct($context);
+        $this->apiRequest = $apiRequest;
         $this->logger = $logger;
         $this->collectionSession = $_collectorSession;
         $this->product = $product;
@@ -125,7 +134,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     if ($errors == true) {
                         $errors = [];
                     }
-                    if (!in_array($this->cart->getQuote()->getShippingAddress()->getCountryId(), $this->helper->allowedCountries)) {
+                    if (!in_array($this->cart->getQuote()->getShippingAddress()->getCountryId(), $this->helper->allowedCountries) && $this->getRequest()->getParam('ignore_country') == false) {
                         $errors[] = ('This country is not allowed');
                     }
                     return $result->setData(['error' => count($errors) > 0 ? 1 : 0, 'messages' => implode("\n", $errors)]);
@@ -282,7 +291,6 @@ class Cajax extends \Magento\Framework\App\Action\Action
                         $this->cart->getQuote()->getShippingAddress()->addData($shipping)->save();
                         $this->cart->getQuote()->collectTotals();
                         $this->cart->getQuote()->save();
-                        $this->helper->getShippingMethods();
                         $updateCart = true;
                         $updateFees = true;
                     } catch (\Exception $e) {
@@ -324,7 +332,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
 
     private function getCheckoutData()
     {
-        return $this->helper->callCheckouts();
+        return $this->apiRequest->callCheckouts($this->cart);
     }
 
     /**

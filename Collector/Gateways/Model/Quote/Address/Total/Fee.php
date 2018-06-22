@@ -29,19 +29,27 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
     protected $collectorSession;
 
     /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+
+    /**
      * Fee constructor.
      * @param \Magento\Framework\UrlInterface $urlInterface
      * @param \Collector\Gateways\Helper\Data $helperData
      * @param \Collector\Base\Model\Session $_collectorSession
+     * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      */
     public function __construct(
         \Magento\Framework\UrlInterface $urlInterface,
         \Collector\Gateways\Helper\Data $helperData,
         \Collector\Base\Model\Session $_collectorSession,
+        \Collector\Base\Model\Config $collectorConfig,
         \Magento\Framework\App\Config\ScopeConfigInterface $config
     )
     {
+        $this->collectorConfig = $collectorConfig;
         $this->collectorSession = $_collectorSession;
         $this->_config = $config;
         $this->_helperData = $helperData;
@@ -65,12 +73,10 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
             'title' => __('Invoice Fee'),
             'value' => 0
         ];
-
-        if ($this->_helperData->canApply($quote) && !$checkout && !is_null($quote->getShippingAddress()->getCity())) {
-            $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-            $result['value'] = $this->collectorSession->getVariable('btype') == 'b2b' ?
-                floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2b', $storeScope)) :
-                floatval($this->config->getValue('collector_collectorcheckout/invoice/invoice_fee_b2c', $storeScope));
+        if (!$checkout && !is_null($quote->getShippingAddress()->getCity())) {
+            $result['value'] = $this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B ?
+                $this->collectorConfig->getInvoiceB2BFee() :
+                $this->collectorConfig->getInvoiceB2CFee();
         }
         return $result;
     }

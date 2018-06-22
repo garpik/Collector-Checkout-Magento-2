@@ -71,7 +71,30 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     protected $logger;
 
+    /**
+     * @var \Magento\Framework\Message\ManagerInterface
+     */
+    protected $messageManager;
 
+
+    /**
+     * @var \Magento\Framework\App\Response\RedirectInterface
+     */
+    protected $redirect;
+
+    /**
+     * @var \Magento\Framework\App\Response\Http
+     */
+    protected $response;
+
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+
+    /**
+     * @var array
+     */
     protected $paymentToMethod = [
         'DirectInvoice' => 'collector_invoice',
         'PartPayment' => 'collector_partpay',
@@ -84,6 +107,8 @@ class Index extends \Magento\Framework\App\Action\Action
 
     /**
      * Index constructor.
+     * @param \Collector\Base\Model\Config $collectorConfig
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Magento\Framework\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
@@ -106,6 +131,8 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Magento\Framework\App\Response\RedirectInterface $redirect
      */
     public function __construct(
+        \Collector\Base\Model\Config $collectorConfig,
+        \Collector\Base\Model\ApiRequest $apiRequest,
         \Collector\Iframe\Helper\Data $_helper,
         \Magento\Framework\App\Action\Context $context,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
@@ -129,6 +156,8 @@ class Index extends \Magento\Framework\App\Action\Action
 
     )
     {
+        $this->apiRequest = $apiRequest;
+        $this->collectorConfig = $collectorConfig;
         $this->response = $response;
         $this->redirect = $redirect;
         $this->messageManager = $messageManager;
@@ -161,6 +190,9 @@ class Index extends \Magento\Framework\App\Action\Action
 
     public function execute()
     {
+        $this->checkoutSession->clearQuote();
+        $this->checkoutSession->clearStorage();
+
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
         if ($response["code"] == 0) {
@@ -171,50 +203,58 @@ class Index extends \Magento\Framework\App\Action\Action
         try {
             //set payment method
             $paymentMethod = $this->getPaymentMethodByName($response['data']['purchase']['paymentName']);
-            
+
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {
                 $this->messageManager->addError(__('This order is already exists'));
                 return $this->redirect->redirect($this->response, '/');
             }
-
             $shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
             $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
 
-
-            //isShippingAddressEnabled
-
-            if ((!$this->helper->isShippingAddressEnabled() && empty($shippingCountryId)) || empty($billingCountryId)) {
+            //check countries
+            if ((!$this->collectorConfig->isShippingAddressEnabled() && empty($shippingCountryId)) || empty($billingCountryId)) {
                 $this->messageManager->addError(__('Country code is not specified'));
                 return $this->redirect->redirect($this->response, '/');
             }
 
-
             $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
 
-            //init the store id and website id @todo pass from array
-            $store = $this->storeManager->getStore();
-            $websiteId = $this->storeManager->getStore()->getWebsiteId();
+            if (empty($actual_quote)) {
+                $this->messageManager->addError(__('Can\'t load order'));
+                return $this->redirect->redirect($this->response, '/');
+            }
 
+            //init the store id and website id
+            $store = $this->storeManager->getStore();
+            $websiteId = $store->getWebsiteId();
 
             //init the customer
             $customer = $this->customerFactory->create();
             $customer->setWebsiteId($websiteId);
-            $email = "";
-            $firstname = "";
-            $lastname = "";
-            if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
-                $email = $response['data']['businessCustomer']['email'];
-                $firstname = $response['data']['businessCustomer']['firstName'];
-                $lastname = $response['data']['businessCustomer']['lastName'];
-            } else if (isset($response['data']['customer']['billingAddress'])) {
-                $email = $response['data']['customer']['email'];
-                $firstname = $response['data']['customer']['billingAddress']['firstName'];
-                $lastname = $response['data']['customer']['billingAddress']['lastName'];
-            } else {
-                $this->messageManager->addError(__('Undefined user data'));
+
+            if (empty($response["data"]["customerType"])) {
+                $this->messageManager->addError(__('Incorrect user data'));
                 return $this->redirect->redirect($this->response, '/');
             }
+
+            switch ($response["data"]["customerType"]) {
+                case "PrivateCustomer":
+                    $email = $response['data']['customer']['email'];
+                    $firstname = $response['data']['customer']['billingAddress']['firstName'];
+                    $lastname = $response['data']['customer']['billingAddress']['lastName'];
+                    break;
+                case "BusinessCustomer":
+                    $email = $response['data']['businessCustomer']['email'];
+                    $firstname = $response['data']['businessCustomer']['firstName'];
+                    $lastname = $response['data']['businessCustomer']['lastName'];
+                    break;
+                default:
+                    $this->messageManager->addError(__('Incorrect user data'));
+                    return $this->redirect->redirect($this->response, '/');
+                    break;
+            }
+
             //load customer by email address
             $customer->loadByEmail($email);
             //check the customer
@@ -229,16 +269,13 @@ class Index extends \Magento\Framework\App\Action\Action
                 $customer->save();
             }
             if (!empty($this->collectorSession->getVariable('newsletter_signup'))) {
-                if ($this->collectorSession->getVariable('newsletter_signup')) {
-                    $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
-                }
+                $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
             }
             $customer->setEmail($email);
             $customer->save();
-
             //$actual_quote->setCustomerEmail($email);
             //$actual_quote->setStore($store);
-            $customer = $this->customerRepository->getById($customer->getEntityId());
+            //$customer = $this->customerRepository->getById($customer->getEntityId());
             //$actual_quote->setCurrency();
             $actual_quote->assignCustomer($customer);
 
@@ -337,7 +374,7 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->getShippingAddress()->setCustomerId($customer->getId());
 
             // Collect total and save
-            $actual_quote->collectTotals();
+            //$actual_quote->collectTotals();
             // Disable old quote
             $actual_quote->setIsActive(0);
             // Submit the quote and create the order
@@ -348,7 +385,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
             $this->orderSender->send($order);
             $order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
-            if ($this->collectorSession->getVariable('btype') == 'b2b') {
+            if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B) {
                 $order->setData('collector_ssn', $response['data']['businessCustomer']['organizationNumber']);
             }
             $fee = 0;
@@ -372,6 +409,28 @@ class Index extends \Magento\Framework\App\Action\Action
                 ['order_ids' => [$order->getId()]]
             );
 
+
+//            if ($order->getBillingAddress()->getCompany()) {
+//                $storeID = $this->collectorConfig->getB2BStoreID();
+//            } else {
+//                $storeID = $this->collectorConfig->getB2CStoreID();
+//            }
+//            $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $order->getRemoteIp()]);
+//
+//            $req = array(
+//                'CorrelationId' => $order->getIncrementId(),
+//                'CountryCode' => $this->collectorConfig->getCountryCode(),
+//                'InvoiceNo' => $order->getData('collector_invoice_id'),
+//                'StoreId' => $storeID,
+//            );
+//            try {
+//                $soap->CancelInvoice($req);
+//            } catch (\Exception $e) {
+//                $this->logger->error($e->getMessage());
+//                $this->logger->error($e->getTraceAsString());
+//            }
+
+
             $this->checkoutSession->clearStorage();
             $this->checkoutSession->clearQuote();
             return $resultPage;
@@ -388,15 +447,15 @@ class Index extends \Magento\Framework\App\Action\Action
         try {
             switch ($result) {
                 case "OnHold":
-                    $status = $this->helper->getHoldStatus();
+                    $status = $this->collectorConfig->getHoldStatus();
                     $state = $this->orderState->load($status)->getState();
                     break;
                 case "Preliminary":
-                    $status = $this->helper->getAcceptStatus();
+                    $status = $this->collectorConfig->getAcceptStatus();
                     $state = $this->orderState->load($status)->getState();
                     break;
                 default:
-                    $status = $this->helper->getDeniedStatus();
+                    $status = $this->collectorConfig->getDeniedStatus();
                     $state = $this->orderState->load($status)->getState();
                     break;
             }

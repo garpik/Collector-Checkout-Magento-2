@@ -16,15 +16,15 @@ class ActiveMethods
 
     /**
      * ActiveMethods constructor.
-     * @param \Magento\Payment\Model\Config $config
+     * @param \Magento\Payment\Model\Config $paymentConfig
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        \Magento\Payment\Model\Config $config,
+        \Magento\Payment\Model\Config $paymentConfig,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     )
     {
-        $this->paymentConfig = $config;
+        $this->paymentConfig = $paymentConfig;
         $this->scopeConfig = $scopeConfig;
     }
 
@@ -39,9 +39,7 @@ class ActiveMethods
             'value' => '',
             'label' => ''
         ]];
-        $payments = $this->_getPaymentMethods();
-
-        foreach ($payments as $paymentCode => $paymentModel) {
+        foreach ($this->_getPaymentMethods() as $paymentCode => $paymentModel) {
             $paymentTitle = $this->scopeConfig->getValue('payment/' . $paymentCode . '/title');
             $methods[$paymentCode] = [
                 'label' => $paymentTitle,

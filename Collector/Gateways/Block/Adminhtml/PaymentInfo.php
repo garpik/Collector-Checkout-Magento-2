@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Collector\Gateways\Block\Adminhtml;
 
 /**
@@ -47,10 +48,11 @@ class PaymentInfo extends \Magento\Sales\Block\Adminhtml\Order\View\Tab\Info
             'can_display_total_refunded' => true
         ];
     }
-	
-	public function getInvoiceId(){
-		return $this->getOrder()->getData('collector_invoice_id');
-	}
+
+    public function getInvoiceId()
+    {
+        return $this->getOrder()->getData('collector_invoice_id');
+    }
 
     /**
      * Get order info data
