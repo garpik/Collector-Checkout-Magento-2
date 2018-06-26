@@ -133,12 +133,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getSuccessPageUrl()
     {
-        return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/success";
+        return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/success/";
     }
 
     public function getNotificationUrl()
     {
-        return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/notification";
+        return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/notification/";
     }
 
     public function getDiscount()
@@ -160,7 +160,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getGrandTotal()
     {
-        if (empty($this->collectorSession->getVariable('curr_shipping_tax'))) {
+        if (empty($this->collectorSession->getCurrShippingTax(0))) {
             $this->getShippingPrice();
         }
         $this->cart->getQuote()->collectTotals();
@@ -179,17 +179,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $first = true;
         $methods = $shippingAddress->getGroupedAllShippingRates();
         $selectedIsActive = false;
-        if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
+        if (!empty($this->collectorSession->getCurrShippingCode())) {
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
-                    if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
+                    if ($rate->getCode() == $this->collectorSession->getCurrShippingCode()) {
                         $selectedIsActive = true;
                     }
                 }
             }
         }
         if (!$selectedIsActive) {
-            $this->collectorSession->setVariable('curr_shipping_code', '');
+            $this->collectorSession->setCurrShippingCode('');
         }
 
         foreach ($methods as $method) {
@@ -200,7 +200,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'content' => ''
                 ];
                 if (!$selectedIsActive && $first
-                    || $selectedIsActive && $rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')
+                    || $selectedIsActive && $rate->getCode() == $this->collectorSession->getCurrShippingCode(0)
                 ) {
                     $first = false;
                     $this->setShippingMethod($rate->getCode());
@@ -221,7 +221,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $ruleId = $this->coupon->loadByCode($code)->getRuleId();
         if (!empty($ruleId)) {
             $this->checkoutSession->getQuote()->setCouponCode($code)->collectTotals()->save();
-            $this->collectorSession->setVariable('collector_applied_discount_code', $code);
+            $this->collectorSession->setCollectorAppliedDiscountCode($code);
             $this->cart->getQuote()->setData('collector_applied_discount_code', $code);
             $this->cart->getQuote()->save();
             $this->messageManager->addSuccess(__('You used coupon code "%1".', $code));
@@ -232,11 +232,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function unsetDiscountCode()
     {
-        $this->collectorSession->setVariable('collector_applied_discount_code', '');
+        $this->collectorSession->setCollectorAppliedDiscountCode('');
         $this->cart->getQuote()->setData('collector_applied_discount_code', NULL);
         $this->cart->getQuote()->save();
         $this->messageManager->addSuccess(__('You canceled the coupon code.'));
-        $this->checkoutSession->getQuote()->setCouponCode(NULL)->collectTotals()->save();
+        $this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
     }
 
     public function setShippingMethod($methodInput = '')
@@ -247,8 +247,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($methods as $method) {
             foreach ($method as $rate) {
                 if ($rate->getCode() == $methodInput || empty($methodInput)) {
-                    $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
-                    $this->collectorSession->setVariable('curr_shipping_tax', 0);
+                    $this->collectorSession->setCurrShippingPrice($rate->getPrice());
+                    $this->collectorSession->setCurrShippingTax(0);
                     $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
                     $this->shippingRate->setCode($rate->getCode());
                     try {
@@ -258,24 +258,25 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
                     $this->cart->getQuote()->collectTotals();
                     $this->cart->getQuote()->save();
-                    $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
+                    $this->collectorSession->setCurrShippingCode($rate->getCode());
                     break;
                 }
             }
         }
-        if (empty($this->collectorSession->getVariable('curr_shipping_price'))) {
-            $this->collectorSession->setVariable('curr_shipping_price', 0);
+
+        if (empty($this->collectorSession->getCurrShippingPrice())) {
+            $this->collectorSession->setCurrShippingPrice(0);
         }
-        return $this->pricingHelper->currency($this->collectorSession->getVariable('curr_shipping_price'), true, false);
+        return $this->pricingHelper->currency($this->collectorSession->getCurrShippingPrice(0), true, false);
     }
 
     public function getShippingPrice($inclFormatting = true)
     {
-        $this->setShippingMethod($this->collectorSession->getVariable('curr_shipping_code'));
+        $this->setShippingMethod($this->collectorSession->getCurrShippingCode());
         if ($inclFormatting) {
-            return $this->pricingHelper->currency($this->collectorSession->getVariable('curr_shipping_price'), true, false);
+            return $this->pricingHelper->currency($this->collectorSession->getCurrShippingPrice(0), true, false);
         }
-        return $this->collectorSession->getVariable('curr_shipping_price');
+        return $this->collectorSession->getCurrShippingPrice(0);
 
     }
 
@@ -296,7 +297,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
             } else if ($cartItem->getProductType() == 'bundle') {
                 foreach ($op['bundle_options'] as $option) {
-                    $options[] = $option['value'][0]['title']
+                    $options[] = $option['value'][0]['title'];
                 }
             }
             array_push($items, array(
@@ -388,12 +389,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
         if (empty($cartTotals['shipping']->getData()['title']->getArguments())) {
-            if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
-                if ($this->collectorSession->getVariable('curr_shipping_code') == 0) {
+            if (!empty($this->collectorSession->getCurrShippingCode(0))) {
+                if ($this->collectorSession->getCurrShippingCode(0) == 0) {
                     $ret = array(
                         'shipping' => array(
                             'id' => "shipping",
-                            'description' => $this->collectorSession->getVariable('curr_shipping_code'),
+                            'description' => $this->collectorSession->getCurrShippingCode(0),
                             'unitPrice' => 0,
                             'vat' => 0
                         )
@@ -402,9 +403,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $ret = array(
                         'shipping' => array(
                             'id' => "shipping",
-                            'description' => $this->collectorSession->getVariable('curr_shipping_code'),
-                            'unitPrice' => $this->collectorSession->getVariable('curr_shipping_code'),
-                            'vat' => ($this->collectorSession->getVariable('curr_shipping_code') / ($this->collectorSession->getVariable('curr_shipping_code') - $this->collectorSession->getVariable('curr_shipping_code')) - 1) * 100
+                            'description' => $this->collectorSession->getCurrShippingCode(0),
+                            'unitPrice' => $this->collectorSession->getCurrShippingCode(0),
+                            'vat' => ($this->collectorSession->getCurrShippingCode(0) / ($this->collectorSession->getCurrShippingCode(0) - $this->collectorSession->getCurrShippingCode(0)) - 1) * 100
                         )
                     );
                 }
@@ -422,7 +423,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $ret = array(
                 'shipping' => array(
                     'id' => 'shipping',
-                    'description' => $this->collectorSession->getVariable('curr_shipping_code'),
+                    'description' => $this->collectorSession->getCurrShippingCode(0),
                     'unitPrice' => $cartTotals['shipping']->getData()['value'],
                     'vat' => '25'
                 )
@@ -457,14 +458,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $ret;
     }
 
-
     public function updateFees()
     {
         $fees = $this->getFees();
-        if ($this->collectorSession->getVariable('col_curr_fee') == $fees) {
+        if ($this->collectorSession->getColCurrFee(0) == $fees) {
             return;
         }
-        $this->collectorSession->setVariable('col_curr_fee', $fees);
+        $this->collectorSession->setColCurrFee($fees);
         $this->apiRequest->callCheckoutsFees($fees, $this->cart);
     }
 
@@ -475,7 +475,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             'items' => $this->getProducts()
         ], $this->cart);
     }
-
 
     public function getOrderResponse()
     {
@@ -490,5 +489,4 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
         return $result;
     }
-
 }

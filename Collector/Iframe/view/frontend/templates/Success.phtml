@@ -1,9 +1,10 @@
 <?php
-$url = $block->getCollectorVariable('collector_url');
-$dataLang = $block->getCollectorVariable('collector_language');
-$dataVariant = $block->getCollectorVariable('collector_data_variant');
-$publicToken = $block->getCollectorVariable('collector_public_token');
-$block->setCollectorVariable('collector_public_token', '');
+$collectorSession = $block->getCollectorSession();
+$url = $collectorSession->getCollectorUrl('');
+$dataLang = $collectorSession->getCollectorLanguage('');
+$dataVariant = $collectorSession->getCollectorDataVariant('');
+$publicToken = $collectorSession->getCollectorPublicToken('');
+$collectorSession->setCollectorPublicToken('');
 ?>
 
 <script>

@@ -158,12 +158,12 @@ class Config
 
     public function getB2BrB2CStore(): int
     {
-        if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B
-            || empty($this->collectorSession->getVariable('btype')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
-            $this->collectorSession->setVariable('btype', \Collector\Base\Model\Session::B2B);
+        if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B
+            || empty($this->collectorSession->getBtype('')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
+            $this->collectorSession->setBtype(\Collector\Base\Model\Session::B2B);
             return intval($this->getB2BStoreID());
         }
-        $this->collectorSession->setVariable('btype', \Collector\Base\Model\Session::B2C);
+        $this->collectorSession->setBtype(\Collector\Base\Model\Session::B2C);
         return intval($this->getB2CStoreID());
     }
 

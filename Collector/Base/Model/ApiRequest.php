@@ -13,7 +13,7 @@ class ApiRequest
      */
     protected $soapClientFactory;
     /**
-     * @var Session 
+     * @var Session
      */
     protected $collectorSession;
 
@@ -53,8 +53,8 @@ class ApiRequest
 
     private function getPID($cart = null)
     {
-        if (!empty($this->collectorSession->getVariable('collector_private_id'))) {
-            return $this->collectorSession->getVariable('collector_private_id');
+        if (!empty($this->collectorSession->getCollectorPrivateId(''))) {
+            return $this->collectorSession->getCollectorPrivateId('');
         }
         if ($cart == null) {
             return '';

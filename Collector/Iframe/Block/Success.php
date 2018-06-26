@@ -54,12 +54,10 @@ class Success extends \Magento\Checkout\Block\Onepage {
         $this->storeManager = $context->getStoreManager();
 	}
 
-	public function getCollectorVariable($name) {
-        return $this->collectorSession->getVariable($name);
+	public function &getCollectorSession() {
+        return $this->collectorSession;
     }
-    public function setCollectorVariable($name, $value = '') {
-        return $this->collectorSession->setVariable($name,$value);
-    }
+
 	public function getStoreBaseUrl() {
         return $this->storeManager->getStore()->getBaseUrl();
     }

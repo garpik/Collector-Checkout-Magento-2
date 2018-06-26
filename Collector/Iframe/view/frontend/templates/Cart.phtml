@@ -46,7 +46,14 @@ $showDiscount = $collectorConfig->getShowDiscount();
                     </div>
                     <div class="collector-checkout-name">
                         <p><?php echo $product['name'] ?></p>
-                        <?php echo $product['options'] ?>
+                        <?php if (count($product['options'])) {
+                            ?>
+                            <dl>
+                            <?php foreach ($product['options'] as $option): ?>
+                                <dd><?php echo $option ?></dd>
+                            <?php endforeach; ?>
+                            </dl><?php
+                        } ?>
                     </div>
                     <div class="collector-checkout-qty" id="qty_ <?php echo $product['id'] ?>">
                         <button class="collector-checkout-button-sub col-sub"

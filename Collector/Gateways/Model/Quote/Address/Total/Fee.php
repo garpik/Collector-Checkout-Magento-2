@@ -74,7 +74,7 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
             'value' => 0
         ];
         if (!$checkout && !is_null($quote->getShippingAddress()->getCity())) {
-            $result['value'] = $this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B ?
+            $result['value'] = $this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B ?
                 $this->collectorConfig->getInvoiceB2BFee() :
                 $this->collectorConfig->getInvoiceB2CFee();
         }

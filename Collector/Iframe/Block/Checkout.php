@@ -86,18 +86,18 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     public function getCheckoutUrl()
     {
         if ($this->collectorConfig->getTestMode()) {
-            $this->collectorSession->setVariable('collector_url', "https://checkout-uat.collector.se/collector-checkout-loader.js");
+            $this->collectorSession->setCollectorUrl("https://checkout-uat.collector.se/collector-checkout-loader.js");
         } else {
-            $this->collectorSession->setVariable('collector_url', "https://checkout.collector.se/collector-checkout-loader.js");
+            $this->collectorSession->setCollectorUrl("https://checkout.collector.se/collector-checkout-loader.js");
         }
-        return $this->collectorSession->getVariable('collector_url');
+        return $this->collectorSession->getCollectorUrl('');
     }
 
     public function getLanguage()
     {
         $lang = $this->collectorConfig->getCountryCode();
         if (!empty($this->languageArray[$lang])) {
-            $this->collectorSession->setVariable('collector_language', $this->languageArray[$lang]);
+            $this->collectorSession->setCollectorLanguage($this->languageArray[$lang]);
             return $this->languageArray[$lang];
         }
         return null;
@@ -106,21 +106,21 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     public function getDataVariant()
     {
         $dataVariant = ' async';
-        if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B
-            || empty($this->collectorSession->getVariable('btype'))
+        if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B
+            || empty($this->collectorSession->getBtype(''))
             && $this->collectorConfig->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $dataVariant = ' data-variant="b2b" async';
         }
-        $this->collectorSession->setVariable('collector_data_variant', $dataVariant);
+        $this->collectorSession->setCollectorDataVariant($dataVariant);
         return $dataVariant;
     }
 
     public function getPublicToken()
     {
-        if (!empty($this->collectorSession->getVariable('collector_public_token'))) {
+        if (!empty($this->collectorSession->getCollectorPublicToken())) {
             $this->helper->updateCart();
             $this->helper->updateFees();
-            return $this->collectorSession->getVariable('collector_public_token');
+            return $this->collectorSession->getCollectorPublicToken();
         }
         if (empty($this->cart->getQuote()->getReservedOrderId())) {
             $this->cart->getQuote()->reserveOrderId()->save();
@@ -135,10 +135,10 @@ class Checkout extends \Magento\Checkout\Block\Onepage
             "cart" => ['items' => $this->helper->getProducts()],
             "fees" => $this->helper->getFees()
         ]);
-        $this->collectorSession->setVariable('collector_public_token', $result["data"]["publicToken"]);
-        $this->collectorSession->setVariable('collector_private_id', $result['data']['privateId']);
+        $this->collectorSession->setCollectorPublicToken($result["data"]["publicToken"]);
+        $this->collectorSession->setCollectorPrivateId($result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);
-        $this->cart->getQuote()->setData('collector_btype', $this->collectorSession->getVariable('btype'));
+        $this->cart->getQuote()->setData('collector_btype', $this->collectorSession->getBtype());
         $this->cart->getQuote()->save();
         return $publicToken = $result["data"]["publicToken"];
     }

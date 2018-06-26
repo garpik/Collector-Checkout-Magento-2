@@ -151,12 +151,16 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Iframe\Model\State $orderState,
+        \Magento\Customer\Model\Session $customerSession,
+        \Magento\Quote\Model\QuoteFactory $quoteFactory,
         \Magento\Framework\App\Response\Http $response,
         \Magento\Framework\App\Response\RedirectInterface $redirect
 
     )
     {
+        $this->quoteFactory = $quoteFactory;
         $this->apiRequest = $apiRequest;
+        $this->customerSession = $customerSession;
         $this->collectorConfig = $collectorConfig;
         $this->response = $response;
         $this->redirect = $redirect;
@@ -190,7 +194,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
     public function execute()
     {
-        if (empty($this->collectorSession->getVariable('collector_public_token'))) {
+        if (empty($this->collectorSession->getCollectorPublicToken(''))) {
             $this->logger->error('Error while public_token loading');
             $this->messageManager->addError(__('API request error.'));
             return $this->redirect->redirect($this->response, '/');
@@ -269,7 +273,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     ->setPassword($email);
                 $customer->save();
             }
-            if (!empty($this->collectorSession->getVariable('newsletter_signup'))) {
+            if (!empty($this->collectorSession->getNewsletterSignup(''))) {
                 $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
             }
             $customer->setEmail($email);
@@ -355,7 +359,7 @@ class Index extends \Magento\Framework\App\Action\Action
             //$actual_quote->getShippingAddress()->addData($shippingAddressArr);
 
             // Collect Rates and Set Shipping & Payment Method
-            $this->shippingRate->setCode($this->collectorSession->getVariable('curr_shipping_code'))->getPrice();
+            $this->shippingRate->setCode($this->collectorSession->getCurrShippingCode(''))->getPrice();
             //$shippingAddress = $actual_quote->getShippingAddress();
             //@todo set in order data
 //            $shippingAddress->setCollectShippingRates(true)
@@ -379,13 +383,13 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->setIsActive(0);
             // Submit the quote and create the order
             $actual_quote->save();
-            $this->collectorSession->setVariable('is_iframe', 1);
+            $this->collectorSession->setIsIframe(1);
             $order = $this->quoteManagement->submit($actual_quote);
 
 
             $this->orderSender->send($order);
             $order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
-            if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B) {
+            if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B) {
                 $order->setData('collector_ssn', $response['data']['businessCustomer']['organizationNumber']);
             }
             $fee = 0;
@@ -410,29 +414,40 @@ class Index extends \Magento\Framework\App\Action\Action
                 'checkout_onepage_controller_success_action',
                 ['order_ids' => [$order->getId()]]
             );
+
             $this->checkoutSession->clearStorage();
             $this->checkoutSession->clearQuote();
             return $resultPage;
         } catch (\Exception $e) {
-            if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B) {
+            if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B) {
                 $storeID = $this->collectorConfig->getB2BStoreID();
             } else {
                 $storeID = $this->collectorConfig->getB2CStoreID();
             }
-            $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $actual_quote->getRemoteIp()]);
-            $req = array(
-                'CorrelationId' => $response['data']['reference'],
-                'CountryCode' => $this->collectorConfig->getCountryCode(),
-                'InvoiceNo' => $response['data']['purchase']['purchaseIdentifier'],
-                'StoreId' => $storeID,
-            );
-            try {
-                $soap->CancelInvoice($req);
-            } catch (\Exception $e) {
-                $this->logger->error($e->getMessage());
-                $this->logger->error($e->getTraceAsString());
-            }
+            if (isset($actual_quote)) {
+                $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $actual_quote->getRemoteIp()]);
+                
+                $actual_quote->setReservedOrderId(0);
+                $actual_quote->reserveOrderId();
+                $actual_quote->save();
+                $this->collectorSession->setCollectorPublicToken('');
+                $this->collectorSession->setCollectorDataVariant('');
 
+
+                $req = array(
+                    'CorrelationId' => $response['data']['reference'],
+                    'CountryCode' => $this->collectorConfig->getCountryCode(),
+                    'InvoiceNo' => $response['data']['purchase']['purchaseIdentifier'],
+                    'StoreId' => $storeID,
+                );
+                try {
+                    $soap->CancelInvoice($req);
+                } catch (\Exception $e) {
+                    $this->logger->error($e->getMessage());
+                    $this->logger->error($e->getTraceAsString());
+                }
+
+            }
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
             $this->messageManager->addError($e->getMessage());

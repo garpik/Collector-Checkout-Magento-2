@@ -1,6 +1,7 @@
 define([
     'jquery',
-    'mage/validation'
+    'mage/validation',
+    'domReady!'
 ], function ($, collectorajax, validation) {
     return {
         call: function (ajaxUrl) {

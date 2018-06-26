@@ -82,7 +82,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
     {
         $code = $this->checkoutSession->getQuote()->getCouponCode();
         if (!empty($code)) {
-            $this->collectorSession->setVariable('collector_applied_discount_code', $code);
+            $this->collectorSession->setCollectorAppliedDiscountCode($code);
         }
         return $code;
     }
@@ -182,7 +182,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
     {
         $code = $this->checkoutSession->getQuote()->getCouponCode();
         if ($code) {
-            $this->collectorSession->setVariable('collector_applied_discount_code', $code);
+            $this->collectorSession->setCollectorAppliedDiscountCode($code);
             return true;
         }
         return false;

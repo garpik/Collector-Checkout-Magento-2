@@ -120,7 +120,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $quote = $order->getQuote();
         $isIframe = false;
-        if (!empty($this->collectorSession->getVariable('is_iframe'))) {
+        if (!empty($this->collectorSession->getIsIframe(''))) {
             $isIframe = true;
             $payment->setIsTransactionClosed(false);
         }
@@ -166,7 +166,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
 
             }
         }
-        $this->collectorSession->setVariable('is_iframe', false);
+        $this->collectorSession->setIsIframe(false);
     }
 
     public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)

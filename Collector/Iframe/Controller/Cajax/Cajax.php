@@ -207,7 +207,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $updateFees = true;
                     break;
                 case "submit":
-                    if (!empty($this->collectionSession->getVariable('collector_applied_discount_code'))) {
+                    if (!empty($this->collectionSession->getCollectorAppliedDiscountCode())) {
                         $this->helper->unsetDiscountCode();
                     } else {
                         $this->helper->setDiscountCode($this->getRequest()->getParam('value'));
@@ -217,7 +217,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $updateFees = true;
                     break;
                 case "newsletter":
-                    $this->collectionSession->setVariable('newsletter_signup', $this->getRequest()->getParam('id') == "true");
+                    $this->collectionSession->setNewsletterSignup($this->getRequest()->getParam('id') == "true");
                     break;
                 case "del":
                     $allItems = $this->cart->getQuote()->getAllVisibleItems();
@@ -239,8 +239,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $changed = true;
                     break;
                 case "btype":
-                    $this->collectionSession->setVariable('btype', $this->getRequest()->getParam('value'));
-                    $this->collectionSession->setVariable('collector_public_token', '');
+                    $this->collectionSession->setBtype($this->getRequest()->getParam('value'));
+                    $this->collectionSession->setCollectorPublicToken('');
                     $changeLanguage = true;
                     $changed = true;
                     $updateCart = true;
