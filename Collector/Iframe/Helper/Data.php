@@ -160,9 +160,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getGrandTotal()
     {
-        if (empty($this->collectorSession->getCurrShippingTax(0))) {
-            $this->getShippingPrice();
-        }
         $this->cart->getQuote()->collectTotals();
         return $this->pricingHelper->currency($this->cart->getQuote()->getGrandTotal(), true, false);
     }
@@ -177,19 +174,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $shippingMethods = [];
         $first = true;
+
         $methods = $shippingAddress->getGroupedAllShippingRates();
         $selectedIsActive = false;
-        if (!empty($this->collectorSession->getCurrShippingCode())) {
+        if (!empty($shippingAddress->getShippingMethod())) {
             foreach ($methods as $method) {
                 foreach ($method as $rate) {
-                    if ($rate->getCode() == $this->collectorSession->getCurrShippingCode()) {
+                    if ($rate->getCode() == $shippingAddress->getShippingMethod()) {
                         $selectedIsActive = true;
                     }
                 }
             }
-        }
-        if (!$selectedIsActive) {
-            $this->collectorSession->setCurrShippingCode('');
         }
 
         foreach ($methods as $method) {
@@ -200,7 +195,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'content' => ''
                 ];
                 if (!$selectedIsActive && $first
-                    || $selectedIsActive && $rate->getCode() == $this->collectorSession->getCurrShippingCode(0)
+                    || $selectedIsActive && $rate->getCode() == $shippingAddress->getShippingMethod()
                 ) {
                     $first = false;
                     $this->setShippingMethod($rate->getCode());
@@ -247,36 +242,32 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($methods as $method) {
             foreach ($method as $rate) {
                 if ($rate->getCode() == $methodInput || empty($methodInput)) {
-                    $this->collectorSession->setCurrShippingPrice($rate->getPrice());
-                    $this->collectorSession->setCurrShippingTax(0);
                     $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
                     $this->shippingRate->setCode($rate->getCode());
                     try {
                         $this->cart->getQuote()->getShippingAddress()->addShippingRate($this->shippingRate);
                     } catch (\Exception $e) {
                     }
-                    $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
                     $this->cart->getQuote()->collectTotals();
                     $this->cart->getQuote()->save();
-                    $this->collectorSession->setCurrShippingCode($rate->getCode());
                     break;
                 }
             }
         }
 
-        if (empty($this->collectorSession->getCurrShippingPrice())) {
-            $this->collectorSession->setCurrShippingPrice(0);
-        }
-        return $this->pricingHelper->currency($this->collectorSession->getCurrShippingPrice(0), true, false);
+        return $this->pricingHelper->currency($this->cart->getQuote()->getShippingAddress()->getShippingInclTax(), true, false);
     }
+
 
     public function getShippingPrice($inclFormatting = true)
     {
-        $this->setShippingMethod($this->collectorSession->getCurrShippingCode());
-        if ($inclFormatting) {
-            return $this->pricingHelper->currency($this->collectorSession->getCurrShippingPrice(0), true, false);
+        if (empty($this->cart->getQuote()->getShippingAddress()->getShippingMethod())) {
+            $this->setShippingMethod();
         }
-        return $this->collectorSession->getCurrShippingPrice(0);
+        if ($inclFormatting) {
+            return $this->pricingHelper->currency($this->cart->getQuote()->getShippingAddress()->getShippingInclTax(), true, false);
+        }
+        return $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
 
     }
 
@@ -359,9 +350,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $fee = $cartTotals['fee']->getData()['value'];
         }
         if (array_key_exists('value_incl_tax', $cartTotals['subtotal']->getData())) {
-            $totals = $cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'];
+            $totals = $cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
         } else {
-            $totals = $cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'];
+            $totals = $cartTotals['subtotal']->getData()['value'] + $fee + $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
         }
         $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
         $this->logger->info('Subtotal+unitPrice:' . $totals);
@@ -387,85 +378,42 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getFees()
     {
         $this->cart->getQuote()->collectTotals();
-        $cartTotals = $this->cart->getQuote()->getTotals();
-        if (empty($cartTotals['shipping']->getData()['title']->getArguments())) {
-            if (!empty($this->collectorSession->getCurrShippingCode(0))) {
-                if ($this->collectorSession->getCurrShippingCode(0) == 0) {
-                    $ret = array(
-                        'shipping' => array(
-                            'id' => "shipping",
-                            'description' => $this->collectorSession->getCurrShippingCode(0),
-                            'unitPrice' => 0,
-                            'vat' => 0
-                        )
-                    );
-                } else {
-                    $ret = array(
-                        'shipping' => array(
-                            'id' => "shipping",
-                            'description' => $this->collectorSession->getCurrShippingCode(0),
-                            'unitPrice' => $this->collectorSession->getCurrShippingCode(0),
-                            'vat' => ($this->collectorSession->getCurrShippingCode(0) / ($this->collectorSession->getCurrShippingCode(0) - $this->collectorSession->getCurrShippingCode(0)) - 1) * 100
-                        )
-                    );
-                }
-            } else {
-                $ret = array(
-                    'shipping' => array(
-                        'id' => 'shipping',
-                        'description' => 'freeshipping_freeshipping',
-                        'unitPrice' => 0,
-                        'vat' => '0'
-                    )
-                );
-            }
-        } else {
-            $ret = array(
-                'shipping' => array(
-                    'id' => 'shipping',
-                    'description' => $this->collectorSession->getCurrShippingCode(0),
-                    'unitPrice' => $cartTotals['shipping']->getData()['value'],
-                    'vat' => '25'
-                )
-            );
-        }
+        $shippingAddress = $this->cart->getQuote()->getShippingAddress();
         $fee = $this->collectorConfig->getInvoiceB2BFee();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
         $feeTaxClass = $this->collectorConfig->getB2CInvoiceFeeTaxClass();
         $feeTax = $this->taxCalculation->getRate($request->setProductClassId($feeTaxClass));
+
+        $ret = [];
         if ($fee > 0) {
-            $iFee = array(
+            $ret['directinvoicenotification'] = [
                 'id' => 'invoice_fee',
                 'description' => 'Invoice Fee',
                 'unitPrice' => $fee,
                 'vat' => $feeTax
-            );
-            $ret['directinvoicenotification'] = $iFee;
+            ];
         }
-        return $ret;
-    }
-
-    public function getShippingInclTax()
-    {
-        $this->cart->getQuote()->collectTotals();
-        $cartTotals = $this->cart->getQuote()->getTotals();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
-        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($this->collectorConfig->getShippingTaxClass()));
-        $ret = [
-            'description' => $cartTotals['shipping']->getData()['title']->getArguments(),
-            'unitPrice' => $cartTotals['shipping']->getData()['value'] * (1 + $shippingTax / 100),
-        ];
+        if (!empty($shippingAddress->getShippingMethod())) {
+            $ret ['shipping'] = [
+                'id' => "shipping",
+                'description' => $shippingAddress->getShippingMethod(),
+                'unitPrice' => $shippingAddress->getShippingInclTax(),
+                'vat' => 0
+            ];
+        } else {
+            $ret['shipping'] = [
+                'id' => 'shipping',
+                'description' => 'freeshipping_freeshipping',
+                'unitPrice' => 0,
+                'vat' => '0'
+            ];
+        }
         return $ret;
     }
 
     public function updateFees()
     {
-        $fees = $this->getFees();
-        if ($this->collectorSession->getColCurrFee(0) == $fees) {
-            return;
-        }
-        $this->collectorSession->setColCurrFee($fees);
-        $this->apiRequest->callCheckoutsFees($fees, $this->cart);
+        $this->apiRequest->callCheckoutsFees($this->getFees(), $this->cart);
     }
 
     public function updateCart()
@@ -478,6 +426,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getOrderResponse()
     {
+        $result = [];
         $data = $this->apiRequest->callCheckouts($this->cart);
         if ($data["data"]) {
             $result['code'] = 1;

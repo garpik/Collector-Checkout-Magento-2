@@ -70,7 +70,10 @@ define([
                                         customerData.reload(sections, true);
                                     });
                                 },
-                                success: function () {
+                                success: function (data) {
+                                    if (data.cart) {
+                                        jQuery('div.collector-cart').replaceWith(data.cart);
+                                    }
                                     var param = {
                                         is_ajax: true,
                                         type: 'shippingValidate',
@@ -103,6 +106,8 @@ define([
                         }
                     }
                 );
+            } else {
+                $('.collector-checkout').removeClass('disabled');
             }
             $(document).on('click', '.col-inc', function () {
                 var param = {

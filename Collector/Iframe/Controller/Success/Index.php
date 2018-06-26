@@ -199,9 +199,6 @@ class Index extends \Magento\Framework\App\Action\Action
             $this->messageManager->addError(__('API request error.'));
             return $this->redirect->redirect($this->response, '/');
         }
-//        $this->checkoutSession->clearQuote();
-//        $this->checkoutSession->clearStorage();
-
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
         if ($response["code"] == 0) {
@@ -291,89 +288,76 @@ class Index extends \Magento\Framework\App\Action\Action
 
 
             //Set Address to quote @todo add section in order data for seperate billing and handle it
-            if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
-//                $scompany = $response['data']['businessCustomer']['deliveryAddress']['companyName'];
-//                $sfirstname = $response['data']['businessCustomer']['firstName'];
-//                $slastname = $response['data']['businessCustomer']['lastName'];
-//                if (isset($response['data']['businessCustomer']['deliveryAddress']['address'])) {
-//                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
-//                } else {
-//                    $sstreet = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
-//                }
-//                $sstreet = $response['data']['businessCustomer']['deliveryAddress']['address'];
-//                $scity = $response['data']['businessCustomer']['deliveryAddress']['city'];
-//                $spostcode = $response['data']['businessCustomer']['deliveryAddress']['postalCode'];
-//                $stelephone = $response['data']['businessCustomer']['mobilePhoneNumber'];
-
-                $bcompany = $response['data']['businessCustomer']['invoiceAddress']['companyName'];
-                $bfirstname = $response['data']['businessCustomer']['firstName'];
-                $blastname = $response['data']['businessCustomer']['lastName'];
-                if (isset($response['data']['businessCustomer']['invoiceAddress']['address'])) {
-                    $bstreet = $response['data']['businessCustomer']['invoiceAddress']['address'];
+            if (!$this->collectorConfig->isShippingAddressEnabled()) {
+                if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
+                    $shippingAddressArr = [
+                        'company' => $response['data']['businessCustomer']['deliveryAddress']['companyName'],
+                        'firstname' => $response['data']['businessCustomer']['firstName'],
+                        'lastname' => $response['data']['businessCustomer']['lastName'],
+                        'street' => $response['data']['businessCustomer']['deliveryAddress']['address'],
+                        'city' => $response['data']['businessCustomer']['deliveryAddress']['city'],
+                        'postcode' => $response['data']['businessCustomer']['deliveryAddress']['postalCode'],
+                        'telephone' => $response['data']['businessCustomer']['mobilePhoneNumber'],
+                        'country_id' => $response['data']['countryCode'],
+                        'same_as_billing' => 0
+                    ];
                 } else {
-                    $bstreet = $response['data']['businessCustomer']['invoiceAddress']['postalCode'];
+                    $shippingAddressArr = [
+                        'company' => '',
+                        'firstname' => $response['data']['customer']['deliveryAddress']['firstName'],
+                        'lastname' => $response['data']['customer']['deliveryAddress']['lastName'],
+                        'street' => $response['data']['customer']['deliveryAddress']['address'],
+                        'city' => $response['data']['customer']['deliveryAddress']['city'],
+                        'postcode' => $response['data']['customer']['deliveryAddress']['postalCode'],
+                        'telephone' => $response['data']['customer']['mobilePhoneNumber'],
+                        'country_id' => $response['data']['countryCode'],
+                        'same_as_billing' => 0
+                    ];
+
                 }
-                $bcity = $response['data']['businessCustomer']['invoiceAddress']['city'];
-                $bpostcode = $response['data']['businessCustomer']['invoiceAddress']['postalCode'];
-                $btelephone = $response['data']['businessCustomer']['mobilePhoneNumber'];
-            } else {
-//                $scompany = '';
-//                $sfirstname = $response['data']['customer']['deliveryAddress']['firstName'];
-//                $slastname = $response['data']['customer']['deliveryAddress']['lastName'];
-//                $sstreet = $response['data']['customer']['deliveryAddress']['address'];
-//                $scity = $response['data']['customer']['deliveryAddress']['city'];
-//                $spostcode = $response['data']['customer']['deliveryAddress']['postalCode'];
-//                $stelephone = $response['data']['customer']['mobilePhoneNumber'];
+                $actual_quote->getShippingAddress()->addData($shippingAddressArr);
 
-                $bcompany = '';
-                $bfirstname = $response['data']['customer']['billingAddress']['firstName'];
-                $blastname = $response['data']['customer']['billingAddress']['lastName'];
-                $bstreet = $response['data']['customer']['billingAddress']['address'];
-                $bcity = $response['data']['customer']['billingAddress']['city'];
-                $bpostcode = $response['data']['customer']['billingAddress']['postalCode'];
-                $btelephone = $response['data']['customer']['mobilePhoneNumber'];
+                // Collect Rates and Set Shipping & Payment Method
+                $this->shippingRate->setCode($actual_quote->getShippingAddress()->getShippingMethod())->getPrice();
+                $shippingAddress = $actual_quote->getShippingAddress();
+                //@todo set in order data
+                $shippingAddress->setCollectShippingRates(true)
+                    ->collectShippingRates(); //shipping method
+
+                $actual_quote->getShippingAddress()->addShippingRate($this->shippingRate);
+                $actual_quote->getShippingAddress()->save();
             }
+            if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
+                $billingAddress = array(
+                    'company' => $response['data']['businessCustomer']['invoiceAddress']['companyName'],
+                    'firstname' => $response['data']['businessCustomer']['firstName'],
+                    'lastname' => $response['data']['businessCustomer']['lastName'],
+                    'street' => isset($response['data']['businessCustomer']['invoiceAddress']['address']) ?
+                        $response['data']['businessCustomer']['invoiceAddress']['address'] : $response['data']['businessCustomer']['invoiceAddress']['postalCode'],
+                    'city' => $response['data']['businessCustomer']['invoiceAddress']['city'],
+                    'country_id' => $response['data']['countryCode'],
+                    'postcode' => $response['data']['businessCustomer']['invoiceAddress']['postalCode'],
+                    'telephone' => $response['data']['businessCustomer']['mobilePhoneNumber']
+                );
 
+            } else {
+                $billingAddress = array(
+                    'company' => '',
+                    'firstname' => $response['data']['customer']['billingAddress']['firstName'],
+                    'lastname' => $response['data']['customer']['billingAddress']['lastName'],
+                    'street' => $response['data']['customer']['billingAddress']['address'],
+                    'city' => $response['data']['customer']['billingAddress']['city'],
+                    'country_id' => $response['data']['countryCode'],
+                    'postcode' => $response['data']['customer']['billingAddress']['postalCode'],
+                    'telephone' => $response['data']['customer']['mobilePhoneNumber']
+                );
 
-            $billingAddress = array(
-                'company' => $bcompany,
-                'firstname' => $bfirstname,
-                'lastname' => $blastname,
-                'street' => $bstreet,
-                'city' => $bcity,
-                'country_id' => $response['data']['countryCode'],
-                'postcode' => $bpostcode,
-                'telephone' => $btelephone
-            );
-//            $shippingAddressArr = array(
-//                'company' => $scompany,
-//                'firstname' => $sfirstname,
-//                'lastname' => $slastname,
-//                'street' => $sstreet,
-//                'city' => $scity,
-//                'country_id' => $response['data']['countryCode'],
-//                'postcode' => $spostcode,
-//                'telephone' => $stelephone
-//            );
+            }
             $actual_quote->getBillingAddress()->addData($billingAddress);
-            //$actual_quote->getShippingAddress()->addData($shippingAddressArr);
-
-            // Collect Rates and Set Shipping & Payment Method
-            $this->shippingRate->setCode($this->collectorSession->getCurrShippingCode(''))->getPrice();
-            //$shippingAddress = $actual_quote->getShippingAddress();
-            //@todo set in order data
-//            $shippingAddress->setCollectShippingRates(true)
-//                ->collectShippingRates()
-//                ->setShippingMethod($this->collectorSession->getVariable('curr_shipping_code')); //shipping method
-
-//            $actual_quote->getShippingAddress()->addShippingRate($this->shippingRate);
-
             $actual_quote->setPaymentMethod($paymentMethod); //payment method
             $actual_quote->getPayment()->importData(['method' => $paymentMethod]);
             $actual_quote->setReservedOrderId($response['data']['reference']);
 
-            //$actual_quote->getBillingAddress()->setEmail($response['data']['customer']['email']);
-            //$actual_quote->getShippingAddress()->setEmail($response['data']['customer']['email']);
             $actual_quote->getBillingAddress()->setCustomerId($customer->getId());
             $actual_quote->getShippingAddress()->setCustomerId($customer->getId());
 
@@ -385,36 +369,35 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->save();
             $this->collectorSession->setIsIframe(1);
             $order = $this->quoteManagement->submit($actual_quote);
-
-
             $this->orderSender->send($order);
-            $order->setData('collector_invoice_id', $response['data']['purchase']['purchaseIdentifier']);
+            $order->setCollectorInvoiceId($response['data']['purchase']['purchaseIdentifier']);
+
             if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B) {
-                $order->setData('collector_ssn', $response['data']['businessCustomer']['organizationNumber']);
+                $order->setCollectorSsn($response['data']['businessCustomer']['organizationNumber']);
             }
+
             $fee = 0;
             foreach ($response['data']['order']['items'] as $item) {
                 if ($item['id'] == 'invoice_fee') {
                     $fee = $item['unitPrice'];
                 }
             }
-            $order->setData('fee_amount', $fee);
-            $order->setData('base_fee_amount', $fee);
+
+            $order->setFeeAmount($fee);
+            $order->setBaseFeeAmount($fee);
 
             $order->setGrandTotal($order->getGrandTotal() + $fee);
             $order->setBaseGrandTotal($order->getBaseGrandTotal() + $fee);
 
-
             if (!$this->setOrderStatusState($order, $response["data"]["purchase"]["result"])) {
                 throw new \Exception(__('Invalid order status'));
             }
-
             $order->save();
+
             $this->eventManager->dispatch(
                 'checkout_onepage_controller_success_action',
                 ['order_ids' => [$order->getId()]]
             );
-
             $this->checkoutSession->clearStorage();
             $this->checkoutSession->clearQuote();
             return $resultPage;
@@ -426,7 +409,7 @@ class Index extends \Magento\Framework\App\Action\Action
             }
             if (isset($actual_quote)) {
                 $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $actual_quote->getRemoteIp()]);
-                
+
                 $actual_quote->setReservedOrderId(0);
                 $actual_quote->reserveOrderId();
                 $actual_quote->save();

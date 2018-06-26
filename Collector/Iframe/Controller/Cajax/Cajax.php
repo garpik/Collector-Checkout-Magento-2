@@ -166,7 +166,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $this->cart->getQuote()->getBillingAddress()->save();
                     $this->cart->getQuote()->collectTotals();
                     $this->cart->getQuote()->save();
-                    return $result->setData(true);
+                    $changed = true;
+                    $updateFees = true;
+                    $updateCart = true;
                     break;
                 case "sub":
                     $allItems = $this->cart->getQuote()->getAllVisibleItems();
