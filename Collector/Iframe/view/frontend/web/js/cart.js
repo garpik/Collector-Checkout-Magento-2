@@ -4,7 +4,6 @@ define([
 ], function ($, collectorajax, validation) {
     return {
         call: function (ajaxUrl) {
-
             if (window.showCollectorShipping) {
                 $(document).on('mouseover', '.collector-checkout-wrapper', function () {
                     if ($('.collector-checkout.disabled').length > 0) {
@@ -48,66 +47,58 @@ define([
                             value: $(this).val()
                         }
                         $('.collector-checkout').addClass('disabled');
-
-                        //if ($(this).hasClass('validate')) {
                         $(this).mage('validation', {});
-                        //}
-                        if (!$('.form-shipping-address').valid()) {
-                            $('.collector-checkout').addClass('disabled');
-                            $('div.mage-error').remove();
-                        } else {
-                            if ($(this).valid()) {
-                                $.ajax({
-                                    url: ajaxUrl,
-                                    data: param,
-                                    type: "POST",
-                                    dataType: 'json',
-                                    beforeSend: function () {
-                                        //jQuery('body').addClass('is-suspended');
-                                        window.collector.checkout.api.suspend();
-                                    },
-                                    complete: function () {
-                                        //jQuery('body').removeClass('is-suspended');
-                                        window.collector.checkout.api.resume();
-                                        require([
-                                            'Magento_Customer/js/customer-data'
-                                        ], function (customerData) {
-                                            var sections = ['cart'];
-                                            customerData.invalidate(sections);
-                                            customerData.reload(sections, true);
-                                        });
-                                    },
-                                    success: function () {
-                                        var param = {
-                                            is_ajax: true,
-                                            type: 'shippingValidate',
-                                            ignore_country: true
-                                        }
-                                        $.ajax({
-                                            url: ajaxUrl,
-                                            data: param,
-                                            type: "POST",
-                                            dataType: 'json',
-                                            beforeSend: function () {
-                                                //jQuery('body').addClass('is-suspended');
-                                                window.collector.checkout.api.suspend();
-                                            },
-                                            success: function (data) {
-                                                if (data.error === 0) {
-                                                    $('.collector-checkout').removeClass('disabled');
-                                                } else {
-                                                    alert(data.messages);
-                                                    event.preventDefault();
-                                                }
-                                            },
-                                            complete: function () {
-                                                //jQuery('body').removeClass('is-suspended');
-                                                window.collector.checkout.api.resume();
-                                            }
-                                        });
+                        if ($(this).valid()) {
+                            $.ajax({
+                                url: ajaxUrl,
+                                data: param,
+                                type: "POST",
+                                dataType: 'json',
+                                beforeSend: function () {
+                                    //jQuery('body').addClass('is-suspended');
+                                    window.collector.checkout.api.suspend();
+                                },
+                                complete: function () {
+                                    //jQuery('body').removeClass('is-suspended');
+                                    window.collector.checkout.api.resume();
+                                    require([
+                                        'Magento_Customer/js/customer-data'
+                                    ], function (customerData) {
+                                        var sections = ['cart'];
+                                        customerData.invalidate(sections);
+                                        customerData.reload(sections, true);
+                                    });
+                                },
+                                success: function () {
+                                    var param = {
+                                        is_ajax: true,
+                                        type: 'shippingValidate',
+                                        ignore_country: true
                                     }
-                                });
-                            }
+                                    $.ajax({
+                                        url: ajaxUrl,
+                                        data: param,
+                                        type: "POST",
+                                        dataType: 'json',
+                                        beforeSend: function () {
+                                            //jQuery('body').addClass('is-suspended');
+                                            window.collector.checkout.api.suspend();
+                                        },
+                                        success: function (data) {
+                                            if (data.error === 0) {
+                                                $('.collector-checkout').removeClass('disabled');
+                                            } else {
+                                                alert(data.messages);
+                                                event.preventDefault();
+                                            }
+                                        },
+                                        complete: function () {
+                                            //jQuery('body').removeClass('is-suspended');
+                                            window.collector.checkout.api.resume();
+                                        }
+                                    });
+                                }
+                            });
                         }
                     }
                 );

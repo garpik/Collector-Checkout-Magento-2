@@ -122,11 +122,8 @@ class Config
 
     public function getWSDL(): string
     {
-        if ($this->getTestMode()) {
-            return "https://checkout-api-uat.collector.se";
-        } else {
-            return "https://checkout-api.collector.se";
-        }
+        return $this->getTestMode() ? "https://checkout-api-uat.collector.se" : "https://checkout-api.collector.se";
+
     }
 
     public function getInvoiceWSDL(): string
@@ -169,7 +166,6 @@ class Config
         $this->collectorSession->setVariable('btype', \Collector\Base\Model\Session::B2C);
         return intval($this->getB2CStoreID());
     }
-
 
 
     public function getHash($path, $json = '')

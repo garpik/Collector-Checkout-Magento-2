@@ -236,158 +236,69 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->cart->getQuote()->setData('collector_applied_discount_code', NULL);
         $this->cart->getQuote()->save();
         $this->messageManager->addSuccess(__('You canceled the coupon code.'));
-        $this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
+        $this->checkoutSession->getQuote()->setCouponCode(NULL)->collectTotals()->save();
     }
 
-    public function setShippingMethod($methodInput)
+    public function setShippingMethod($methodInput = '')
     {
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
-
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
         $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $methods = $shippingAddress->getGroupedAllShippingRates();
-        $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
-        $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
-        $first = true;
         foreach ($methods as $method) {
             foreach ($method as $rate) {
-                if ($rate->getCode() == $methodInput) {
+                if ($rate->getCode() == $methodInput || empty($methodInput)) {
                     $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
                     $this->collectorSession->setVariable('curr_shipping_tax', 0);
-
                     $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
-                    $this->shippingRate->setCode($rate->getCode())->getPrice();
+                    $this->shippingRate->setCode($rate->getCode());
                     try {
                         $this->cart->getQuote()->getShippingAddress()->addShippingRate($this->shippingRate);
                     } catch (\Exception $e) {
                     }
-                    $this->cart->getQuote()->getShippingAddress()->save();
-                    $this->cart->getQuote()->collectTotals();
-                    $this->cart->getQuote()->save();
-                    $this->cart->getQuote()->collectTotals();
-                    $this->cart->getQuote()->getTotals();
-                    $first = false;
-                    $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
                     $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
+                    $this->cart->getQuote()->collectTotals();
                     $this->cart->getQuote()->save();
+                    $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
                     break;
                 }
             }
-            if (!$first) {
-                break;
-            }
+        }
+        if (empty($this->collectorSession->getVariable('curr_shipping_price'))) {
+            $this->collectorSession->setVariable('curr_shipping_price', 0);
         }
         return $this->pricingHelper->currency($this->collectorSession->getVariable('curr_shipping_price'), true, false);
     }
 
     public function getShippingPrice($inclFormatting = true)
     {
-        //$currentStore = $this->storeManager->getStore();
-        //$currentStoreId = $currentStore->getId();
-        //$request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $shippingAddress = $this->cart->getQuote()->getShippingAddress();
-        $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
-        $methods = $shippingAddress->getGroupedAllShippingRates();
-        //$shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
-        $first = true;
-
-        if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
-            foreach ($methods as $method) {
-                foreach ($method as $rate) {
-                    if ($rate->getCode() == $this->collectorSession->getVariable('curr_shipping_code')) {
-                        $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
-                        $this->collectorSession->setVariable('curr_shipping_tax', 0);
-
-                        $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
-                        $this->shippingRate->setCode($rate->getCode())->getPrice();
-                        try {
-                            $this->cart->getQuote()->getShippingAddress()->addShippingRate($this->shippingRate);
-                        } catch (\Exception $e) {
-                        }
-                        $this->cart->getQuote()->getShippingAddress()->save();
-                        $this->cart->getQuote()->collectTotals();
-                        $this->cart->getQuote()->save();
-                        $this->cart->getQuote()->getTotals();
-                        $this->setShippingMethod($rate->getCode());
-                        $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
-                        $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
-                        $this->cart->getQuote()->save();
-                        break;
-                    }
-                }
-            }
-        } else {
-            foreach ($methods as $method) {
-                foreach ($method as $rate) {
-                    if ($first) {
-                        $this->collectorSession->setVariable('curr_shipping_price', $rate->getPrice());
-                        $this->collectorSession->setVariable('curr_shipping_tax', 0);
-
-                        $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
-                        $this->shippingRate->setCode($rate->getCode())->getPrice();
-                        try {
-                            $this->cart->getQuote()->getShippingAddress()->addShippingRate($this->shippingRate);
-                        } catch (\Exception $e) {
-                        }
-                        $this->cart->getQuote()->getShippingAddress()->save();
-                        $this->cart->getQuote()->collectTotals();
-                        $this->cart->getQuote()->save();
-                        $this->cart->getQuote()->getTotals();
-                        $first = false;
-                        $this->setShippingMethod($rate->getCode());
-                        $this->collectorSession->setVariable('curr_shipping_code', $rate->getCode());
-
-                        $this->cart->getQuote()->setData('curr_shipping_code', $rate->getCode());
-                        $this->cart->getQuote()->save();
-                        break;
-                    }
-                }
-                if (!$first) {
-                    break;
-                }
-            }
-        }
-
-        if (empty($this->collectorSession->getVariable('curr_shipping_price'))) {
-            $this->collectorSession->getVariable('curr_shipping_price', 0);
-        }
+        $this->setShippingMethod($this->collectorSession->getVariable('curr_shipping_code'));
         if ($inclFormatting) {
             return $this->pricingHelper->currency($this->collectorSession->getVariable('curr_shipping_price'), true, false);
-        } else {
-            return $this->collectorSession->getVariable('curr_shipping_price');
         }
+        return $this->collectorSession->getVariable('curr_shipping_price');
+
     }
 
     public function getBlockProducts()
     {
-        $cartItems = $this->cart->getQuote()->getAllVisibleItems();
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $items = array();
+        $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
+        $items = [];
 
-        foreach ($cartItems as $cartItem) {
+        foreach ($this->cart->getQuote()->getAllVisibleItems() as $cartItem) {
             $product = $cartItem->getProduct();
             $taxClassId = $product->getTaxClassId();
             $percent = $this->taxCalculation->getRate($request->setProductClassId($taxClassId));
-            $options = "<dl>";
+            $options = [];
             $op = $cartItem->getProduct()->getTypeInstance(true)->getOrderOptions($cartItem->getProduct());
             if ($cartItem->getProductType() == 'configurable') {
                 foreach ($op['attributes_info'] as $option) {
-                    $options .= "<dd>";
-                    $options .= $option['label'] . ": " . $option['value'];
-                    $options .= "</dd>";
+                    $options[] = $option['label'] . ": " . $option['value'];;
                 }
             } else if ($cartItem->getProductType() == 'bundle') {
                 foreach ($op['bundle_options'] as $option) {
-                    $options .= "<dd>";
-                    $options .= $option['value'][0]['title'];
-                    $options .= "</dd>";
+                    $options[] = $option['value'][0]['title']
                 }
             }
-            $options .= '</dl>';
             array_push($items, array(
                 'name' => $cartItem->getName(),
                 'options' => $options,
@@ -403,15 +314,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getProducts()
     {
-        $cartItems = $this->cart->getQuote()->getAllItems();
-        $currentStore = $this->storeManager->getStore();
-        $currentStoreId = $currentStore->getId();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
+        $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
         $cartTotals = $this->cart->getQuote()->getTotals();
         $items = [];
         $bundlesWithFixedPrice = [];
 
-        foreach ($cartItems as $cartItem) {
+        foreach ($this->cart->getQuote()->getAllItems() as $cartItem) {
             if ($cartItem->getProductType() == 'configurable') {
                 continue;
             } elseif (in_array($cartItem->getParentItemId(), $bundlesWithFixedPrice)) {
@@ -450,50 +358,28 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $fee = $cartTotals['fee']->getData()['value'];
         }
         if (array_key_exists('value_incl_tax', $cartTotals['subtotal']->getData())) {
-            $left = $this->cart->getQuote()->getGrandTotal();
-            $right = ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']);
-
-            $this->logger->info(var_export($left, true));
-            $this->logger->info(var_export($right, true));
-            $this->logger->info(var_export(abs(($left - $right) / $right) < 0.00001, true));
-
-
-            if ($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'])) {
-                if ($this->cart->getQuote()->getCouponCode() != null) {
-                    $coupon = $this->cart->getQuote()->getCouponCode();
-                } else {
-                    $coupon = "no_code";
-                }
-                $code = array(
-                    'id' => 'discount',
-                    'description' => $coupon,
-                    'quantity' => 1,
-                    'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - ($cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'])),
-                    'vat' => '25',
-                );
-                array_push($items, $code);
-            }
+            $totals = $cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->getShippingInclTax()['unitPrice'];
         } else {
-            $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
-            $this->logger->info('Subtotal+unitPrice:' . ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']));
-            $this->logger->info(var_export($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice']), true));
-
-            if ($this->cart->getQuote()->getGrandTotal() < ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'])) {
-                if ($this->cart->getQuote()->getCouponCode() != null) {
-                    $coupon = $this->cart->getQuote()->getCouponCode();
-                } else {
-                    $coupon = "no_code";
-                }
-                $code = array(
-                    'id' => 'discount',
-                    'description' => $coupon,
-                    'quantity' => 1,
-                    'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - ($cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'])),
-                    'vat' => '25',
-                );
-                array_push($items, $code);
-            }
+            $totals = $cartTotals['subtotal']->getData()['value'] + $fee + $this->getShippingInclTax()['unitPrice'];
         }
+        $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
+        $this->logger->info('Subtotal+unitPrice:' . $totals);
+        $this->logger->info(var_export($this->cart->getQuote()->getGrandTotal() < $totals, true));
+        if ($this->cart->getQuote()->getGrandTotal() < $totals) {
+            $coupon = "no_code";
+            if ($this->cart->getQuote()->getCouponCode() != null) {
+                $coupon = $this->cart->getQuote()->getCouponCode();
+            }
+            $code = array(
+                'id' => 'discount',
+                'description' => $coupon,
+                'quantity' => 1,
+                'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - $totals),
+                'vat' => '25',
+            );
+            array_push($items, $code);
+        }
+
         return $items;
     }
 
@@ -501,10 +387,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
-        $currentStoreId = $this->storeManager->getStore()->getId();
-        //$request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        //$shippingTaxClass = $this->getShippingTaxClass();
-        //$shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         if (empty($cartTotals['shipping']->getData()['title']->getArguments())) {
             if (!empty($this->collectorSession->getVariable('curr_shipping_code'))) {
                 if ($this->collectorSession->getVariable('curr_shipping_code') == 0) {
@@ -547,7 +429,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             );
         }
         $fee = $this->collectorConfig->getInvoiceB2BFee();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
+        $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
         $feeTaxClass = $this->collectorConfig->getB2CInvoiceFeeTaxClass();
         $feeTax = $this->taxCalculation->getRate($request->setProductClassId($feeTaxClass));
         if ($fee > 0) {
@@ -566,14 +448,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
-        $currentStoreId = $this->storeManager->getStore()->getId();
-        $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
-        $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
-        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
-        $ret = array(
+        $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
+        $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($this->collectorConfig->getShippingTaxClass()));
+        $ret = [
             'description' => $cartTotals['shipping']->getData()['title']->getArguments(),
             'unitPrice' => $cartTotals['shipping']->getData()['value'] * (1 + $shippingTax / 100),
-        );
+        ];
         return $ret;
     }
 

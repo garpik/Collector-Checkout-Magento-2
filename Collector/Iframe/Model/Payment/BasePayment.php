@@ -110,6 +110,14 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         );
     }
 
+    private function getB2BrB2CStoreId(&$order)
+    {
+        if ($order->getBillingAddress()->getCompany()) {
+            return $this->collectorConfig->getB2BStoreID();
+        }
+        return $this->collectorConfig->getB2CStoreID();
+    }
+
     public function canRefund()
     {
         return true;
@@ -142,6 +150,8 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         //send addinvoice request
         //if error throw error
         //spara, corelation id och invoice id
+
+
         $info = $this->getInfoInstance();
         $paymentInfo = $info->getAdditionalInformation();
         $order = $payment->getOrder();
@@ -152,13 +162,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
             $payment->setIsTransactionClosed(false);
         }
         if (!$isIframe) {
-
-            if ($order->getBillingAddress()->getCompany()) {
-                $storeID = $this->collectorConfig->getB2BStoreID();
-            } else {
-                $storeID = $this->collectorConfig->getB2CStoreID();
-            }
-
+            $storeID = $this->getB2BrB2CStoreId($order);
             $req = array(
                 'ActivationOption' => "0",
                 'CorrelationId' => $order->getIncrementId(),
@@ -175,8 +179,9 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 'RegNo' => $paymentInfo['ssn'],
                 'StoreId' => $storeID
             );
+
             $client = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
-            $this->logger->info(var_export("auth " . $payment->getOrder()->getIncrementId() . ": " .$req,true));
+            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $resp = $client->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -187,8 +192,8 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                     $payment->setIsTransactionClosed(false);
                 }
             } catch (\Exception $e) {
-                $this->logger->error(var_export($e->getMessage(),true));
-                $this->logger->error(var_export($e->getTraceAsString(),true));
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
             }
         }
         $this->collectorSession->setVariable('is_iframe', false);
@@ -198,11 +203,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $order = $payment->getOrder();
         $client = $this->apiRequest->getInvoiceSOAP();
-        if ($order->getBillingAddress()->getCompany()) {
-            $storeID = $this->collectorConfig->getB2BStoreID();
-        } else {
-            $storeID = $this->collectorConfig->getB2CStoreID();
-        }
+        $storeID = $this->getB2BrB2CStoreId($order);
 
         if ($order->getGrandTotal() - $order->getTotalInvoiced() == $amount) {
             $req = array(
@@ -220,12 +221,10 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
-
-                $this->logger->error(var_export($req,true));
-                $this->logger->error("capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+                $this->logger->error(var_export($req, true));
+                $this->logger->error("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
-
             }
         } else {
             foreach ($payment->getOrder()->getInvoiceCollection() as $invoice) {
@@ -274,7 +273,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                     try {
                         $resp = $client->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -297,11 +296,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
     public function void(\Magento\Payment\Model\InfoInterface $payment)
     {
         $order = $payment->getOrder();
-        if ($order->getBillingAddress()->getCompany()) {
-            $storeID = $this->collectorConfig->getB2BStoreID();
-        } else {
-            $storeID = $this->collectorConfig->getB2CStoreID();
-        }
+        $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
@@ -320,11 +315,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
     public function cancel(\Magento\Payment\Model\InfoInterface $payment)
     {
         $order = $payment->getOrder();
-        if ($order->getBillingAddress()->getCompany()) {
-            $storeID = $this->collectorConfig->getB2BStoreID();
-        } else {
-            $storeID = $this->collectorConfig->getB2CStoreID();
-        }
+        $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
@@ -344,11 +335,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
     public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
         $order = $payment->getOrder();
-        if ($order->getBillingAddress()->getCompany()) {
-            $storeID = $this->collectorConfig->getB2BStoreID();
-        } else {
-            $storeID = $this->collectorConfig->getB2CStoreID();
-        }
+        $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
         if ($order->getGrandTotal() == $amount) {
             $req = array(
@@ -358,39 +345,13 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " .var_export($req,true));
+            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $client->CreditInvoice($req);
             } catch (\Exception $e) {
-                $this->logger->error(var_export($e->getMessage(),true));
-                $this->logger->error(var_export($e->getTraceAsString(),true));
+                $this->logger->error(var_export($e->getMessage(), true));
+                $this->logger->error(var_export($e->getTraceAsString(), true));
             }
-        } else {
-            //	while($payment->getCreditmemo() != null){}
-            /*	$req = array(
-                    'CorrelationId' => $order->getIncrementId(),
-                    'CountryCode' => $this->collectorConfig->getCountryCode(),
-                    'InvoiceNo' => $order->getData('collector_invoice_id'),
-                    'StoreId' => $storeID,
-                    'CreditDate' => date("Y-m-d"),
-                    'ArticleList' => array()
-                );
-                foreach ($payment->getCreditmemo()->getItemsCollection() as $item){
-                    $article = array(
-                        'ArticleId' => $item->getSku(),
-                        'Description' => $item->getName(),
-                        'Quantity' => $item->getQty()
-                    );
-                    array_push($req['ArticleList'], $article);
-                }
-                ob_start();
-                print_r($req);
-                file_put_contents(BP . "/var/log/req.log", "part refund " . $payment->getOrder()->getIncrementId() . ": " . ob_get_clean() . "\n", FILE_APPEND);
-                try {
-                    $client->PartCreditInvoice($req);
-                }
-                catch (\Exception $e){
-                }*/
         }
     }
 }

@@ -67,7 +67,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
     protected $logger;
 
     /**
-     * @var \Collector\Base\Model\ApiRequest 
+     * @var \Collector\Base\Model\ApiRequest
      */
     protected $apiRequest;
 
@@ -145,6 +145,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     if (empty($name)) {
                         return $result->setData(false);
                     }
+                    $this->cart->getQuote()->getShippingAddress()->setSameAsBilling(0);
                     if (in_array($name, $customizeAttribute)) {
                         switch ($name) {
                             case 'street_1':

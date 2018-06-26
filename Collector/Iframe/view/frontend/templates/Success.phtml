@@ -1,29 +1,20 @@
 <?php
-if (empty($block->getCollectorVariable('collector_public_token'))) {
-    $url = $block->getStoreBaseUrl();
-    if (headers_sent()) {
-        echo '<script>location.href="' . $url . '";</script>';
-    } else {
-        die('<script>location.href="' . $url . '";</script>');
-    }
-} else {
-    $url = $block->getCollectorVariable('collector_url');
-    $dataLang = $block->getCollectorVariable('collector_language');
-    $dataVariant = $block->getCollectorVariable('collector_data_variant');
-    $publicToken = $block->getCollectorVariable('collector_public_token');
-    $block->setCollectorVariable('collector_public_token','');
-    ?>
+$url = $block->getCollectorVariable('collector_url');
+$dataLang = $block->getCollectorVariable('collector_language');
+$dataVariant = $block->getCollectorVariable('collector_data_variant');
+$publicToken = $block->getCollectorVariable('collector_public_token');
+$block->setCollectorVariable('collector_public_token', '');
+?>
 
-    <script>
-        require([
-            'Magento_Customer/js/customer-data'
-        ], function (customerData) {
-            var sections = ['cart'];
-            customerData.invalidate(sections);
-        });
-    </script>
-    <div id="collector-checkout" class="collector-checkout">
-        <script src="<?php echo $url; ?>" data-token="<?php echo $publicToken; ?>"
-                data-lang='<?php echo $dataLang; ?>' <?php echo $dataVariant; ?>></script>
-    </div>
-<?php } ?>
+<script>
+    require([
+        'Magento_Customer/js/customer-data'
+    ], function (customerData) {
+        var sections = ['cart'];
+        customerData.invalidate(sections);
+    });
+</script>
+<div id="collector-checkout" class="collector-checkout">
+    <script src="<?php echo $url; ?>" data-token="<?php echo $publicToken; ?>"
+            data-lang='<?php echo $dataLang; ?>' <?php echo $dataVariant; ?>></script>
+</div>

@@ -190,8 +190,13 @@ class Index extends \Magento\Framework\App\Action\Action
 
     public function execute()
     {
-        $this->checkoutSession->clearQuote();
-        $this->checkoutSession->clearStorage();
+        if (empty($this->collectorSession->getVariable('collector_public_token'))) {
+            $this->logger->error('Error while public_token loading');
+            $this->messageManager->addError(__('API request error.'));
+            return $this->redirect->redirect($this->response, '/');
+        }
+//        $this->checkoutSession->clearQuote();
+//        $this->checkoutSession->clearStorage();
 
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
@@ -201,28 +206,25 @@ class Index extends \Magento\Framework\App\Action\Action
             return $this->redirect->redirect($this->response, '/');
         }
         try {
+            $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
             //set payment method
             $paymentMethod = $this->getPaymentMethodByName($response['data']['purchase']['paymentName']);
 
             $exOrder = $this->orderInterface->loadByIncrementId($response['data']['reference']);
             if ($exOrder->getIncrementId()) {
-                $this->messageManager->addError(__('This order is already exists'));
-                return $this->redirect->redirect($this->response, '/');
+                throw new \Exception(__('This order is already exists'));
             }
             $shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
             $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
 
             //check countries
             if ((!$this->collectorConfig->isShippingAddressEnabled() && empty($shippingCountryId)) || empty($billingCountryId)) {
-                $this->messageManager->addError(__('Country code is not specified'));
-                return $this->redirect->redirect($this->response, '/');
+                throw new \Exception(__('Country code is not specified'));
             }
-
-            $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
-
+            //print_r($actual_quote->getBillingAddress()->getFirstname());exit;
+            //$actual_quote->load($actual_quote->getId());
             if (empty($actual_quote)) {
-                $this->messageManager->addError(__('Can\'t load order'));
-                return $this->redirect->redirect($this->response, '/');
+                throw new \Exception(__('Can\'t load order'));
             }
 
             //init the store id and website id
@@ -234,8 +236,7 @@ class Index extends \Magento\Framework\App\Action\Action
             $customer->setWebsiteId($websiteId);
 
             if (empty($response["data"]["customerType"])) {
-                $this->messageManager->addError(__('Incorrect user data'));
-                return $this->redirect->redirect($this->response, '/');
+                throw new \Exception(__('Incorrect user data'));
             }
 
             switch ($response["data"]["customerType"]) {
@@ -275,7 +276,7 @@ class Index extends \Magento\Framework\App\Action\Action
             $customer->save();
             //$actual_quote->setCustomerEmail($email);
             //$actual_quote->setStore($store);
-            //$customer = $this->customerRepository->getById($customer->getEntityId());
+            $customer = $this->customerRepository->getById($customer->getEntityId());
             //$actual_quote->setCurrency();
             $actual_quote->assignCustomer($customer);
 
@@ -353,7 +354,6 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->getBillingAddress()->addData($billingAddress);
             //$actual_quote->getShippingAddress()->addData($shippingAddressArr);
 
-
             // Collect Rates and Set Shipping & Payment Method
             $this->shippingRate->setCode($this->collectorSession->getVariable('curr_shipping_code'))->getPrice();
             //$shippingAddress = $actual_quote->getShippingAddress();
@@ -401,40 +401,38 @@ class Index extends \Magento\Framework\App\Action\Action
             $order->setBaseGrandTotal($order->getBaseGrandTotal() + $fee);
 
 
-            $this->setOrderStatusState($order, $response["data"]["purchase"]["result"]);
+            if (!$this->setOrderStatusState($order, $response["data"]["purchase"]["result"])) {
+                throw new \Exception(__('Invalid order status'));
+            }
 
             $order->save();
             $this->eventManager->dispatch(
                 'checkout_onepage_controller_success_action',
                 ['order_ids' => [$order->getId()]]
             );
-
-
-//            if ($order->getBillingAddress()->getCompany()) {
-//                $storeID = $this->collectorConfig->getB2BStoreID();
-//            } else {
-//                $storeID = $this->collectorConfig->getB2CStoreID();
-//            }
-//            $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $order->getRemoteIp()]);
-//
-//            $req = array(
-//                'CorrelationId' => $order->getIncrementId(),
-//                'CountryCode' => $this->collectorConfig->getCountryCode(),
-//                'InvoiceNo' => $order->getData('collector_invoice_id'),
-//                'StoreId' => $storeID,
-//            );
-//            try {
-//                $soap->CancelInvoice($req);
-//            } catch (\Exception $e) {
-//                $this->logger->error($e->getMessage());
-//                $this->logger->error($e->getTraceAsString());
-//            }
-
-
             $this->checkoutSession->clearStorage();
             $this->checkoutSession->clearQuote();
             return $resultPage;
         } catch (\Exception $e) {
+            if ($this->collectorSession->getVariable('btype') == \Collector\Base\Model\Session::B2B) {
+                $storeID = $this->collectorConfig->getB2BStoreID();
+            } else {
+                $storeID = $this->collectorConfig->getB2CStoreID();
+            }
+            $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $actual_quote->getRemoteIp()]);
+            $req = array(
+                'CorrelationId' => $response['data']['reference'],
+                'CountryCode' => $this->collectorConfig->getCountryCode(),
+                'InvoiceNo' => $response['data']['purchase']['purchaseIdentifier'],
+                'StoreId' => $storeID,
+            );
+            try {
+                $soap->CancelInvoice($req);
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage());
+                $this->logger->error($e->getTraceAsString());
+            }
+
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
             $this->messageManager->addError($e->getMessage());
