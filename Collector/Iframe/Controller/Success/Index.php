@@ -93,6 +93,10 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $collectorConfig;
 
     /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
+    /**
      * @var array
      */
     protected $paymentToMethod = [
@@ -151,16 +155,11 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Newsletter\Model\SubscriberFactory $subscriberFactory,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Iframe\Model\State $orderState,
-        \Magento\Customer\Model\Session $customerSession,
-        \Magento\Quote\Model\QuoteFactory $quoteFactory,
         \Magento\Framework\App\Response\Http $response,
         \Magento\Framework\App\Response\RedirectInterface $redirect
-
     )
     {
-        $this->quoteFactory = $quoteFactory;
         $this->apiRequest = $apiRequest;
-        $this->customerSession = $customerSession;
         $this->collectorConfig = $collectorConfig;
         $this->response = $response;
         $this->redirect = $redirect;

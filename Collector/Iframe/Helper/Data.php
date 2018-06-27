@@ -67,6 +67,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Collector\Base\Model\ApiRequest
      */
     protected $apiRequest;
+
+    /**
+     * @var \Magento\Checkout\Helper\Data
+     */
+    protected $checkoutHelper;
     public $allowedCountries = [
         'NO',
         'SE',
@@ -90,6 +95,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\ApiRequest $apiRequest
+     * @param \Magento\Checkout\Helper\Data $checkoutHelper
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      * @param \Collector\Base\Model\Config $collectorConfig
      */
@@ -108,10 +114,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
+        \Magento\Checkout\Helper\Data $checkoutHelper,
         \Magento\Framework\Message\ManagerInterface $_messageManager,
         \Collector\Base\Model\Config $collectorConfig
     )
     {
+        $this->checkoutHelper = $checkoutHelper;
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
@@ -143,7 +151,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getDiscount()
     {
-        return $this->pricingHelper->currency(($this->cart->getQuote()->getSubtotal() - $this->cart->getQuote()->getSubtotalWithDiscount()), true, false);
+        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getSubtotal() - $this->cart->getQuote()->getSubtotalWithDiscount());
     }
 
     public function hasDiscount()
@@ -155,13 +163,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $this->cart->getQuote()->collectTotals();
         $cartTotals = $this->cart->getQuote()->getTotals();
-        return $this->pricingHelper->currency($cartTotals['tax']->getData()['value'], true, false);
+        return $this->checkoutHelper->formatPrice($cartTotals['tax']->getData()['value']);
     }
 
     public function getGrandTotal()
     {
         $this->cart->getQuote()->collectTotals();
-        return $this->pricingHelper->currency($this->cart->getQuote()->getGrandTotal(), true, false);
+        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getGrandTotal());
     }
 
     public function getShippingMethods()
@@ -201,9 +209,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->setShippingMethod($rate->getCode());
                 }
                 if ($shippingTax == 0) {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->checkoutHelper->formatPrice($rate->getPrice());
                 } else {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency(($rate->getPrice() * (1 + ($shippingTax / 100))), true, false);
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->checkoutHelper->formatPrice($rate->getPrice() * (1 + ($shippingTax / 100)));
                 }
                 array_push($shippingMethods, $shipMethod);
             }
@@ -255,7 +263,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
 
-        return $this->pricingHelper->currency($this->cart->getQuote()->getShippingAddress()->getShippingInclTax(), true, false);
+        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getShippingAddress()->getShippingInclTax());
     }
 
 
@@ -265,7 +273,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->setShippingMethod();
         }
         if ($inclFormatting) {
-            return $this->pricingHelper->currency($this->cart->getQuote()->getShippingAddress()->getShippingInclTax(), true, false);
+            return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getShippingAddress()->getShippingInclTax());
         }
         return $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
 
@@ -295,14 +303,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'name' => $cartItem->getName(),
                 'options' => $options,
                 'id' => $cartItem->getId(),
-                'unitPrice' => $this->pricingHelper->currency(($cartItem->getPrice() * (1 + ($percent / 100))), true, false),
+                'unitPrice' => $this->checkoutHelper->formatPrice(($cartItem->getPrice() * (1 + ($percent / 100)))),
                 'qty' => $cartItem->getQty(),
-                'sum' => $this->pricingHelper->currency(($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100))), true, false),
+                'sum' => $this->checkoutHelper->formatPrice($this->apiRequest->convert(($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100))), 'SEK')),
                 'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
             ));
         }
         return $items;
     }
+
 
     public function getProducts()
     {
@@ -327,7 +336,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $product = $this->productRepository->get($cartItem->getSku());
             $taxClassId = $product->getTaxClassId();
             $percent = $this->taxCalculation->getRate($request->setProductClassId($taxClassId));
-            $qty = 0;
             if ($cartItem->getParentItem()) {
                 $qty = $cartItem->getParentItem()->getQty();
             } else {
@@ -340,7 +348,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             array_push($items, array(
                 'id' => $cartItem->getSku(),
                 'description' => $cartItem->getName(),
-                'unitPrice' => round($price, 2),
+                'unitPrice' => round($this->apiRequest->convert($price, 'SEK'), 2),
                 'quantity' => $qty,
                 'vat' => $percent
             ));
@@ -366,7 +374,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'id' => 'discount',
                 'description' => $coupon,
                 'quantity' => 1,
-                'unitPrice' => sprintf("%01.2f", $this->cart->getQuote()->getGrandTotal() - $totals),
+                'unitPrice' => sprintf("%01.2f", $this->apiRequest->convert($this->cart->getQuote()->getGrandTotal() - $totals, 'SEK')),
                 'vat' => '25',
             );
             array_push($items, $code);
@@ -389,7 +397,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $ret['directinvoicenotification'] = [
                 'id' => 'invoice_fee',
                 'description' => 'Invoice Fee',
-                'unitPrice' => $fee,
+                'unitPrice' => $this->apiRequest->convert($fee, 'SEK', 'base'),
                 'vat' => $feeTax
             ];
         }
@@ -397,7 +405,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $ret ['shipping'] = [
                 'id' => "shipping",
                 'description' => $shippingAddress->getShippingMethod(),
-                'unitPrice' => $shippingAddress->getShippingInclTax(),
+                'unitPrice' => $this->apiRequest->convert($shippingAddress->getShippingInclTax(), 'SEK'),
                 'vat' => 0
             ];
         } else {

@@ -22,13 +22,19 @@ class ApiRequest
      * @param Config $collectorConfig
      * @param \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory
      * @param Session $collectorSession
+     * @param \Magento\Store\Model\StoreManagerInterface $_storeManager
+     * @param \Magento\Directory\Model\CurrencyFactory $currencyFactory
      */
     public function __construct(
         \Collector\Base\Model\Config $collectorConfig,
         \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
-        \Collector\Base\Model\Session $collectorSession
+        \Collector\Base\Model\Session $collectorSession,
+        \Magento\Store\Model\StoreManagerInterface $_storeManager,
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory
     )
     {
+        $this->currencyFactory = $currencyFactory;
+        $this->storeManager = $_storeManager;
         $this->collectorSession = $collectorSession;
         $this->soapClientFactory = $soapClientFactory;
         $this->collectorConfig = $collectorConfig;
@@ -143,5 +149,42 @@ class ApiRequest
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    }
+
+
+    public function convert($amountValue, $currencyCodeTo = null, $currencyCodeFrom = null)
+    {
+        if ($currencyCodeFrom == 'base') {
+            $currencyCodeFrom = $this->storeManager->getStore()->getBaseCurrency()->getCode();
+        }
+        /**
+         * If is not specified the currency code from which we want to convert - use current currency
+         */
+        if (!$currencyCodeFrom) {
+            $currencyCodeFrom = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
+        }
+
+        /**
+         * If is not specified the currency code to which we want to convert - use base currency
+         */
+        if (!$currencyCodeTo) {
+            $currencyCodeTo = $this->storeManager->getStore()->getBaseCurrency()->getCode();
+        }
+        /**
+         * Do not convert if currency is same
+         */
+        if ($currencyCodeFrom == $currencyCodeTo) {
+            return $amountValue;
+        }
+
+        /** @var float $rate */
+        // Get rate
+        $rate = $this->currencyFactory->create()->load($currencyCodeFrom)->getAnyRate($currencyCodeTo);
+        // Get amount in new currency
+        if ($rate == 0)
+            return $amountValue;
+
+        $amountValue = $amountValue * $rate;
+        return $amountValue;
     }
 }

@@ -11,15 +11,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_urlInterface;
 
     /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
+
+    /**
      * Data constructor.
      * @param \Magento\Framework\UrlInterface $urlInterface
+     * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\App\Helper\Context $context
      */
     public function __construct(
         \Magento\Framework\UrlInterface $urlInterface,
+        \Collector\Base\Model\ApiRequest $apiRequest,
         \Magento\Framework\App\Helper\Context $context
     )
     {
+        $this->apiRequest = $apiRequest;
         $this->_urlInterface = $urlInterface;
         parent::__construct($context);
     }
@@ -44,7 +52,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'ArticleId' => $item->getSku(),
                 'Description' => $item->getName(),
                 'Quantity' => $item->getQtyOrdered(),
-                'UnitPrice' => $item->getPriceInclTax(),
+                'UnitPrice' => $this->apiRequest->convert($item->getPriceInclTax(), 'SEK'),
                 'VAT' => $item->getTaxPercent()
             ];
             array_push($rows, $itemArr);
@@ -53,7 +61,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             'ArticleId' => 'shipping',
             'Description' => substr($order->getShippingDescription(), 0, 50),
             'Quantity' => 1,
-            'UnitPrice' => sprintf("%01.2f", $order->getBaseShippingInclTax()),
+            'UnitPrice' => sprintf("%01.2f", $this->apiRequest->convert($order->getBaseShippingInclTax(), 'SEK')),
             'VAT' => sprintf("%01.2f", $order->getBaseShippingTaxAmount() / $order->getBaseShippingAmount() * 100),
         ];
         if ($order->getDiscountAmount() < 0) {
@@ -61,7 +69,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'ArticleId' => 'discount',
                 'Description' => empty($order->getCouponCode()) ? 'no_code' : $order->getCouponCode(),
                 'Quantity' => 1,
-                'UnitPrice' => sprintf("%01.2f", $order->getDiscountAmount()),
+                'UnitPrice' => sprintf("%01.2f", $this->apiRequest->convert($order->getDiscountAmount(), 'SEK')),
                 'VAT' => sprintf("%01.2f", $order->getDiscountTaxCompensationAmount() / $order->getDiscountAmount() * 100),
             ];
             array_push($rows, $code);

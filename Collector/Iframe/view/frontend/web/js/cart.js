@@ -74,6 +74,9 @@ define([
                                     if (data.cart) {
                                         jQuery('div.collector-cart').replaceWith(data.cart);
                                     }
+                                    if (data.shipping) {
+                                        jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
+                                    }
                                     var param = {
                                         is_ajax: true,
                                         type: 'shippingValidate',
@@ -128,6 +131,9 @@ define([
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
                         }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
+                        }
                     },
                     complete: function () {
                         jQuery('body').removeClass('is-suspended');
@@ -160,6 +166,9 @@ define([
                     success: function (data) {
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
+                        }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
                         }
                     },
                     complete: function () {
@@ -237,6 +246,9 @@ define([
                             }
                             jQuery('div.collector-cart').replaceWith(data.cart);
                         }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
+                        }
                     },
                     complete: function () {
                         jQuery('body').removeClass('is-suspended');
@@ -280,6 +292,9 @@ define([
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
                         }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
+                        }
                         if (data.checkout) {
                             jQuery('div.collector-checkout').replaceWith(data.checkout);
                         }
@@ -309,6 +324,9 @@ define([
                     success: function (data) {
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
+                        }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
                         }
                     },
                     complete: function () {
@@ -344,6 +362,9 @@ define([
                     success: function (data) {
                         if (data.cart) {
                             jQuery('div.collector-cart').replaceWith(data.cart);
+                        }
+                        if (data.shipping) {
+                            jQuery('div.collector-shipping-methods').replaceWith(data.shipping);
                         }
                         if (data.checkout) {
                             jQuery('div.collector-checkout').replaceWith(data.checkout);

@@ -37,6 +37,11 @@ class Cart extends \Magento\Checkout\Block\Onepage
     protected $collectorConfig;
 
     /**
+     * @var \Magento\Checkout\Helper\Data
+     */
+    protected $checkoutHelper;
+
+    /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
@@ -49,6 +54,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\Config $collectorConfig
+     * @param \Magento\Checkout\Helper\Data $checkoutHelper
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -63,10 +69,12 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\Config $collectorConfig,
+        \Magento\Checkout\Helper\Data $checkoutHelper,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->checkoutHelper = $checkoutHelper;
         $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
@@ -131,6 +139,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
     protected function _toHtml()
     {
         return parent::_toHtml();
+    }
+
+    public function getCheckoutHelper() {
+        return $this->checkoutHelper;
     }
 
     public function getProducts()

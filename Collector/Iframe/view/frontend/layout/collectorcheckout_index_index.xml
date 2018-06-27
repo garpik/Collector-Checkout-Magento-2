@@ -19,6 +19,7 @@
 			</container>
 			<container name="collector-shipping" htmlTag="div" htmlClass="collector-shipping-wrapper" after="collector-cart">
 				<block class="Collector\Iframe\Block\Shipping" cacheable="false" name="collectorshipping" template="Collector_Iframe::Shipping-address.phtml" before="main" after="header-wrapper" />
+				<block class="Collector\Iframe\Block\Cart" cacheable="false" name="collectorshippingmethod" template="Collector_Iframe::Shipping-methods.phtml" before="-" after="collectorshipping" />
 			</container>
 			<container name="collector-checkout" htmlTag="div" htmlClass="collector-checkout-wrapper" after="collector-shipping">
 				<block class="Collector\Iframe\Block\Checkout" cacheable="false" name="collectorjscheckout" template="Collector_Iframe::Checkoutjs.phtml" before="main" after="collector-cart" />

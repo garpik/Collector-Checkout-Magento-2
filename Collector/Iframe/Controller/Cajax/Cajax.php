@@ -312,18 +312,25 @@ class Cajax extends \Magento\Framework\App\Action\Action
                 $block = $layout->getBlock('collectorcart');
                 $block->setTemplate('Collector_Iframe::Cart.phtml');
                 $html = $block->toHtml();
+
+                $shippingBlock = $layout->getBlock('collectorcart');
+                $shippingBlock->setTemplate('Collector_Iframe::Shipping-methods.phtml');
+                $shippingHtml = $shippingBlock->toHtml();
+
                 if ($changeLanguage) {
                     $checkoutBlock = $layout->getBlock('collectorcheckout');
                     $checkoutBlock->setTemplate('Collector_Iframe::Checkout.phtml');
                     $checkoutHtml = $checkoutBlock->toHtml();
                     $return = array(
                         'cart' => $html,
-                        'checkout' => $checkoutHtml
+                        'checkout' => $checkoutHtml,
+                        'shipping' =>  $shippingHtml
                     );
                     return $result->setData($return);
                 } else {
                     $return = array(
-                        'cart' => $html
+                        'cart' => $html,
+                        'shipping' =>  $shippingHtml
                     );
                     return $result->setData($return);
                 }

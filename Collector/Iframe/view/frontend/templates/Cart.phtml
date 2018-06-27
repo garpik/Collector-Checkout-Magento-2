@@ -5,6 +5,7 @@ $customerType = $collectorConfig->getCustomerType();
 $url = $block->getBaseUrl();
 $updateCustomer = $collectorConfig->getUpdateCustomer();
 $showDiscount = $collectorConfig->getShowDiscount();
+$checkoutHelper = $block->getCheckoutHelper();
 ?>
 <script>
     var cajaxurl = "<?php echo $url . "collectorcheckout/cajax/cajax"; ?>";
@@ -94,6 +95,7 @@ $showDiscount = $collectorConfig->getShowDiscount();
             <?php $totals = $this->getTotals();
             foreach ($totals as $total): ?>
                 <?php
+//                var_dump($total->getData());
                 if (array_key_exists('value_incl_tax', $total->getData())) {
                     if (isset($total->getData()['value_incl_tax'])) {
                         if ($total->getData()['value_incl_tax'] > 0) {
@@ -156,48 +158,44 @@ $showDiscount = $collectorConfig->getShowDiscount();
                             echo $this->getShippingPrice();
                         } else if ($total->getData()['code'] == 'grand_total') {
                             if (empty($totals['shipping']->getData()['title']->getArguments())) {
-                                echo $priceHelper->currency($total->getData()['value'] + $this->getShippingPriceExclFormatting() + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($this->getShippingPriceExclFormatting(), false, false) + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                             } else {
                                 if (array_key_exists('value_incl_tax', $total->getData())) {
                                     if (isset($total->getData()['value_incl_tax'])) {
-                                        echo $priceHelper->currency($total->getData()['value_incl_tax'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                        echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                     } else {
-                                        echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                        echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                     }
                                 } else {
-                                    echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                    echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                 }
                             }
                         } else if ($total->getData()['code'] == 'fee_amount') {
                             if (array_key_exists('value_incl_tax', $total->getData())) {
                                 if (isset($total->getData()['value_incl_tax'])) {
-                                    echo $priceHelper->currency($total->getData()['value_incl_tax'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                    echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                 } else {
                                     if ($total->getData()['value'] > 0) {
-                                        echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                        echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                     }
                                 }
                             } else {
                                 if ($total->getData()['value'] > 0) {
-                                    echo $priceHelper->currency($total->getData()['value'] + $collectorConfig->getInvoiceB2BFee(), true, false);
+                                    echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
                                 }
                             }
                         } else {
                             if (array_key_exists('value_incl_tax', $total->getData())) {
                                 if (isset($total->getData()['value_incl_tax'])) {
-                                    echo $priceHelper->currency($total->getData()['value_incl_tax'], true, false);
+                                    echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax']);
                                 } else {
                                     if (array_key_exists('value', $total->getData())) {
-                                        echo $priceHelper->currency($total->getData()['value'], true, false);
-                                    } else {
-                                        //echo $priceHelper->currency(0, true, false);
+                                        echo $checkoutHelper->formatPrice($total->getData()['value']);
                                     }
                                 }
                             } else {
                                 if (array_key_exists('value', $total->getData())) {
-                                    echo $priceHelper->currency($total->getData()['value'], true, false);
-                                } else {
-                                    //echo $priceHelper->currency(0, true, false);
+                                    echo $checkoutHelper->formatPrice($total->getData()['value']);
                                 }
                             }
                         }
@@ -238,30 +236,6 @@ $showDiscount = $collectorConfig->getShowDiscount();
             </form>
         </div>
 
-    </div>
-
-
-    <div class="collector_shipping_methods">
-        <h1><?php echo __('Shipping Methods') ?></h1>
-        <form>
-            <?php foreach ($this->getShippingMethods() as $method): ?>
-                <?php if ($method['first']): ?>
-                    <div class="col-ship_methods">
-                        <input type="radio" class="col-radio" id="<?php echo $method['code'] ?>" name="method"
-                               value="<?php echo $method['code'] ?>" checked>
-                        <label for="<?php echo $method['code'] ?>"
-                               class="col-radio_label"><?php echo $method['content'] ?></label>
-                    </div>
-                <?php else: ?>
-                    <div class="col-ship_methods">
-                        <input type="radio" class="col-radio" id="<?php echo $method['code'] ?>" name="method"
-                               value="<?php echo $method['code'] ?>">
-                        <label for="<?php echo $method['code'] ?>"
-                               class="col-radio_lable"><?php echo $method['content'] ?></label>
-                    </div>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </form>
     </div>
 
 </div>
