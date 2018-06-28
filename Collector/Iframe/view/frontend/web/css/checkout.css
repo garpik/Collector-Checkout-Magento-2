@@ -1,6 +1,15 @@
 body{
     font-weight:bold;
 }
+.collector_shipping_address:after,
+.collector-shipping-methods:after{
+    content: '';
+    display: table;
+    clear: both;
+}
+.collector-shipping-methods {
+    margin: 0 0 30px;
+}
 .collector-cart-wrapper{
     box-sizing: border-box;
     margin-left: auto;
