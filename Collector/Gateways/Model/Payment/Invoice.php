@@ -2,11 +2,11 @@
 
 namespace Collector\Gateways\Model\Payment;
 
+use Magento\Framework\Exception\CouldNotSaveException;
+
 /**
  * Pay In Store payment method model
  */
-
-
 class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
 {
     protected $_code = 'collector_invoice';
@@ -34,7 +34,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
     /**
      * @var \Collector\Base\Logger\Collector
      */
-    protected $logger;
+    protected $collectorLogger;
 
     /**
      * @var \Collector\Base\Model\ApiRequest
@@ -88,7 +88,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $this->collectorConfig = $collectorConfig;
         $this->collectorApi = $collectorApi;
-        $this->logger = $collectorLogger;
+        $this->collectorLogger = $collectorLogger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
         $this->clientFactory = $clientFactory;
@@ -150,7 +150,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             );
 
 
-            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
+            $this->collectorLogger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $resp = $soap->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -161,9 +161,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                     $payment->setIsTransactionClosed(false);
                 }
             } catch (\Exception $e) {
-                $this->logger->error($e->getMessage());
-                $this->logger->error($e->getTraceAsString());
-
+                $this->collectorLogger->error($e->getMessage());
+                $this->collectorLogger->error($e->getTraceAsString());
+                throw new CouldNotSaveException(
+                    __($e->getMessage()),
+                    $e
+                );
             }
         }
         $this->collectorSession->setIsIframe(false);
@@ -260,6 +263,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                     } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());
                         $this->logger->error($e->getTraceAsString());
+                        throw new CouldNotSaveException(
+                            __($e->getMessage()),
+                            $e
+                        );
                     }
                 }
             }
@@ -287,6 +294,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
+            throw new CouldNotSaveException(
+                __($e->getMessage()),
+                $e
+            );
         }
     }
 
@@ -311,6 +322,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
+            throw new CouldNotSaveException(
+                __($e->getMessage()),
+                $e
+            );
         }
     }
 
@@ -337,6 +352,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
+                throw new CouldNotSaveException(
+                    __($e->getMessage()),
+                    $e
+                );
             }
         }
     }

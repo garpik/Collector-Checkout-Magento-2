@@ -4,12 +4,8 @@ namespace Collector\Iframe\Block;
 
 class Shipping extends \Magento\Framework\View\Element\Template
 {
-    protected $storeManager;
 
-    /**
-     * @var \Collector\Base\Model\Session
-     */
-    protected $collectorSession;
+    protected $storeManager;
 
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
@@ -45,7 +41,6 @@ class Shipping extends \Magento\Framework\View\Element\Template
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param array $data
      * @param \Magento\Checkout\Model\Session $_checkoutSession
-     * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Collector\Iframe\Helper\Data $helper
      * @param \Collector\Base\Model\Config $collectorConfig
@@ -56,7 +51,6 @@ class Shipping extends \Magento\Framework\View\Element\Template
         \Magento\Framework\View\Element\Template\Context $context,
         array $data = [],
         \Magento\Checkout\Model\Session $_checkoutSession,
-        \Collector\Base\Model\Session $_collectorSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Collector\Iframe\Helper\Data $helper,
         \Collector\Base\Model\Config $collectorConfig,
@@ -71,7 +65,6 @@ class Shipping extends \Magento\Framework\View\Element\Template
         $this->configCacheType = $configCacheType;
         $this->countryCollectionFactory = $countryCollectionFactory;
         $this->checkoutSession = $_checkoutSession;
-        $this->collectorSession = $_collectorSession;
         $this->storeManager = $context->getStoreManager();
     }
 

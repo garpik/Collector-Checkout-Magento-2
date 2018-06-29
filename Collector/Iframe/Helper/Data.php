@@ -242,6 +242,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
     }
 
+    public function getShippingMethod()
+    {
+        return $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->getShippingMethod();
+    }
+
     public function setShippingMethod($methodInput = '')
     {
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
@@ -305,7 +310,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'id' => $cartItem->getId(),
                 'unitPrice' => $this->checkoutHelper->formatPrice(($cartItem->getPrice() * (1 + ($percent / 100)))),
                 'qty' => $cartItem->getQty(),
-                'sum' => $this->checkoutHelper->formatPrice($this->apiRequest->convert(($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100))), 'SEK')),
+                'sum' => $this->pricingHelper->currency($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100)), true, false),
                 'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
             ));
         }

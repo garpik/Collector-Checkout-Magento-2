@@ -1,4 +1,5 @@
 <?php
+$block->updateShipping();
 $priceHelper = $block->getPricingObject();
 $collectorConfig = $block->getCollectorConfig();
 $customerType = $collectorConfig->getCustomerType();
@@ -94,114 +95,45 @@ $checkoutHelper = $block->getCheckoutHelper();
             <?php endif; ?>
             <?php $totals = $this->getTotals();
             foreach ($totals as $total): ?>
-                <?php
-//                var_dump($total->getData());
-                if (array_key_exists('value_incl_tax', $total->getData())) {
-                    if (isset($total->getData()['value_incl_tax'])) {
-                        if ($total->getData()['value_incl_tax'] > 0) {
-                        } else {
-                            continue;
-                        }
-                    } else {
-                        if (array_key_exists('value', $total->getData())) {
-                            if ($total->getData()['value'] > 0) {
-                            } else {
-                                continue;
-                            }
-                        }
-                    }
-                } else {
-                    if (array_key_exists('value', $total->getData())) {
-                        if ($total->getData()['value'] > 0) {
-                        } else {
-                            continue;
-                        }
-                    } else {
-                        continue;
-                    }
-                }
-                ?>
                 <tr>
                     <td class="col-name">
-                        <?php if ($total->getData()['code'] == 'grand_total') { ?>
-                            <span class="col-grandname"><?php echo $total->getData()['title']; ?></span>
-                            <?php
-                        } else {
-                            if (array_key_exists('value_incl_tax', $total->getData())) {
-                                if (isset($total->getData()['value_incl_tax'])) {
-                                    if ($total->getData()['value_incl_tax'] > 0) {
-                                        echo $total->getData()['title'];
-                                    }
-                                } else {
-                                    if (array_key_exists('value', $total->getData())) {
-                                        if ($total->getData()['value'] > 0) {
-                                            echo $total->getData()['title'];
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (array_key_exists('value', $total->getData())) {
-                                    if ($total->getData()['value'] > 0) {
-                                        echo $total->getData()['title'];
-                                    }
-                                }
-                            }
-                        } ?>
+                        <span class="<?php echo $total->getData()['code'] == 'grand_total' ? "col-grandname" : ""; ?>">
+                        <?php echo $total->getData()['title'] ?>
+                        </span>
                     </td>
-                    <?php if ($total->getData()['code'] == 'grand_total'){ ?>
-                    <td class="col-price col-grand">
-                        <?php }else{ ?>
-                    <td class="col-price">
-                        <?php } ?>
+                    <td class="col-price <?php echo $total->getData()['code'] == 'grand_total' ? "col-grand" : ""; ?>">
                         <?php
+
+                        $price = array_key_exists('value_incl_tax', $total->getData()) ? $total->getData()['value_incl_tax'] : $total->getData()['value'];
+                        $additional = 0;
+
                         if ($total->getData()['code'] == 'shipping') {
-                            echo $this->getShippingPrice();
-                        } else if ($total->getData()['code'] == 'grand_total') {
+                            $price = $this->getShippingPriceExclFormatting();
+                        }
+
+                        if ($total->getData()['code'] == 'grand_total') {
                             if (empty($totals['shipping']->getData()['title']->getArguments())) {
-                                echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($this->getShippingPriceExclFormatting(), false, false) + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
+                                $additional = $collectorConfig->getInvoiceB2BFee();
                             } else {
                                 if (array_key_exists('value_incl_tax', $total->getData())) {
                                     if (isset($total->getData()['value_incl_tax'])) {
-                                        echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
+                                        $additional = $collectorConfig->getInvoiceB2BFee();
                                     } else {
-                                        echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
+                                        $additional = $collectorConfig->getInvoiceB2BFee();
                                     }
                                 } else {
-                                    echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
-                                }
-                            }
-                        } else if ($total->getData()['code'] == 'fee_amount') {
-                            if (array_key_exists('value_incl_tax', $total->getData())) {
-                                if (isset($total->getData()['value_incl_tax'])) {
-                                    echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
-                                } else {
-                                    if ($total->getData()['value'] > 0) {
-                                        echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
-                                    }
-                                }
-                            } else {
-                                if ($total->getData()['value'] > 0) {
-                                    echo $checkoutHelper->formatPrice($total->getData()['value'] + $priceHelper->currency($collectorConfig->getInvoiceB2BFee(), false, false));
-                                }
-                            }
-                        } else {
-                            if (array_key_exists('value_incl_tax', $total->getData())) {
-                                if (isset($total->getData()['value_incl_tax'])) {
-                                    echo $checkoutHelper->formatPrice($total->getData()['value_incl_tax']);
-                                } else {
-                                    if (array_key_exists('value', $total->getData())) {
-                                        echo $checkoutHelper->formatPrice($total->getData()['value']);
-                                    }
-                                }
-                            } else {
-                                if (array_key_exists('value', $total->getData())) {
-                                    echo $checkoutHelper->formatPrice($total->getData()['value']);
+                                    $additional = $collectorConfig->getInvoiceB2BFee();
                                 }
                             }
                         }
+
+                        if ($total->getData()['code'] == 'fee_amount') {
+                            $additional = $collectorConfig->getInvoiceB2BFee();
+                        }
                         ?>
-                    </td>
+                        <?php echo $checkoutHelper->formatPrice($price + $priceHelper->currency($additional, false, false)); ?>
                 </tr>
+
             <?php endforeach; ?>
         </table>
         <?php if ($showDiscount): ?>

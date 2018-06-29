@@ -185,10 +185,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
     protected function getPaymentMethodByName($name)
     {
-        if (isset($this->paymentToMethod[$name])) {
-            return $this->paymentToMethod[$name];
-        }
-        return 'collector_invoice';
+        return isset($this->paymentToMethod[$name]) ? $this->paymentToMethod[$name] : 'collector_invoice';
     }
 
     public function execute()
@@ -221,8 +218,6 @@ class Index extends \Magento\Framework\App\Action\Action
             if ((!$this->collectorConfig->isShippingAddressEnabled() && empty($shippingCountryId)) || empty($billingCountryId)) {
                 throw new \Exception(__('Country code is not specified'));
             }
-            //print_r($actual_quote->getBillingAddress()->getFirstname());exit;
-            //$actual_quote->load($actual_quote->getId());
             if (empty($actual_quote)) {
                 throw new \Exception(__('Can\'t load order'));
             }
@@ -234,11 +229,9 @@ class Index extends \Magento\Framework\App\Action\Action
             //init the customer
             $customer = $this->customerFactory->create();
             $customer->setWebsiteId($websiteId);
-
             if (empty($response["data"]["customerType"])) {
                 throw new \Exception(__('Incorrect user data'));
             }
-
             switch ($response["data"]["customerType"]) {
                 case "PrivateCustomer":
                     $email = $response['data']['customer']['email'];
@@ -274,17 +267,8 @@ class Index extends \Magento\Framework\App\Action\Action
             }
             $customer->setEmail($email);
             $customer->save();
-            //$actual_quote->setCustomerEmail($email);
-            //$actual_quote->setStore($store);
             $customer = $this->customerRepository->getById($customer->getEntityId());
-            //$actual_quote->setCurrency();
             $actual_quote->assignCustomer($customer);
-
-            //set quote coupon code from session
-//            if (!empty($this->collectorSession->getVariable('collector_applied_discount_code'))) {
-//                $actual_quote->setCouponCode($this->collectorSession->getVariable('collector_applied_discount_code'));
-//            }
-
 
             //Set Address to quote @todo add section in order data for seperate billing and handle it
             if (!$this->collectorConfig->isShippingAddressEnabled()) {
@@ -360,8 +344,17 @@ class Index extends \Magento\Framework\App\Action\Action
             $actual_quote->getBillingAddress()->setCustomerId($customer->getId());
             $actual_quote->getShippingAddress()->setCustomerId($customer->getId());
 
-            // Collect total and save
-            //$actual_quote->collectTotals();
+            $fee = 0;
+
+            foreach ($response['data']['order']['items'] as $item) {
+                if ($item['id'] == 'invoice_fee') {
+                    $fee = $this->apiRequest->convert($item['unitPrice'], NULL, 'SEK');
+                }
+            }
+
+            $actual_quote->setFeeAmount($fee);
+            $actual_quote->setBaseFeeAmount($fee);
+
             // Disable old quote
             $actual_quote->setIsActive(0);
             // Submit the quote and create the order
@@ -375,12 +368,6 @@ class Index extends \Magento\Framework\App\Action\Action
                 $order->setCollectorSsn($response['data']['businessCustomer']['organizationNumber']);
             }
 
-            $fee = 0;
-            foreach ($response['data']['order']['items'] as $item) {
-                if ($item['id'] == 'invoice_fee') {
-                    $fee = $item['unitPrice'];
-                }
-            }
 
             $order->setFeeAmount($fee);
             $order->setBaseFeeAmount($fee);
@@ -408,14 +395,11 @@ class Index extends \Magento\Framework\App\Action\Action
             }
             if (isset($actual_quote)) {
                 $soap = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $actual_quote->getRemoteIp()]);
-
                 $actual_quote->setReservedOrderId(0);
                 $actual_quote->reserveOrderId();
                 $actual_quote->save();
                 $this->collectorSession->setCollectorPublicToken('');
                 $this->collectorSession->setCollectorDataVariant('');
-
-
                 $req = array(
                     'CorrelationId' => $response['data']['reference'],
                     'CountryCode' => $this->collectorConfig->getCountryCode(),
@@ -424,11 +408,14 @@ class Index extends \Magento\Framework\App\Action\Action
                 );
                 try {
                     $soap->CancelInvoice($req);
+                    // Disable old quote
+                    $actual_quote->setIsActive(1);
+                    // Submit the quote and create the order
+                    $actual_quote->save();
                 } catch (\Exception $e) {
                     $this->logger->error($e->getMessage());
                     $this->logger->error($e->getTraceAsString());
                 }
-
             }
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());

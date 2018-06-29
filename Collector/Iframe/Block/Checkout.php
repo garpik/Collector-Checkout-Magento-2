@@ -20,11 +20,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         "DK" => "en-DK",
         "DE" => "en-DE"
     ];
-
-    /**
-     * @var \Collector\Base\Logger\Collector
-     */
-    protected $logger;
     /**
      * @var \Collector\Base\Model\Session
      */
@@ -51,7 +46,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      * @param \Magento\Checkout\Model\Cart $_cart
      * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Collector\Base\Model\Session $_collectorSession
-     * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param array $layoutProcessors
      */
@@ -64,7 +58,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         \Magento\Checkout\Model\Cart $_cart,
         \Collector\Base\Model\Config $collectorConfig,
         \Collector\Base\Model\Session $_collectorSession,
-        \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
         array $layoutProcessors = []
     )
@@ -72,7 +65,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
-        $this->logger = $logger;
         $this->collectorSession = $_collectorSession;
         $this->helper = $_helper;
         $this->cart = $_cart;

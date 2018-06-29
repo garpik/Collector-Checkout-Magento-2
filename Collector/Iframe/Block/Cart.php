@@ -141,7 +141,8 @@ class Cart extends \Magento\Checkout\Block\Onepage
         return parent::_toHtml();
     }
 
-    public function getCheckoutHelper() {
+    public function getCheckoutHelper()
+    {
         return $this->checkoutHelper;
     }
 
@@ -163,6 +164,13 @@ class Cart extends \Magento\Checkout\Block\Onepage
     public function getShippingPriceExclFormatting()
     {
         return $this->helper->getShippingPrice(false);
+    }
+
+    public function updateShipping()
+    {
+        if (empty($this->helper->getShippingMethod())) {
+            $this->helper->setShippingMethod('');
+        }
     }
 
     public function getShippingMethods()

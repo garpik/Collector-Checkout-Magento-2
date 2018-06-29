@@ -205,6 +205,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $this->cart->save();
                     break;
                 case "radio":
+                    if (!empty($this->getRequest()->getParam('id'))) {
+                        $this->helper->setShippingMethod($this->getRequest()->getParam('id'));
+                    }
                     $changed = true;
                     $updateFees = true;
                     break;
@@ -324,13 +327,13 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $return = array(
                         'cart' => $html,
                         'checkout' => $checkoutHtml,
-                        'shipping' =>  $shippingHtml
+                        'shipping' => $shippingHtml
                     );
                     return $result->setData($return);
                 } else {
                     $return = array(
                         'cart' => $html,
-                        'shipping' =>  $shippingHtml
+                        'shipping' => $shippingHtml
                     );
                     return $result->setData($return);
                 }
