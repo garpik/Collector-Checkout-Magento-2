@@ -8,7 +8,9 @@ body{
     clear: both;
 }
 .collector-shipping-methods {
+    width: 35%;
     margin: 0 0 30px;
+    float: left;
 }
 .collector-cart-wrapper{
     box-sizing: border-box;
@@ -273,13 +275,19 @@ table.col-totals td {
 }
 .col-totals-table{    
     width: 62%;
+    margin: 0 0 30px;
     float: right;
 }
+    .col-totals-table .col-totals {
+        width: 100%;
+        max-width: 500px;
+    }
 .collector-checkout-discount {
     margin-top: 0px;
     float: right;
     margin-bottom: 0px;
-    width: 53.5%;
+    width: 100%;
+    max-width: 460px;
     padding-bottom: 10px;
 }
 .collector_shipping_methods {
@@ -423,8 +431,13 @@ position:relative;
     /*padding: 15px;*/
     /*border:1px solid #eaeaea;*/
     /*}*/
+    .collector-shipping-methods {
+        width: 100%;
+        float: none;
+    }
     #collector-cart .col-totals, .collector-checkout-discount{
         width: 100%;
+        max-width: 100%;
         margin-bottom: 15px;
         }
         .collector_shipping_methods {
@@ -622,8 +635,9 @@ td.col-price.col-grand {
 @media screen and (min-width: 771px){
 .letter_methods.newsletter {
     text-align: right;
-    margin-right: 140px;
+    margin-right: 0;
 	float: right;
+    clear: right;
 }
 }
 @media screen and (min-width: 768px) and (max-width:770px){
