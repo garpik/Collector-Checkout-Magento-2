@@ -115,6 +115,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
         return $this->scopeConfig;
     }
 
+    public function isShippingAddressEnabled() {
+        return $this->collectorConfig->isShippingAddressEnabled();
+    }
+
     public function init()
     {
         $defaultData = [
@@ -126,7 +130,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
             'postcode' => '12345',
             'telephone' => '0123456789'
         ];
-        if ($this->collectorConfig->isShippingAddressEnabled()) {
+        if ($this->isShippingAddressEnabled()) {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
         } else {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);

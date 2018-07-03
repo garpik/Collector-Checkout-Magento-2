@@ -198,9 +198,9 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
-                $this->logger->info("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
-                $this->logger->error($e->getMessage());
-                $this->logger->error($e->getTraceAsString());
+                $this->collectorLogger->info("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
+                $this->collectorLogger->error($e->getMessage());
+                $this->collectorLogger->error($e->getTraceAsString());
 
             }
         } else {
@@ -250,7 +250,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
+                    $this->collectorLogger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                     try {
                         $resp = $soap->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -261,8 +261,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                         $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
                         $order->setData('collector_invoice_id', $resp->NewInvoiceNo);
                     } catch (\Exception $e) {
-                        $this->logger->error($e->getMessage());
-                        $this->logger->error($e->getTraceAsString());
+                        $this->collectorLogger->error($e->getMessage());
+                        $this->collectorLogger->error($e->getTraceAsString());
                         throw new CouldNotSaveException(
                             __($e->getMessage()),
                             $e
@@ -292,8 +292,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         try {
             $soap->CancelInvoice($req);
         } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
-            $this->logger->error($e->getTraceAsString());
+            $this->collectorLogger->error($e->getMessage());
+            $this->collectorLogger->error($e->getTraceAsString());
             throw new CouldNotSaveException(
                 __($e->getMessage()),
                 $e
@@ -320,8 +320,8 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         try {
             $soap->CancelInvoice($req);
         } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
-            $this->logger->error($e->getTraceAsString());
+            $this->collectorLogger->error($e->getMessage());
+            $this->collectorLogger->error($e->getTraceAsString());
             throw new CouldNotSaveException(
                 __($e->getMessage()),
                 $e
@@ -346,12 +346,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
+            $this->collectorLogger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $soap->CreditInvoice($req);
             } catch (\Exception $e) {
-                $this->logger->error($e->getMessage());
-                $this->logger->error($e->getTraceAsString());
+                $this->collectorLogger->error($e->getMessage());
+                $this->collectorLogger->error($e->getTraceAsString());
                 throw new CouldNotSaveException(
                     __($e->getMessage()),
                     $e

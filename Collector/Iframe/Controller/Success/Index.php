@@ -429,6 +429,10 @@ class Index extends \Magento\Framework\App\Action\Action
         try {
             switch ($result) {
                 case "OnHold":
+                    $activeStatus = $this->collectorConfig->getAcceptStatus();
+                    $activeState = $this->orderState->load($activeStatus)->getState();
+                    $order->setHoldBeforeState($activeState)->setHoldBeforeStatus($activeStatus);
+
                     $status = $this->collectorConfig->getHoldStatus();
                     $state = $this->orderState->load($status)->getState();
                     break;

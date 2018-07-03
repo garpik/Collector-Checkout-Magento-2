@@ -82,7 +82,7 @@ class Config
 
     public function getShowDiscount()
     {
-        return $this->scopeConfig->getValue('collector_collectorcheckout/general/showdiscount', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->scopeConfig->getValue('collector_collectorcheckout/styling/showdiscount', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function getPassword()
