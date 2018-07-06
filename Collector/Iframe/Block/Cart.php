@@ -70,10 +70,12 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\Config $collectorConfig,
         \Magento\Checkout\Helper\Data $checkoutHelper,
+        \Collector\Base\Helper\Prices $collectorPriceHelper,
         array $layoutProcessors = []
     )
     {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
+        $this->collectorPriceHelper = $collectorPriceHelper;
         $this->checkoutHelper = $checkoutHelper;
         $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;
@@ -115,7 +117,8 @@ class Cart extends \Magento\Checkout\Block\Onepage
         return $this->scopeConfig;
     }
 
-    public function isShippingAddressEnabled() {
+    public function isShippingAddressEnabled()
+    {
         return $this->collectorConfig->isShippingAddressEnabled();
     }
 
@@ -214,6 +217,6 @@ class Cart extends \Magento\Checkout\Block\Onepage
 
     public function getTotals()
     {
-        return $this->checkoutSession->getQuote()->getTotals();
+        return $this->collectorPriceHelper->getQuoteTotalsArray($this->checkoutSession->getQuote(), false);
     }
 }

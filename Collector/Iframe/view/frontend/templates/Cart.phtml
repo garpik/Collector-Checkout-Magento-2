@@ -123,40 +123,23 @@ $checkoutHelper = $block->getCheckoutHelper();
                 </tr>
             <?php endif; ?>
             <?php $totals = $this->getTotals();
-            foreach ($totals as $total): ?>
+            foreach ($totals as $code => $total): ?>
                 <tr>
                     <td class="col-name">
-                        <span class="<?php echo $total->getData()['code'] == 'grand_total' ? "col-grandname" : ""; ?>">
-                        <?php echo $total->getData()['title'] ?>
+                        <span class="<?php echo $code == 'grand_total' ? "col-grandname" : ""; ?>">
+                        <?php echo $total['title'] ?>
                         </span>
                     </td>
-                    <td class="col-price <?php echo $total->getData()['code'] == 'grand_total' ? "col-grand" : ""; ?>">
+                    <td class="col-price <?php echo $code == 'grand_total' ? "col-grand" : ""; ?>">
                         <?php
 
-                        $price = array_key_exists('value_incl_tax', $total->getData()) ? $total->getData()['value_incl_tax'] : $total->getData()['value'];
+                        $price = $total['value'];
                         $additional = 0;
-
-                        if ($total->getData()['code'] == 'shipping') {
-                            $price = $this->getShippingPriceExclFormatting();
+                        if ($code == 'grand_total') {
+                            $additional = $collectorConfig->getInvoiceB2BFee();
                         }
 
-                        if ($total->getData()['code'] == 'grand_total') {
-                            if (empty($totals['shipping']->getData()['title']->getArguments())) {
-                                $additional = $collectorConfig->getInvoiceB2BFee();
-                            } else {
-                                if (array_key_exists('value_incl_tax', $total->getData())) {
-                                    if (isset($total->getData()['value_incl_tax'])) {
-                                        $additional = $collectorConfig->getInvoiceB2BFee();
-                                    } else {
-                                        $additional = $collectorConfig->getInvoiceB2BFee();
-                                    }
-                                } else {
-                                    $additional = $collectorConfig->getInvoiceB2BFee();
-                                }
-                            }
-                        }
-
-                        if ($total->getData()['code'] == 'fee_amount') {
+                        if ($code == 'fee_amount') {
                             $additional = $collectorConfig->getInvoiceB2BFee();
                         }
                         ?>

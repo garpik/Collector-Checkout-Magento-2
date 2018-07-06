@@ -72,6 +72,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Magento\Checkout\Helper\Data
      */
     protected $checkoutHelper;
+
+    /**
+     * @var \Collector\Base\Helper\Prices
+     */
+    protected $collectorPriceHelper;
     public $allowedCountries = [
         'NO',
         'SE',
@@ -98,6 +103,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Checkout\Helper\Data $checkoutHelper
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      * @param \Collector\Base\Model\Config $collectorConfig
+     * @param \Collector\Base\Helper\Prices $collectorPriceHelper
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -116,9 +122,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Magento\Framework\Message\ManagerInterface $_messageManager,
-        \Collector\Base\Model\Config $collectorConfig
+        \Collector\Base\Model\Config $collectorConfig,
+        \Collector\Base\Helper\Prices $collectorPriceHelper
     )
     {
+        $this->collectorPriceHelper = $collectorPriceHelper;
         $this->checkoutHelper = $checkoutHelper;
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
@@ -151,25 +159,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getDiscount()
     {
-        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getSubtotal() - $this->cart->getQuote()->getSubtotalWithDiscount());
+        return $this->collectorPriceHelper->getQuoteDiscount($this->cart->getQuote(), true);
     }
 
     public function hasDiscount()
     {
-        return $this->cart->getQuote()->getSubtotal() != $this->cart->getQuote()->getSubtotalWithDiscount();
+        return $this->collectorPriceHelper->hasQuoteDiscount($this->cart->getQuote());
     }
 
     public function getTax()
     {
-        $this->cart->getQuote()->collectTotals();
-        $cartTotals = $this->cart->getQuote()->getTotals();
-        return $this->checkoutHelper->formatPrice($cartTotals['tax']->getData()['value']);
+        return $this->collectorPriceHelper->getQuoteTaxValue($this->cart->getQuote(), true);
     }
 
     public function getGrandTotal()
     {
-        $this->cart->getQuote()->collectTotals();
-        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getGrandTotal());
+        return $this->collectorPriceHelper->getQuoteGrandTotal($this->cart->getQuote(), true);
     }
 
     public function getShippingMethods()
@@ -177,7 +182,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $currentStoreId = $this->storeManager->getStore()->getId();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
-        $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
+        //$shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
         $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $shippingMethods = [];
@@ -198,7 +203,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($methods as $method) {
             foreach ($method as $rate) {
                 $shipMethod = [
-                    'first' => $first,
+                    'first' => !$selectedIsActive && $first
+                        || $selectedIsActive && $rate->getCode() == $shippingAddress->getShippingMethod(),
                     'code' => $rate->getCode(),
                     'content' => ''
                 ];
@@ -244,44 +250,40 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getShippingMethod()
     {
-        return $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->getShippingMethod();
+        return $this->cart->getQuote()->getShippingAddress()
+            ->getShippingMethod();
     }
 
     public function setShippingMethod($methodInput = '')
     {
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
-        $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
+
         $methods = $shippingAddress->getGroupedAllShippingRates();
         foreach ($methods as $method) {
             foreach ($method as $rate) {
                 if ($rate->getCode() == $methodInput || empty($methodInput)) {
-                    $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($rate->getCode());
+                    $this->cart->getQuote()->getShippingAddress()->setShippingMethod($rate->getCode());
                     $this->shippingRate->setCode($rate->getCode());
                     try {
                         $this->cart->getQuote()->getShippingAddress()->addShippingRate($this->shippingRate);
                     } catch (\Exception $e) {
                     }
-                    $this->cart->getQuote()->collectTotals();
                     $this->cart->getQuote()->save();
                     break;
                 }
             }
         }
 
-        return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getShippingAddress()->getShippingInclTax());
+        return $this->collectorPriceHelper->getQuoteShippingPrice($this->cart->getQuote(), true);
     }
 
 
     public function getShippingPrice($inclFormatting = true)
     {
         if (empty($this->cart->getQuote()->getShippingAddress()->getShippingMethod())) {
-            $this->setShippingMethod();
+            $this->getShippingMethod();
         }
-        if ($inclFormatting) {
-            return $this->checkoutHelper->formatPrice($this->cart->getQuote()->getShippingAddress()->getShippingInclTax());
-        }
-        return $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
-
+        return $this->collectorPriceHelper->getQuoteShippingPrice($this->cart->getQuote(), $inclFormatting);
     }
 
     public function getBlockProducts()
@@ -292,7 +294,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($this->cart->getQuote()->getAllVisibleItems() as $cartItem) {
             $product = $cartItem->getProduct();
             $taxClassId = $product->getTaxClassId();
-            $percent = $this->taxCalculation->getRate($request->setProductClassId($taxClassId));
+            //$percent = $this->taxCalculation->getRate($request->setProductClassId($taxClassId));
             $options = [];
             $op = $cartItem->getProduct()->getTypeInstance(true)->getOrderOptions($cartItem->getProduct());
             if ($cartItem->getProductType() == 'configurable') {
@@ -308,9 +310,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'name' => $cartItem->getName(),
                 'options' => $options,
                 'id' => $cartItem->getId(),
-                'unitPrice' => $this->checkoutHelper->formatPrice(($cartItem->getPrice() * (1 + ($percent / 100)))),
+                'unitPrice' => $this->checkoutHelper->formatPrice($cartItem->getPrice()),
                 'qty' => $cartItem->getQty(),
-                'sum' => $this->pricingHelper->currency($cartItem->getPrice() * $cartItem->getQty() * (1 + ($percent / 100)), true, false),
+                'sum' => $this->pricingHelper->currency($cartItem->getPrice() * $cartItem->getQty(), true, false),
                 'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
             ));
         }
@@ -321,7 +323,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getProducts()
     {
         $request = $this->taxCalculation->getRateRequest(null, null, null, $this->storeManager->getStore()->getId());
-        $cartTotals = $this->cart->getQuote()->getTotals();
+        $cartTotals = $this->collectorPriceHelper->getQuoteTotalsArray($this->cart->getQuote(), false);
         $items = [];
         $bundlesWithFixedPrice = [];
 
@@ -358,15 +360,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'vat' => $percent
             ));
         }
-        $fee = 0;
-        if (array_key_exists('fee', $cartTotals)) {
-            $fee = $cartTotals['fee']->getData()['value'];
-        }
-        if (array_key_exists('value_incl_tax', $cartTotals['subtotal']->getData())) {
-            $totals = $cartTotals['subtotal']->getData()['value_incl_tax'] + $fee + $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
-        } else {
-            $totals = $cartTotals['subtotal']->getData()['value'] + $fee + $this->cart->getQuote()->getShippingAddress()->getShippingInclTax();
-        }
+        $totals =
+            (!empty($cartTotals['subtotal']['value']) ? $cartTotals['subtotal']['value'] : 0)
+            + (!empty($cartTotals['fee']['value']) ? $cartTotals['fee']['value'] : 0)
+            + (!empty($cartTotals['shipping']['value']) ? $cartTotals['shipping']['value'] : 0);
         $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
         $this->logger->info('Subtotal+unitPrice:' . $totals);
         $this->logger->info(var_export($this->cart->getQuote()->getGrandTotal() < $totals, true));

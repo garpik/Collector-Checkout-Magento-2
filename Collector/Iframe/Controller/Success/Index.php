@@ -304,8 +304,8 @@ class Index extends \Magento\Framework\App\Action\Action
                 $this->shippingRate->setCode($actual_quote->getShippingAddress()->getShippingMethod())->getPrice();
                 $shippingAddress = $actual_quote->getShippingAddress();
                 //@todo set in order data
-                $shippingAddress->setCollectShippingRates(true)
-                    ->collectShippingRates(); //shipping method
+//                $shippingAddress->setCollectShippingRates(true)
+//                    ->collectShippingRates(); //shipping method
 
                 $actual_quote->getShippingAddress()->addShippingRate($this->shippingRate);
                 $actual_quote->getShippingAddress()->save();
