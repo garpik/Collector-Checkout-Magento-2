@@ -130,6 +130,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
             $changed = false;
             switch ($this->getRequest()->getParam('type')) {
                 case "shippingValidate":
+                    $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates();
                     $errors = $this->cart->getQuote()->getShippingAddress()->validate();
                     if ($errors == true) {
                         $errors = [];

@@ -189,6 +189,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $first = true;
 
         $methods = $shippingAddress->getGroupedAllShippingRates();
+        if (count($methods) == 0) {
+            $this->checkoutSession->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates();
+            $methods = $shippingAddress->getGroupedAllShippingRates();
+        }
+
         $selectedIsActive = false;
         if (!empty($shippingAddress->getShippingMethod())) {
             foreach ($methods as $method) {

@@ -123,7 +123,9 @@ $checkoutHelper = $block->getCheckoutHelper();
                 </tr>
             <?php endif; ?>
             <?php $totals = $this->getTotals();
-            foreach ($totals as $code => $total): ?>
+            foreach ($totals as $code => $total):
+                if ($code == 'fee_amount') continue;
+                ?>
                 <tr>
                     <td class="col-name">
                         <span class="<?php echo $code == 'grand_total' ? "col-grandname" : ""; ?>">
