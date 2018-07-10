@@ -138,7 +138,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
         } else {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
             $this->checkoutSession->getQuote()->getShippingAddress()->addData($defaultData);
+            $this->checkoutSession->getQuote()->getShippingAddress()->save();
         }
+        $this->checkoutSession->getQuote()->getBillingAddress()->save();
+        $this->helper->getShippingMethods();
         $this->checkoutSession->getQuote()->collectTotals();
         $this->checkoutSession->getQuote()->save();
     }
