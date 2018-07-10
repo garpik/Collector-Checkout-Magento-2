@@ -3,20 +3,20 @@
  * See COPYING.txt for license details.
  */
 define(
-	[
-		'Collector_Gateways/js/view/checkout/summary/fee'
-	],
-	function (Component) {
-		'use strict';
+    [
+        'Collector_Gateways/js/view/checkout/summary/fee'
+    ],
+    function (Component) {
+        'use strict';
 
-		return Component.extend({
+        return Component.extend({
 
-			/**
-			 * @override
-			 */
-			isDisplayed: function () {
-				return true;
-			}
-		});
-	}
+            /**
+             * @override
+             */
+            isDisplayed: function () {
+                return true;
+            }
+        });
+    }
 );

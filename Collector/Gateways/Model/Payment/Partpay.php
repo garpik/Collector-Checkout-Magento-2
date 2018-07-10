@@ -17,7 +17,7 @@ class Partpay extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_canRefundInvoicePartial = true;
     protected $_isOffline = false;
     protected $_canAuthorize = false;
-    
+
 
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {

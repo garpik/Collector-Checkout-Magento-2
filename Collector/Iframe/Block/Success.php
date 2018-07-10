@@ -1,13 +1,14 @@
 <?php
 
 namespace Collector\Iframe\Block;
- 
-class Success extends \Magento\Checkout\Block\Onepage {
-	protected $storeManager;
+
+class Success extends \Magento\Checkout\Block\Onepage
+{
+    protected $storeManager;
     /**
      * @var \Collector\Iframe\Helper\Data
      */
-	protected $helper;
+    protected $helper;
     /**
      * @var \Magento\Quote\Model\Quote\Address\Rate
      */
@@ -19,7 +20,7 @@ class Success extends \Magento\Checkout\Block\Onepage {
     protected $collectorSession;
 
     /**
-     * @var \Collector\Base\Logger\Collector 
+     * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
 
@@ -36,29 +37,32 @@ class Success extends \Magento\Checkout\Block\Onepage {
      * @param array $layoutProcessors
      */
     public function __construct(
-		\Magento\Framework\View\Element\Template\Context $context, 
-		array $data = [],
-		\Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
-		\Magento\Framework\Data\Form\FormKey $formKey,
+        \Magento\Framework\View\Element\Template\Context $context,
+        array $data = [],
+        \Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
+        \Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
-		\Collector\Iframe\Helper\Data $_helper,
+        \Collector\Iframe\Helper\Data $_helper,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\Session $_collectorSession,
         array $layoutProcessors = []
-	){
+    )
+    {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
         $this->collectorSession = $_collectorSession;
         $this->logger = $logger;
-		$this->helper = $_helper;
-		$this->shippingRate = $_shippingRate;
+        $this->helper = $_helper;
+        $this->shippingRate = $_shippingRate;
         $this->storeManager = $context->getStoreManager();
-	}
+    }
 
-	public function &getCollectorSession() {
+    public function &getCollectorSession()
+    {
         return $this->collectorSession;
     }
 
-	public function getStoreBaseUrl() {
+    public function getStoreBaseUrl()
+    {
         return $this->storeManager->getStore()->getBaseUrl();
     }
 }

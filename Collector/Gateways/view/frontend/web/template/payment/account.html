@@ -8,32 +8,32 @@
     </div>
     <div class="payment-method-content">
         <!-- ko foreach: getRegion('messages') -->
-        <!-- ko template: getTemplate() --><!-- /ko -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
         <!--/ko-->
 
         <div class="payment-method-billing-address">
             <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-		
-		<form id="account-form" class="form form-account" data-role="account-form">
-			<fieldset class="fieldset checkout-agreements-block" data-bind='attr: {id: "payment_agree_" + getCode()}'>
+        <form id="account-form" class="form form-account" data-role="account-form">
+            <fieldset class="fieldset checkout-agreements-block" data-bind='attr: {id: "payment_agree_" + getCode()}'>
                 <div class="field checkbox required">
                     <div class="control">
-                        <input type="checkbox" id="agreement" name="agreement" data-validate="{required:true}" class="input-text"/>
-							<a href="www.google.se">test</a><input type="checkbox"/> kalle
+                        <input type="checkbox" id="agreement" name="agreement" data-validate="{required:true}"
+                               class="input-text"/>
+                        <a href="www.google.se">test</a><input type="checkbox"/> kalle
                     </div>
                 </div>
             </fieldset>
         </form>
-		
-		<div class="checkout-agreements-block">
+
+        <div class="checkout-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-		
+
         <div class="actions-toolbar">
             <div class="primary">
                 <button class="action primary checkout"

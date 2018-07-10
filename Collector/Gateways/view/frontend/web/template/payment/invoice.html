@@ -8,16 +8,16 @@
     </div>
     <div class="payment-method-content">
         <!-- ko foreach: getRegion('messages') -->
-        <!-- ko template: getTemplate() --><!-- /ko -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
         <!--/ko-->
 
         <div class="payment-method-billing-address">
             <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-		
-		<form id="invoice-form" class="form form-invoice" data-role="invoice-form">
+
+        <form id="invoice-form" class="form form-invoice" data-role="invoice-form">
             <fieldset class="fieldset payment method" data-bind='attr: {id: "payment_form_" + getCode()}'>
                 <div class="field field-number required">
                     <label for="ssn" class="label">
@@ -36,13 +36,13 @@
                 </div>
             </fieldset>
         </form>
-		
-		<div class="checkout-agreements-block">
+
+        <div class="checkout-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-		
+
         <div class="actions-toolbar">
             <div class="primary">
                 <button class="action primary checkout"

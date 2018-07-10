@@ -24,7 +24,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
         if (!is_array($additionalData)) {
             return;
         }
-        
+
         $paymentMethod = $this->readMethodArgument($observer);
 
         $payment = $observer->getPaymentModel();

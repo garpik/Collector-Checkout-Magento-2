@@ -1,9 +1,9 @@
 {
-  "name": "collector/module-iframe",
+  "name": "collector/module-gateways",
   "description": "",
   "license": "GPL-3.0",
   "type": "magento2-module",
-  "version": "1.1.1",
+  "version": "0.1.0",
   "authors": [
     {
       "name": "Mage2Gen",
@@ -21,7 +21,7 @@
       "registration.php"
     ],
     "psr-4": {
-      "Collector\\Iframe\\": ""
+      "Collector\\Gateways\\": ""
     }
   }
 }
