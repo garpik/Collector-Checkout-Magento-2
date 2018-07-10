@@ -215,9 +215,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $this->setShippingMethod($rate->getCode());
                 }
                 if ($shippingTax == 0) {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->checkoutHelper->formatPrice($rate->getPrice());
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
                 } else {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->checkoutHelper->formatPrice($rate->getPrice() * (1 + ($shippingTax / 100)));
+                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice() * (1 + ($shippingTax / 100)), true, false);
                 }
                 array_push($shippingMethods, $shipMethod);
             }
