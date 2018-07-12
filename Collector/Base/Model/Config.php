@@ -159,7 +159,7 @@ class Config
     public function getB2BrB2CStore($btype = NULL): int
     {
         if (empty($btype)) {
-            $btype = $this->collectorSession->getBtype('')
+            $btype = $this->collectorSession->getBtype('');
         }
         if ($btype == \Collector\Base\Model\Session::B2B
             || empty($btype) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
