@@ -41,6 +41,12 @@ class Cart extends \Magento\Checkout\Block\Onepage
      */
     protected $checkoutHelper;
 
+
+    /**
+     * @var \Collector\Base\Helper\Prices
+     */
+    protected $collectorPriceHelper;
+
     /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -55,6 +61,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Magento\Checkout\Helper\Data $checkoutHelper
+     * @param \Collector\Base\Helper\Prices $collectorPriceHelper
      * @param array $layoutProcessors
      */
     public function __construct(
@@ -133,6 +140,7 @@ class Cart extends \Magento\Checkout\Block\Onepage
             'postcode' => '12345',
             'telephone' => '0123456789'
         ];
+
         if ($this->isShippingAddressEnabled()) {
             $this->checkoutSession->getQuote()->getBillingAddress()->addData($defaultData);
         } else {
@@ -140,7 +148,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
             $this->checkoutSession->getQuote()->getShippingAddress()->addData($defaultData);
             $this->checkoutSession->getQuote()->getShippingAddress()->save();
         }
+
         $this->checkoutSession->getQuote()->getBillingAddress()->save();
+
+
         $this->helper->getShippingMethods();
         $this->checkoutSession->getQuote()->collectTotals();
         $this->checkoutSession->getQuote()->save();
