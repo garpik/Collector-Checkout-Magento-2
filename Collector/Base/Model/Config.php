@@ -156,10 +156,13 @@ class Config
         return "2";
     }
 
-    public function getB2BrB2CStore(): int
+    public function getB2BrB2CStore($btype = NULL): int
     {
-        if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B
-            || empty($this->collectorSession->getBtype('')) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
+        if (empty($btype)) {
+            $btype = $this->collectorSession->getBtype('')
+        }
+        if ($btype == \Collector\Base\Model\Session::B2B
+            || empty($btype) && $this->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
             $this->collectorSession->setBtype(\Collector\Base\Model\Session::B2B);
             return intval($this->getB2BStoreID());
         }

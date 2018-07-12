@@ -18,24 +18,4 @@ class Account extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_canRefundInvoicePartial = true;
     protected $_isOffline = false;
     protected $_canAuthorize = false;
-    
-    public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-
-    }
-
-    public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-
-    }
-
-    public function void(\Magento\Payment\Model\InfoInterface $payment)
-    {
-
-    }
-
-    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-
-    }
 }

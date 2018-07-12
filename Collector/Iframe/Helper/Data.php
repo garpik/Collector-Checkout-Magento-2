@@ -182,17 +182,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $currentStoreId = $this->storeManager->getStore()->getId();
         $request = $this->taxCalculation->getRateRequest(null, null, null, $currentStoreId);
         $shippingAddress = $this->cart->getQuote()->getShippingAddress();
-        $shippingAddress->collectShippingRates();
+        $shippingAddress->setCollectShippingRates(true)->collectShippingRates();
         $shippingTaxClass = $this->collectorConfig->getShippingTaxClass();
         $shippingTax = $this->taxCalculation->getRate($request->setProductClassId($shippingTaxClass));
         $shippingMethods = [];
         $first = true;
 
         $methods = $shippingAddress->getGroupedAllShippingRates();
-        if (count($methods) == 0) {
-            $this->checkoutSession->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates();
-            $methods = $shippingAddress->getGroupedAllShippingRates();
-        }
 
         $selectedIsActive = false;
         if (!empty($shippingAddress->getShippingMethod())) {

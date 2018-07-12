@@ -69,10 +69,12 @@ class ApiRequest
     }
 
 
-    public function callCheckouts($cart = null)
+    public function callCheckouts($cart = null, $pid = null, $btype = null)
     {
-        $pid = $this->getPID($cart);
-        $storeId = $this->collectorConfig->getB2BrB2CStore();
+        if (empty($pid)) {
+            $pid = $this->getPID($cart);
+        }
+        $storeId = $this->collectorConfig->getB2BrB2CStore($btype);
         $path = "/merchants/" . $storeId . "/checkouts/" . $pid;
         $ch = curl_init($this->collectorConfig->getWSDL() . $path);
         $this->setCurlGET($ch);
@@ -80,6 +82,7 @@ class ApiRequest
         $output = curl_exec($ch);
         return json_decode($output, true);
     }
+
 
     public function callCheckoutsCart($params, $cart = null)
     {
