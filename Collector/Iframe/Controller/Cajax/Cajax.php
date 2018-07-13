@@ -249,8 +249,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $this->collectionSession->setCollectorPublicToken('');
                     $changeLanguage = true;
                     $changed = true;
-                    $updateCart = true;
-                    $updateFees = true;
+                 //   $updateCart = true;
+                  //  $updateFees = true;
                     break;
                 case "updatecustomer":
                     try {

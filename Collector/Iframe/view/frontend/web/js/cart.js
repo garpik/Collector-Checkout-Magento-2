@@ -385,7 +385,6 @@ define([
                     complete: function () {
                         // ... and finally resume the Checkout after the backend call is completed to update the checkout
                         jQuery('body').removeClass('is-suspended');
-                        window.collector.checkout.api.resume();
                     },
                 });
             });
