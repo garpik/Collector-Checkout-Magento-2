@@ -105,9 +105,9 @@ class Index extends \Magento\Framework\App\Action\Action
         'Account' => 'collector_account',
         'Card' => 'collector_card',
         'Bank' => 'collector_bank',
-
-
     ];
+	
+	protected $addressFactory;
 
     /**
      * Index constructor.
@@ -156,9 +156,11 @@ class Index extends \Magento\Framework\App\Action\Action
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Iframe\Model\State $orderState,
         \Magento\Framework\App\Response\Http $response,
+		\Magento\Customer\Model\AddressFactory $addressFactory,
         \Magento\Framework\App\Response\RedirectInterface $redirect
     )
     {
+		$this->addressFactory = $addressFactory;
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
         $this->response = $response;
@@ -255,31 +257,7 @@ class Index extends \Magento\Framework\App\Action\Action
 				$createAccount = true;
 				$email = $customerSession->getCustomer()->getEmail();
 			}
-            //load customer by email address
-            $customer->loadByEmail($email);
-            //check the customer
-            if (!$customer->getEntityId() && $createAccount) {
-                //If not avilable then create this customer
-                $customer->setWebsiteId($websiteId)
-                    ->setStore($store)
-                    ->setFirstname($firstname)
-                    ->setLastname($lastname)
-                    ->setEmail($email)
-                    ->setPassword($email);
-                $customer->save();
-            }
-            if (!empty($this->collectorSession->getNewsletterSignup(''))) {
-                $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
-            }
-			if ($createAccount){
-				$customer->setEmail($email);
-				$customer->save();
-				$customer = $this->customerRepository->getById($customer->getEntityId());
-				$actual_quote->assignCustomer($customer);
-			}
-
-            //Set Address to quote @todo add section in order data for seperate billing and handle it
-            if (!$this->collectorConfig->isShippingAddressEnabled()) {
+			if (!$this->collectorConfig->isShippingAddressEnabled()) {
                 if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
                     $shippingAddressArr = [
                         'company' => $response['data']['businessCustomer']['deliveryAddress']['companyName'],
@@ -342,8 +320,66 @@ class Index extends \Magento\Framework\App\Action\Action
                     'postcode' => $response['data']['customer']['billingAddress']['postalCode'],
                     'telephone' => $response['data']['customer']['mobilePhoneNumber']
                 );
-
             }
+            //load customer by email address
+            $customer->loadByEmail($email);
+            //check the customer
+            if (!$customer->getEntityId() && $createAccount) {
+                //If not avilable then create this customer
+                $customer->setWebsiteId($websiteId)
+                    ->setStore($store)
+                    ->setFirstname($firstname)
+                    ->setLastname($lastname)
+                    ->setEmail($email)
+                    ->setPassword($email);
+                $customer->save();
+				
+				if (isset($shippingAddressArr)){
+					$cShippingAddress = $this->addressFactory->create();
+					$cShippingAddress->setCustomerId($customer->getId());
+					$cShippingAddress->setFirstname($firstname);
+					$cShippingAddress->setLastname($lastname);
+					$cShippingAddress->setCountryId($response['data']['countryCode']);
+					$cShippingAddress->setPostcode($shippingAddressArr['postcode']);
+					$cShippingAddress->setCity($shippingAddressArr['city']);
+					$cShippingAddress->setTelephone($shippingAddressArr['telephone']);
+					if ($shippingAddressArr['company'] != ''){
+						$cShippingAddress->setCompany($shippingAddressArr['company']);
+					}
+					$cShippingAddress->setStreet($shippingAddressArr['street']);
+					$cShippingAddress->setIsDefaultShipping('1');
+					$cShippingAddress->setSaveInAddressBook('1');
+					$cShippingAddress->save();
+				}
+				$cBillingAddress = $this->addressFactory->create();
+				$cBillingAddress->setCustomerId($customer->getId());
+				$cBillingAddress->setFirstname($firstname);
+				$cBillingAddress->setLastname($lastname);
+				$cBillingAddress->setCountryId($response['data']['countryCode']);
+				$cBillingAddress->setPostcode($billingAddress['postcode']);
+				$cBillingAddress->setCity($billingAddress['city']);
+				$cBillingAddress->setTelephone($billingAddress['telephone']);
+				if ($billingAddress['company'] != ''){
+					$cBillingAddress->setCompany($billingAddress['company']);
+				}
+				$cBillingAddress->setStreet($billingAddress['street']);
+				$cBillingAddress->setIsDefaultBilling('1');
+				$cBillingAddress->setSaveInAddressBook('1');
+				$cBillingAddress->save();
+				
+            }
+            if (!empty($this->collectorSession->getNewsletterSignup(''))) {
+                $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
+            }
+			if ($createAccount){
+				$customer->setEmail($email);
+				$customer->save();
+				$customer = $this->customerRepository->getById($customer->getEntityId());
+				$actual_quote->assignCustomer($customer);
+			}
+
+            //Set Address to quote @todo add section in order data for seperate billing and handle it
+            
             $actual_quote->getBillingAddress()->addData($billingAddress);
             $actual_quote->setPaymentMethod($paymentMethod); //payment method
             $actual_quote->getPayment()->importData(['method' => $paymentMethod]);
