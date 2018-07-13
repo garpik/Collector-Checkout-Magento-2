@@ -1,0 +1,26 @@
+<?php if ($block->isShippingAddressEnabled()) { ?>
+    <div class="collector-shipping-methods" id="collector-shipping-methods">
+        <div class="collector_shipping_methods">
+            <h1><?php echo __('Shipping Methods') ?></h1>
+            <form>
+                <?php foreach ($this->getShippingMethods() as $method): ?>
+                    <?php if ($method['first']): ?>
+                        <div class="col-ship_methods">
+                            <input type="radio" class="col-radio" id="<?php echo $method['code'] ?>" name="method"
+                                   value="<?php echo $method['code'] ?>" checked>
+                            <label for="<?php echo $method['code'] ?>"
+                                   class="col-radio_label"><?php echo $method['content'] ?></label>
+                        </div>
+                    <?php else: ?>
+                        <div class="col-ship_methods">
+                            <input type="radio" class="col-radio" id="<?php echo $method['code'] ?>" name="method"
+                                   value="<?php echo $method['code'] ?>">
+                            <label for="<?php echo $method['code'] ?>"
+                                   class="col-radio_lable"><?php echo $method['content'] ?></label>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </form>
+        </div>
+    </div>
+<?php } ?>

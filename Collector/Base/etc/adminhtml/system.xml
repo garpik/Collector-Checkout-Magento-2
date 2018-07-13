@@ -59,6 +59,18 @@
 						if selected this will update billing and shipping addresses in magento when they are set in the iframe
 					</comment>
 				</field>
+
+				<field id="shippingaddress" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+					<label>Enable Shipping Address</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<comment>
+
+					</comment>
+				</field>
+				<field id="create_account" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+					<label>Create Customer Account if it doesn't exist</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+				</field>
 			</group>
 			<group id="styling" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
 				<label>Elements</label>

@@ -1,20 +1,10 @@
 <?php
-if (!isset($_SESSION['collector_public_token'])){
-	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-	$storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
-	$url = $storeManager->getStore()->getBaseUrl();
-	if (headers_sent()){
-		echo '<script>location.href="'.$url.'";</script>';
-	}
-	else {
-		die('<script>location.href="'.$url.'";</script>');
-	}
-}else {
-$url = $_SESSION['collector_url'];
-$dataLang = $_SESSION['collector_language'];
-$dataVariant = $_SESSION['collector_data_variant'];
-$publicToken =  $_SESSION['collector_public_token'];
-unset($_SESSION['collector_public_token']);
+$collectorSession = $block->getCollectorSession();
+$url = $collectorSession->getCollectorUrl('');
+$dataLang = $collectorSession->getCollectorLanguage('');
+$dataVariant = $collectorSession->getCollectorDataVariant('');
+$publicToken = $collectorSession->getCollectorPublicToken('');
+$collectorSession->setCollectorPublicToken('');
 ?>
 
 <script>
@@ -26,6 +16,6 @@ unset($_SESSION['collector_public_token']);
     });
 </script>
 <div id="collector-checkout" class="collector-checkout">
-	<script src="<?php echo $url; ?>" data-token="<?php echo $publicToken; ?>" data-lang='<?php echo $dataLang;?>' <?php echo $dataVariant;?>></script>
+    <script src="<?php echo $url; ?>" data-token="<?php echo $publicToken; ?>"
+            data-lang='<?php echo $dataLang; ?>' <?php echo $dataVariant; ?>></script>
 </div>
-<?php } ?>

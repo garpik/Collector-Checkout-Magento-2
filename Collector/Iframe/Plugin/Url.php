@@ -4,18 +4,32 @@ namespace Collector\Iframe\Plugin;
 
 class Url
 {
-    protected $helper;
+    /**
+     * @var \Collector\Base\Model\Config
+     */
+    protected $collectorConfig;
+    /**
+     * @var \Magento\Framework\UrlInterface
+     */
+    protected $urlBuilder;
 
-    public function __construct(\Collector\Iframe\Helper\Data $helper,
-                                \Magento\Framework\UrlInterface $urlBuilder)
+    /**
+     * Url constructor.
+     * @param \Magento\Framework\UrlInterface $urlBuilder
+     * @param \Collector\Base\Model\Config $collectorConfig
+     */
+    public function __construct(
+        \Magento\Framework\UrlInterface $urlBuilder,
+        \Collector\Base\Model\Config $collectorConfig
+    )
     {
+        $this->collectorConfig = $collectorConfig;
         $this->urlBuilder = $urlBuilder;
-        $this->helper = $helper;
     }
 
-    public function afterGetCheckoutUrl($subject, $result)
+    public function afterGetCheckoutUrl($subject = null, $result)
     {
-        if ($this->helper->getEnable()) {
+        if ($this->collectorConfig->getEnable()) {
             return $this->urlBuilder->getUrl('collectorcheckout');
         }
         return $result;
