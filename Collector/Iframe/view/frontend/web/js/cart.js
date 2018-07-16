@@ -8,7 +8,7 @@ define([
             if (window.showCollectorShipping) {
                 $(document).on('mouseover', '.collector-checkout-wrapper', function () {
                     if ($('.collector-checkout.disabled').length > 0) {
-                        if (!$('.form-shipping-address').valid()) {
+                        if (!$('.form-shipping-address').validate().valid()) {
                             $('.collector-checkout').addClass('disabled');
                         } else {
                             var param = {
@@ -52,6 +52,7 @@ define([
                         }
                         $('.collector-checkout').addClass('disabled');
                         $(this).mage('validation', {});
+                        $(this).validate();
                         if ($(this).valid()) {
                             $.ajax({
                                 url: ajaxUrl,
@@ -112,6 +113,9 @@ define([
                         }
                     }
                 );
+                setTimeout(function ($) {
+                    $('.collector-checkout').addClass('disabled')
+                }, 2000, $);
             } else {
                 $('.collector-checkout').removeClass('disabled');
             }
@@ -283,7 +287,7 @@ define([
                     },
                     success: function (data) {
                         if (window.showCollectorShipping) {
-                            if (!$('.form-shipping-address').valid()) {
+                            if (!$('.form-shipping-address').validate().valid()) {
                                 $('div.mage-error').remove();
                                 $('.collector-checkout').addClass('disabled');
                             } else {

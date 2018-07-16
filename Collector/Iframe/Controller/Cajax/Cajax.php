@@ -110,7 +110,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
-     * @paran \Magento\CatalogInventory\Api\StockStateInterface $stockState
+     * @param \Magento\CatalogInventory\Api\StockStateInterface $stockState
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      * @param \Magento\CatalogInventory\Model\StockStateProvider $_stockStateProvider
      * @param \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $_stockItemInterface
