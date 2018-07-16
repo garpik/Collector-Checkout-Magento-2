@@ -175,4 +175,8 @@ class Config
     {
         return base64_encode($this->getUsername() . ":" . hash("sha256", $json . $path . $this->getPassword()));
     }
+	
+	public function createAccount(){
+		return $this->scopeConfig->getValue('collector_collectorcheckout/general/create_account', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+	}
 }

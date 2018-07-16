@@ -96,6 +96,12 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Model\ApiRequest
      */
     protected $apiRequest;
+	
+	/**
+     * @var \Magento\Customer\Model\Session
+     */
+    protected $customerSession;
+	
     /**
      * @var array
      */
@@ -133,6 +139,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Collector\Iframe\Model\State $orderState
      * @param \Magento\Framework\App\Response\Http $response
      * @param \Magento\Framework\App\Response\RedirectInterface $redirect
+	 * @param \Magento\Customer\Model\Session $customerSession
      */
     public function __construct(
         \Collector\Base\Model\Config $collectorConfig,
@@ -157,9 +164,11 @@ class Index extends \Magento\Framework\App\Action\Action
         \Collector\Iframe\Model\State $orderState,
         \Magento\Framework\App\Response\Http $response,
 		\Magento\Customer\Model\AddressFactory $addressFactory,
-        \Magento\Framework\App\Response\RedirectInterface $redirect
+        \Magento\Framework\App\Response\RedirectInterface $redirect,
+		\Magento\Customer\Model\Session $customerSession
     )
     {
+		$this->customerSession = $customerSession;
 		$this->addressFactory = $addressFactory;
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
@@ -199,8 +208,7 @@ class Index extends \Magento\Framework\App\Action\Action
         }
         $response = $this->helper->getOrderResponse();
         $resultPage = $this->resultPageFactory->create();
-		$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-		$createAccount = $objectManager->get('\Magento\Framework\App\Config\ScopeConfigInterface')->getValue('collector_collectorcheckout/general/create_account', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+		$createAccount = $this->collectorConfig->createAccount();
         if ($response["code"] == 0) {
             $this->logger->error($response['error']);
             $this->messageManager->addError(__('Can not place order.'));
@@ -252,10 +260,9 @@ class Index extends \Magento\Framework\App\Action\Action
                     return $this->redirect->redirect($this->response, '/');
                     break;
             }
-			$customerSession = $objectManager->get('Magento\Customer\Model\Session');
-			if($customerSession->isLoggedIn()) {
+			if($this->customerSession->isLoggedIn()) {
 				$createAccount = true;
-				$email = $customerSession->getCustomer()->getEmail();
+				$email = $this->customerSession->getCustomer()->getEmail();
 			}
 			if (!$this->collectorConfig->isShippingAddressEnabled()) {
                 if (isset($response['data']['businessCustomer']['invoiceAddress'])) {
