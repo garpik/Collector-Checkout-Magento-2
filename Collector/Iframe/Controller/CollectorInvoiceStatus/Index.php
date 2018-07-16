@@ -179,7 +179,7 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         if (!empty($this->request->getParam('OrderNo')) && !empty($this->request->getParam('InvoiceStatus'))) {
-			sleep(60);
+			sleep(20);
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if ($order->getId()) {
                 if ($this->request->getParam('InvoiceStatus') == "0") {
@@ -201,7 +201,7 @@ class Index extends \Magento\Framework\App\Action\Action
             }
         }
 		if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))){
-			sleep(20);
+			sleep(10);
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if (!$order->getId()){
