@@ -156,7 +156,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getNotificationUrl()
     {
-        return $this->storeManager->getStore()->getBaseUrl() . "collectorcheckout/notification/";
+		return $this->storeManager->getStore()->getBaseUrl()."collectorcheckout/CollectorInvoiceStatus?OrderNo=".$this->cart->getQuote()->getReservedOrderId();
     }
 
     public function getDiscount()
@@ -220,11 +220,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $first = false;
                     $this->setShippingMethod($rate->getCode());
                 }
-                if ($shippingTax == 0) {
+             //   if ($shippingTax == 0) {
                     $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                } else {
+           /*     } else {
                     $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice() * (1 + ($shippingTax / 100)), true, false);
-                }
+                }*/
                 array_push($shippingMethods, $shipMethod);
             }
         }
@@ -315,9 +315,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'name' => $cartItem->getName(),
                 'options' => $options,
                 'id' => $cartItem->getId(),
-                'unitPrice' => $this->checkoutHelper->formatPrice($cartItem->getPrice()),
+                'unitPrice' => $this->checkoutHelper->formatPrice($cartItem->getPriceInclTax()),
                 'qty' => $cartItem->getQty(),
-                'sum' => $this->pricingHelper->currency($cartItem->getPrice() * $cartItem->getQty(), true, false),
+                'sum' => $this->pricingHelper->currency($cartItem->getPriceInclTax() * $cartItem->getQty(), true, false),
                 'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
             ));
         }
@@ -369,9 +369,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             (!empty($cartTotals['subtotal']['value']) ? $cartTotals['subtotal']['value'] : 0)
             + (!empty($cartTotals['fee']['value']) ? $cartTotals['fee']['value'] : 0)
             + (!empty($cartTotals['shipping']['value']) ? $cartTotals['shipping']['value'] : 0);
-        $this->logger->info('GrandTotal:' . $this->cart->getQuote()->getGrandTotal());
-        $this->logger->info('Subtotal+unitPrice:' . $totals);
-        $this->logger->info(var_export($this->cart->getQuote()->getGrandTotal() < $totals, true));
         if ($this->cart->getQuote()->getGrandTotal() < $totals) {
             $coupon = "no_code";
             if ($this->cart->getQuote()->getCouponCode() != null) {

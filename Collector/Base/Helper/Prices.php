@@ -19,7 +19,6 @@ class Prices extends \Magento\Framework\App\Helper\AbstractHelper
         $quote->collectTotals();
         $returnTotals = [];
         $cartTotals = $quote->getTotals();
-
         foreach ($cartTotals as $total) {
             $returnTotals[$total->getCode()] = ['title' => $total->getTitle(), 'value' => $format ? $this->checkoutHelper->formatPrice($total->getValue()) : $total->getValue()];
         }

@@ -102,8 +102,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $logger,
             $resource,
             $resourceCollection,
-            $data,
-            $directory
+            $data
         );
 
     }
@@ -150,7 +149,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             );
 
 
-            $this->collectorLogger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $resp = $soap->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -198,7 +196,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
-                $this->collectorLogger->info("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                 $this->collectorLogger->error($e->getMessage());
                 $this->collectorLogger->error($e->getTraceAsString());
 
@@ -250,7 +247,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    $this->collectorLogger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                     try {
                         $resp = $soap->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -346,7 +342,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            $this->collectorLogger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $soap->CreditInvoice($req);
             } catch (\Exception $e) {

@@ -116,7 +116,6 @@ class Partrefund
                     'Quantity' => 1
                 ]);
             }
-            $this->logger->info("part-credit " . $memo->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $client->PartCreditInvoice($req);
                 $memo->setData('fee_amount', $order->getData('fee_amount_invoiced'));

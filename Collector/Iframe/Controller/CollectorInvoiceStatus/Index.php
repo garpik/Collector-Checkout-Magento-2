@@ -179,6 +179,7 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         if (!empty($this->request->getParam('OrderNo')) && !empty($this->request->getParam('InvoiceStatus'))) {
+			sleep(60);
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if ($order->getId()) {
                 if ($this->request->getParam('InvoiceStatus') == "0") {
@@ -197,6 +198,15 @@ class Index extends \Magento\Framework\App\Action\Action
             } else {
                 $quote = $this->quoteCollectionFactory->create()->getItemByColumnValue('reserved_order_id', $this->request->getParam('OrderNo'));
                 $this->createOrder($quote);
+            }
+        }
+		if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))){
+			sleep(20);
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
+            if (!$order->getId()){
+                $quote = $objectManager->get(\Magento\Quote\Model\ResourceModel\Quote\CollectionFactory::class)->create()->getItemByColumnValue('reserved_order_id', $this->request->getParam('OrderNo'));
+                $this->createOrder($quote, $this->request->getParam('OrderNo'));
             }
         }
         return $this->resultPageFactory->create();
@@ -231,20 +241,9 @@ class Index extends \Magento\Framework\App\Action\Action
             if ($exOrder->getIncrementId()) {
                 return $resultPage;
             }
-            if ($response['data']['customer']['deliveryAddress']['country'] == 'Sverige') {
-                $shippingCountryId = "SE";
-            } else if ($response['data']['customer']['deliveryAddress']['country'] == 'Norge') {
-                $shippingCountryId = "NO";
-            } else {
-                return $resultPage;
-            }
-            if ($response['data']['customer']['billingAddress']['country'] == 'Sverige') {
-                $billingCountryId = "SE";
-            } else if ($response['data']['customer']['billingAddress']['country'] == 'Norge') {
-                $billingCountryId = "NO";
-            } else {
-                return $resultPage;
-            }
+            
+            $shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
+            $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
 
             $shippingCode = $quote->getData('curr_shipping_code');
 
@@ -374,7 +373,7 @@ class Index extends \Magento\Framework\App\Action\Action
             $this->checkoutSession->clearQuote();
             return $resultPage;
         } catch (\Exception $e) {
-            $this->collectorLogger->info("checkout error: " . $e->getMessage());
+            $this->collectorLogger->debug("checkout error: " . $e->getMessage());
             return $resultPage;
         }
     }
@@ -394,5 +393,25 @@ class Index extends \Magento\Framework\App\Action\Action
             return $result;
         }
         return [];
+    }
+	
+	private function getCountryCodeByName($name, $default)
+    {
+        $id = $default;
+        switch ($name) {
+            case 'Sverige' :
+                $id = 'SE';
+                break;
+            case 'Norge' :
+                $id = 'NO';
+                break;
+            case 'Suomi' :
+                $id = 'FI';
+                break;
+            case 'Deutschland':
+                $id = 'DE';
+                break;
+        }
+        return $id;
     }
 }

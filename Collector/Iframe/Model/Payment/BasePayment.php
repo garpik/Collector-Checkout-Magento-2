@@ -181,7 +181,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
             );
 
             $client = $this->apiRequest->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
-            $this->logger->info("auth " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $resp = $client->AddInvoice($req);
                 if ($resp->InvoiceStatus < 5) {
@@ -273,7 +272,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                             'Quantity' => 1
                         ));
                     }
-                    $this->logger->info("part-capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
                     try {
                         $resp = $client->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
@@ -345,7 +343,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
             );
-            $this->logger->info("refund " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
             try {
                 $client->CreditInvoice($req);
             } catch (\Exception $e) {

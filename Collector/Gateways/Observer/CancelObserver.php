@@ -72,7 +72,6 @@ class CancelObserver extends AbstractDataAssignObserver
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeId,
             ];
-            $this->logger->info(var_export($req));
             try {
                 $client->CancelInvoice($req);
             } catch (\Exception $e) {

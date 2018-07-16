@@ -70,7 +70,32 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Model\ApiRequest
      */
     protected $apiRequest;
-
+	
+	/**
+	 * @var \Magento\CatalogInventory\Api\StockStateInterface
+	 */
+	protected $stockState;
+	/**
+     * @var \Magento\Framework\Message\ManagerInterface
+     */
+    protected $messageManager;
+	/**
+	 * @var \Magento\CatalogInventory\Model\StockStateProvider
+	 */
+	protected $stockStateProvider;
+	/**
+	 * @var \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory
+	 */
+	protected $stockItemInterface;
+	/**
+	 * @var \Magento\CatalogInventory\Model\ResourceModel\Stock\Item
+	 */
+	protected $stockItemResource;
+	/**
+	 * @var \Magento\Store\Model\StoreManagerInterface
+	 */
+	protected $storeManager;
+	
     /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
@@ -85,6 +110,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
+	 * @paran \Magento\CatalogInventory\Api\StockStateInterface $stockState
+	 * @param \Magento\Framework\Message\ManagerInterface $_messageManager
+	 * @param \Magento\CatalogInventory\Model\StockStateProvider $_stockStateProvider
+	 * @param \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $_stockItemInterface
+	 * @param \Magento\CatalogInventory\Model\ResourceModel\Stock\Item $_stockItemResource
+	 * @param \Magento\Store\Model\StoreManagerInterface $_storeManager
      */
     public function __construct(
         \Magento\Framework\View\Result\LayoutFactory $_layoutFactory,
@@ -98,7 +129,13 @@ class Cajax extends \Magento\Framework\App\Action\Action
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
-        \Magento\Framework\Json\Helper\Data $jsonHelper
+        \Magento\Framework\Json\Helper\Data $jsonHelper,
+		\Magento\CatalogInventory\Api\StockStateInterface $stockState,
+		\Magento\Framework\Message\ManagerInterface $_messageManager,
+		\Magento\CatalogInventory\Model\StockStateProvider $_stockStateProvider,
+		\Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $_stockItemInterface,
+		\Magento\CatalogInventory\Model\ResourceModel\Stock\Item $_stockItemResource,
+		\Magento\Store\Model\StoreManagerInterface $_storeManager
     )
     {
         parent::__construct($context);
@@ -113,6 +150,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
         $this->resultPageFactory = $resultPageFactory;
         $this->jsonHelper = $jsonHelper;
         $this->resultJsonFactory = $resultJsonFactory;
+		$this->stockState = $stockState;
+        $this->messageManager = $_messageManager;
+		$this->stockStateProvider = $_stockStateProvider;
+		$this->stockItemInterface = $_stockItemInterface;
+		$this->stockItemResource = $_stockItemResource;
+		$this->storeManager = $_storeManager;
     }
 
     /**
@@ -197,10 +240,18 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $id = explode('_', $this->getRequest()->getParam('id'))[1];
                     foreach ($allItems as $item) {
                         if ($item->getId() == $id) {
-                            $item->setQty($item->getQty() + 1);
-                            $changed = true;
-                            $updateCart = true;
-                            $updateFees = true;
+							$stockItem = $this->stockItemInterface->create();
+							$this->stockItemResource->loadByProductId($stockItem, $item->getProduct()->getId(), $this->storeManager->getWebsite()->getId());
+							$qty = $this->stockState->getStockQty($item->getProduct()->getId(), $item->getProduct()->getStore()->getWebsiteId()) + 1;
+							if ($this->stockStateProvider->checkQty($stockItem, $qty)){
+								$item->setQty($item->getQty() + 1);
+								$changed = true;
+								$updateCart = true;
+								$updateFees = true;
+							}
+							else {
+								$this->messageManager->addError(__('We don\'t have as many "%1" as you requested.', $item->getName()));
+							}
                         }
                     }
                     $this->cart->save();
@@ -223,7 +274,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $updateFees = true;
                     break;
                 case "newsletter":
-                    $this->collectionSession->setNewsletterSignup($this->getRequest()->getParam('id') == "true");
+                    $this->collectionSession->setNewsletterSignup($this->getRequest()->getParam('value') == "true");
                     break;
                 case "del":
                     $allItems = $this->cart->getQuote()->getAllVisibleItems();
@@ -249,8 +300,6 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $this->collectionSession->setCollectorPublicToken('');
                     $changeLanguage = true;
                     $changed = true;
-                    $updateCart = true;
-                    $updateFees = true;
                     break;
                 case "updatecustomer":
                     try {
