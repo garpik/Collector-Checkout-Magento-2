@@ -5,10 +5,6 @@ namespace Collector\Gateways\Helper;
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
 
-    /**
-     * @var \Magento\Framework\UrlInterface
-     */
-    protected $_urlInterface;
 
     /**
      * @var \Collector\Base\Model\ApiRequest
@@ -17,18 +13,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Data constructor.
-     * @param \Magento\Framework\UrlInterface $urlInterface
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\App\Helper\Context $context
      */
     public function __construct(
-        \Magento\Framework\UrlInterface $urlInterface,
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Magento\Framework\App\Helper\Context $context
-    )
-    {
+    ) {
         $this->apiRequest = $apiRequest;
-        $this->_urlInterface = $urlInterface;
         parent::__construct($context);
     }
 
@@ -70,7 +62,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'Description' => empty($order->getCouponCode()) ? 'no_code' : $order->getCouponCode(),
                 'Quantity' => 1,
                 'UnitPrice' => sprintf("%01.2f", $this->apiRequest->convert($order->getDiscountAmount(), 'SEK')),
-                'VAT' => sprintf("%01.2f", $order->getDiscountTaxCompensationAmount() / $order->getDiscountAmount() * 100),
+                'VAT' => sprintf(
+                    "%01.2f",
+                    $order->getDiscountTaxCompensationAmount() / $order->getDiscountAmount() * 100
+                ),
             ];
             array_push($rows, $code);
         }

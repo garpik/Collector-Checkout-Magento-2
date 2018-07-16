@@ -40,7 +40,10 @@ define([
                         }
                     }
                 });
-                $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
+                $(document).on(
+                    'change',
+                    '.collector_shipping_address input, .collector_shipping_address select',
+                    function () {
                         var param = {
                             is_ajax: true,
                             type: 'shippingAddress',
@@ -239,8 +242,7 @@ define([
                                 if (!$('.form-shipping-address').valid()) {
                                     $('div.mage-error').remove();
                                     $('.collector-checkout').addClass('disabled');
-                                }
-                                else {
+                                } else {
                                     $('.collector-checkout').removeClass('disabled');
                                 }
                             }
@@ -284,8 +286,7 @@ define([
                             if (!$('.form-shipping-address').valid()) {
                                 $('div.mage-error').remove();
                                 $('.collector-checkout').addClass('disabled');
-                            }
-                            else {
+                            } else {
                                 $('.collector-checkout').removeClass('disabled');
                             }
                         }
@@ -374,8 +375,7 @@ define([
                             jQuery("#b2c").removeClass("col-active");
                             jQuery("#b2b").addClass("col-active");
                             jQuery("#b2b").removeClass("col-inactive");
-                        }
-                        else if (ctype == "b2c") {
+                        } else if (ctype == "b2c") {
                             jQuery("#b2b").addClass("col-inactive");
                             jQuery("#b2b").removeClass("col-active");
                             jQuery("#b2c").addClass("col-active");

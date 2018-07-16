@@ -39,25 +39,24 @@ class Shipping extends \Magento\Framework\View\Element\Template
     /**
      * Shipping constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param array $data
      * @param \Magento\Checkout\Model\Session $_checkoutSession
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Collector\Iframe\Helper\Data $helper
      * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Magento\Framework\App\Cache\Type\Config $configCacheType
      * @param \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
+     * @param array $data
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        array $data = [],
         \Magento\Checkout\Model\Session $_checkoutSession,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Collector\Iframe\Helper\Data $helper,
         \Collector\Base\Model\Config $collectorConfig,
         \Magento\Framework\App\Cache\Type\Config $configCacheType,
-        \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory
-    )
-    {
+        \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory,
+        array $data = []
+    ) {
         parent::__construct($context, $data);
         $this->collectorConfig = $collectorConfig;
         $this->helper = $helper;
@@ -144,6 +143,4 @@ class Shipping extends \Magento\Framework\View\Element\Template
             ->setExtraParams('data-validate="{\'validate-select\':true}"')
             ->getHtml();
     }
-
-
 }

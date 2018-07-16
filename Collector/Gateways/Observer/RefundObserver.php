@@ -14,6 +14,5 @@ class RefundObserver extends AbstractDataAssignObserver
 {
     public function execute(Observer $observer)
     {
-
     }
 }

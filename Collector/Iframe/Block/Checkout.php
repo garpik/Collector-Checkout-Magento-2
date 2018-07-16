@@ -39,7 +39,6 @@ class Checkout extends \Magento\Checkout\Block\Onepage
     /**
      * Checkout constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param array $data
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -48,10 +47,10 @@ class Checkout extends \Magento\Checkout\Block\Onepage
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param array $layoutProcessors
+     * @param array $data
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        array $data = [],
         \Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
         \Collector\Iframe\Helper\Data $_helper,
@@ -59,9 +58,9 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         \Collector\Base\Model\Config $collectorConfig,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Model\ApiRequest $apiRequest,
-        array $layoutProcessors = []
-    )
-    {
+        array $layoutProcessors = [],
+        array $data = []
+    ) {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
@@ -100,7 +99,8 @@ class Checkout extends \Magento\Checkout\Block\Onepage
         $dataVariant = ' async';
         if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B
             || empty($this->collectorSession->getBtype(''))
-            && $this->collectorConfig->getCustomerType() == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER) {
+            && ($this->collectorConfig->getCustomerType()
+                == \Collector\Iframe\Model\Config\Source\Customertype::BUSINESS_CUSTOMER)) {
             $dataVariant = ' data-variant="b2b" async';
         }
         $this->collectorSession->setCollectorDataVariant($dataVariant);

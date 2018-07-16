@@ -5,11 +5,15 @@ namespace Collector\Base\Helper;
 class Prices extends \Magento\Framework\App\Helper\AbstractHelper
 {
 
+    /**
+     * @var \Magento\Checkout\Helper\Data
+     */
+    protected $checkoutHelper;
+
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
         \Magento\Checkout\Helper\Data $checkoutHelper
-    )
-    {
+    ) {
         $this->checkoutHelper = $checkoutHelper;
         return parent::__construct($context);
     }
@@ -20,15 +24,14 @@ class Prices extends \Magento\Framework\App\Helper\AbstractHelper
         $returnTotals = [];
         $cartTotals = $quote->getTotals();
         foreach ($cartTotals as $total) {
-            $returnTotals[$total->getCode()] = ['title' => $total->getTitle(), 'value' => $format ? $this->checkoutHelper->formatPrice($total->getValue()) : $total->getValue()];
+            $returnTotals[$total->getCode()] = [
+                'title' => $total->getTitle(),
+                'value' => $format ? $this->checkoutHelper->formatPrice($total->getValue()) : $total->getValue()
+            ];
         }
         return $returnTotals;
     }
 
-    public function getOrderTotalsArray($order, $format = false)
-    {
-
-    }
 
     public function getQuoteTaxValue($quote, $format = false)
     {
@@ -63,5 +66,4 @@ class Prices extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $quote->getSubtotal() != $quote->getSubtotalWithDiscount();
     }
-
 }

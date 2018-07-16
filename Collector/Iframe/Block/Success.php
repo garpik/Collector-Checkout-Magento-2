@@ -27,32 +27,31 @@ class Success extends \Magento\Checkout\Block\Onepage
     /**
      * Success constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param array $data
-     * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
+     * @param \Magento\Quote\Model\Quote\Address\Rate $shippingRate
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
      * @param \Collector\Iframe\Helper\Data $_helper
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\Session $_collectorSession
+     * @param array $data
      * @param array $layoutProcessors
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        array $data = [],
-        \Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
+        \Magento\Quote\Model\Quote\Address\Rate $shippingRate,
         \Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
         \Collector\Iframe\Helper\Data $_helper,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\Session $_collectorSession,
+        array $data = [],
         array $layoutProcessors = []
-    )
-    {
+    ) {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
         $this->collectorSession = $_collectorSession;
         $this->logger = $logger;
         $this->helper = $_helper;
-        $this->shippingRate = $_shippingRate;
+        $this->shippingRate = $shippingRate;
         $this->storeManager = $context->getStoreManager();
     }
 

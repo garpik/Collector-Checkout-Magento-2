@@ -18,8 +18,8 @@ class Account extends \Collector\Gateways\Model\Payment\Invoice
     protected $_canRefundInvoicePartial = true;
     protected $_isOffline = false;
     protected $_canAuthorize = false;
-	
-	public function getTitle()
+
+    public function getTitle()
     {
         return "Collector Account";
     }

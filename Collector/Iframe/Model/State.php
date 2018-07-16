@@ -68,6 +68,4 @@ class State extends AbstractModel implements StateInterface, IdentityInterface
     {
         return $this->setData(self::ENTITY_ID, $id);
     }
-
-
 }

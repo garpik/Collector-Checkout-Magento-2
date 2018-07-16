@@ -84,8 +84,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
-    )
-    {
+    ) {
         $this->collectorConfig = $collectorConfig;
         $this->collectorApi = $collectorApi;
         $this->collectorLogger = $collectorLogger;
@@ -104,7 +103,6 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $resourceCollection,
             $data
         );
-
     }
 
     public function getTitle()
@@ -191,14 +189,18 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 $soap->ActivateInvoice($req);
                 $payment->setTransactionId($order->getData('collector_invoice_id'));
                 $payment->setParentTransactionId($payment->getTransactionId());
-                $transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH, null, true, "");
+                $transaction = $payment->addTransaction(
+                    \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH,
+                    null,
+                    true,
+                    ""
+                );
                 $transaction->setIsClosed(true);
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
                 $this->collectorLogger->error($e->getMessage());
                 $this->collectorLogger->error($e->getTraceAsString());
-
             }
         } else {
             foreach ($payment->getOrder()->getInvoiceCollection() as $invoice) {
@@ -218,9 +220,13 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                             continue;
                         } elseif ($item->getOrderItem()->getProductType() == 'bundle') {
                             $product = $item->getOrderItem()->getProduct();
-                            if ($product->getPriceType() == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_FIXED) {
+                            if ($product->getPriceType()
+                                == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_FIXED
+                            ) {
                                 $bundlesWithFixedPrice[] = $item->getItemId();
-                            } elseif ($product->getPriceType() == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_DYNAMIC) {
+                            } elseif ($product->getPriceType()
+                                == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_DYNAMIC
+                            ) {
                                 continue;
                             }
                         }
@@ -251,7 +257,12 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                         $resp = $soap->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
                         $payment->setParentTransactionId($payment->getTransactionId());
-                        $transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH, null, true, "");
+                        $transaction = $payment->addTransaction(
+                            \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH,
+                            null,
+                            true,
+                            ""
+                        );
                         $transaction->setIsClosed(true);
                         $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                         $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));

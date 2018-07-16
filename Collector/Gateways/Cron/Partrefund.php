@@ -39,8 +39,7 @@ class Partrefund
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Collector\Base\Model\Config $collectorConfig
-    )
-    {
+    ) {
         $this->collectorConfig = $collectorConfig;
         $this->apiRequest = $apiRequest;
         $this->logger = $logger;
@@ -55,7 +54,8 @@ class Partrefund
         $creditmemos = $this->creditmemoRepositoryInterface->getList($searchCriteria)->getItems();
         foreach ($creditmemos as $creditmemo) {
             if (strpos($creditmemo->getOrder()->getPayment()->getMethod(), "collector") !== false) {
-                if (count($creditmemo->getOrder()->getCreditmemosCollection()) == 1 && $creditmemo->getGrandTotal() == $creditmemo->getOrder()->getGrandTotal()) {
+                if (count($creditmemo->getOrder()->getCreditmemosCollection()) == 1
+                    && $creditmemo->getGrandTotal() == $creditmemo->getOrder()->getGrandTotal()) {
                     $creditmemo->setData('collector_refunded', '1');
                     $creditmemo->save();
                 } else {
@@ -75,7 +75,9 @@ class Partrefund
         $client = $this->apiRequest->getInvoiceSOAP();
         foreach ($memos as $memo) {
             $order = $memo->getOrder();
-            $storeID = !empty($order->getBillingAddress()->getCompany()) ? $this->collectorConfig->getB2BStoreID() : $this->collectorConfig->getB2CStoreID();
+            $storeID = !empty($order->getBillingAddress()->getCompany()) ?
+                $this->collectorConfig->getB2BStoreID() :
+                $this->collectorConfig->getB2CStoreID();
             $req = [
                 'CorrelationId' => $memo->getOrder()->getIncrementId(),
                 'CountryCode' => $this->collectorConfig->getCountryCode(),
@@ -86,7 +88,11 @@ class Partrefund
             ];
             $bundlesWithFixedPrice = [];
             foreach ($memo->getItemsCollection() as $item) {
-                if ($item->getProductType() == 'configurable' || in_array($item->getParentItemId(), $bundlesWithFixedPrice)) {
+                if ($item->getProductType() == 'configurable' ||
+                    in_array(
+                        $item->getParentItemId(),
+                        $bundlesWithFixedPrice
+                    )) {
                     continue;
                 } elseif ($item->getProductType() == 'bundle') {
                     $product = $item->getProduct();
@@ -109,7 +115,8 @@ class Partrefund
                     'Quantity' => 1
                 ]);
             }
-            if ($order->getData('fee_amount_invoiced') > 0 && $order->getData('fee_amount_invoiced') > $order->getData('fee_amount_refunded')) {
+            if ($order->getData('fee_amount_invoiced') > 0
+                && $order->getData('fee_amount_invoiced') > $order->getData('fee_amount_refunded')) {
                 array_push($req['ArticleList'], [
                     'ArticleId' => 'invoice_fee',
                     'Description' => 'Invoice Fee',

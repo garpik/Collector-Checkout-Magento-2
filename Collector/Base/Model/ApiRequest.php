@@ -18,6 +18,16 @@ class ApiRequest
     protected $collectorSession;
 
     /**
+     * @var \Magento\Directory\Model\CurrencyFactory
+     */
+    protected $currencyFactory;
+
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
      * ApiRequest constructor.
      * @param Config $collectorConfig
      * @param \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory
@@ -31,8 +41,7 @@ class ApiRequest
         \Collector\Base\Model\Session $collectorSession,
         \Magento\Store\Model\StoreManagerInterface $_storeManager,
         \Magento\Directory\Model\CurrencyFactory $currencyFactory
-    )
-    {
+    ) {
         $this->currencyFactory = $currencyFactory;
         $this->storeManager = $_storeManager;
         $this->collectorSession = $collectorSession;
@@ -68,9 +77,11 @@ class ApiRequest
         return $cart->getQuote()->getData('collector_private_id');
     }
 
-
-    public function callCheckouts($cart = null, $pid = null, $btype = null)
-    {
+    public function callCheckouts(
+        $cart = null,
+        $pid = null,
+        $btype = null
+    ) {
         if (empty($pid)) {
             $pid = $this->getPID($cart);
         }
@@ -78,7 +89,11 @@ class ApiRequest
         $path = "/merchants/" . $storeId . "/checkouts/" . $pid;
         $ch = curl_init($this->collectorConfig->getWSDL() . $path);
         $this->setCurlGET($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:SharedKey ' . $this->collectorConfig->getHash($path)));
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array('Authorization:SharedKey ' . $this->collectorConfig->getHash($path))
+        );
         $output = curl_exec($ch);
         return json_decode($output, true);
     }
@@ -93,7 +108,11 @@ class ApiRequest
         $hashstr = 'SharedKey ' . $this->collectorConfig->getHash($path, $json);
         $ch = curl_init($this->collectorConfig->getWSDL() . $path);
         $this->setCurlPUT($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr)
+        );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         curl_exec($ch);
         curl_close($ch);
@@ -108,7 +127,11 @@ class ApiRequest
         $hashstr = 'SharedKey ' . $this->collectorConfig->getHash($path, $json);
         $ch = curl_init($this->collectorConfig->getWSDL() . $path);
         $this->setCurlPUT($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr)
+        );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         curl_exec($ch);
         curl_close($ch);
@@ -121,7 +144,11 @@ class ApiRequest
         $hashstr = 'SharedKey ' . $this->collectorConfig->getHash($path, $json);
         $ch = curl_init($this->collectorConfig->getWSDL() . $path);
         $this->setCurlPOST($ch);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr));
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr)
+        );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         $output = curl_exec($ch);
         curl_close($ch);
@@ -184,8 +211,9 @@ class ApiRequest
         // Get rate
         $rate = $this->currencyFactory->create()->load($currencyCodeFrom)->getAnyRate($currencyCodeTo);
         // Get amount in new currency
-        if ($rate == 0)
+        if ($rate == 0) {
             return $amountValue;
+        }
 
         $amountValue = $amountValue * $rate;
         return $amountValue;
