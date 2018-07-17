@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <container name="test">
-            <block class="\Magento\Framework\View\Element\Template" name="CollectorInvoiceStatus.index" template="Collector_Iframe::CollectorInvoiceStatus/index.phtml"/>
+        <container name="content">
+            <block class="\Magento\Framework\View\Element\Template" name="CollectorInvoiceStatus.index" template="Collector_Iframe::CollectorInvoiceStatus/index.phtml" cacheable="false"/>
         </container>
     </body>
 </page>

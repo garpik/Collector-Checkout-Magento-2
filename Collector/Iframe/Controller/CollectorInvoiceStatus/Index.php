@@ -146,8 +146,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Request\Http $request,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Model\ApiRequest $apiRequest,
-        \Collector\Base\Logger\Collector $logger
+        \Collector\Base\Logger\Collector $logger,
+        \Collector\Iframe\Model\FraudFactory $fraudFactory
     ) {
+        $this->fraudFactory = $fraudFactory;
         $this->collectorLogger = $logger;
         $this->apiRequest = $apiRequest;
         $this->request = $request;
@@ -178,7 +180,6 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         if (!empty($this->request->getParam('OrderNo')) && !empty($this->request->getParam('InvoiceStatus'))) {
-            sleep(20);
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if ($order->getId()) {
                 if ($this->request->getParam('InvoiceStatus') == "0") {
@@ -197,24 +198,26 @@ class Index extends \Magento\Framework\App\Action\Action
                     }
                 }
             } else {
-                $quote = $this->quoteCollectionFactory->create()->getItemByColumnValue(
-                    'reserved_order_id',
-                    $this->request->getParam('OrderNo')
-                );
-                $this->createOrder($quote);
+
+                //if ($this->request->getParam('InvoiceStatus') == "0" || $this->request->getParam('InvoiceStatus') == "1") {
+
+                //}
             }
+            $fraud = $this->fraudFactory->create();
+            $fraud->setIncrementId($this->request->getParam('OrderNo'));
+            $fraud->setStatus($this->request->getParam('InvoiceStatus'));
+            $fraud->setIsAntiFraud(1);
+            $fraud->save();
         }
         if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))) {
-            sleep(10);
-            $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
-            if (!$order->getId()) {
-                $quote = $this->quoteCollectionFactory->create()
-                    ->getItemByColumnValue(
-                        'reserved_order_id',
-                        $this->request->getParam('OrderNo')
-                    );
-                $this->createOrder($quote, $this->request->getParam('OrderNo'));
-            }
+
+            $fraud = $this->fraudFactory->create();
+            $fraud->setData('increment_id',$this->request->getParam('OrderNo'));
+            $fraud->setStatus(5);
+            $fraud->setIsAntiFraud(1);
+
+            $fraud->save();
+            print_r($fraud->getData());exit;
         }
         return $this->resultPageFactory->create();
     }

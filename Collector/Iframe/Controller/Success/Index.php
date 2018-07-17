@@ -114,7 +114,14 @@ class Index extends \Magento\Framework\App\Action\Action
         'Bank' => 'collector_bank',
     ];
 
+    /**
+     * @var \Magento\Customer\Model\AddressFactory
+     */
     protected $addressFactory;
+    /**
+     * @var \Collector\Iframe\Model\ResourceModel\Fraud\Collection
+     */
+    protected $fraudCollection;
 
     /**
      * Index constructor.
@@ -130,6 +137,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Magento\Quote\Model\QuoteManagement $quoteManagement
      * @param \Magento\Sales\Api\Data\OrderInterface $_orderInterface
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Iframe\Model\ResourceModel\Fraud\Collection $fraudCollection
      * @param \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory
      * @param \Magento\Quote\Model\Quote\Address\Rate $_shippingRate
      * @param \Magento\Framework\Event\Manager $eventManager
@@ -139,6 +147,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Iframe\Model\State $orderState
      * @param \Magento\Framework\App\Response\Http $response
+     * @param \Magento\Customer\Model\AddressFactory $addressFactory
      * @param \Magento\Framework\App\Response\RedirectInterface $redirect
      * @param \Magento\Customer\Model\Session $customerSession
      */
@@ -155,6 +164,7 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Quote\Model\QuoteManagement $quoteManagement,
         \Magento\Sales\Api\Data\OrderInterface $_orderInterface,
         \Collector\Base\Logger\Collector $logger,
+        \Collector\Iframe\Model\ResourceModel\Fraud\Collection $fraudCollection,
         \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
         \Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
         \Magento\Framework\Event\Manager $eventManager,
@@ -168,6 +178,7 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Response\RedirectInterface $redirect,
         \Magento\Customer\Model\Session $customerSession
     ) {
+        $this->fraudCollection = $fraudCollection;
         $this->customerSession = $customerSession;
         $this->addressFactory = $addressFactory;
         $this->apiRequest = $apiRequest;
@@ -426,7 +437,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 $actual_quote->setCheckoutMethod(\Magento\Quote\Api\CartManagementInterface::METHOD_GUEST);
             }
 
-            // Submit the quote and create the order
+
             $actual_quote->save();
             $this->collectorSession->setIsIframe(1);
             $order = $this->quoteManagement->submit($actual_quote);
@@ -455,6 +466,19 @@ class Index extends \Magento\Framework\App\Action\Action
             );
             $this->checkoutSession->clearStorage();
             $this->checkoutSession->clearQuote();
+
+            $fraud = $this->fraudCollection->addFieldToFilter('increment_id', $response['data']['reference'])
+                ->getFirstItem();
+            if ($fraud->getId()) {
+                if ($fraud->getStatus() == 1) {
+                    $this->setOrderStatusState($order, 'Preliminary');
+                } elseif ($fraud->getStatus() == 2) {
+                    $this->setOrderStatusState($order, 'OnHold');
+                } else {
+                    $this->setOrderStatusState($order, '');
+                }
+            }
+            $order->save();
             return $resultPage;
         } catch (\Exception $e) {
             if ($this->collectorSession->getBtype('') == \Collector\Base\Model\Session::B2B) {
@@ -492,6 +516,7 @@ class Index extends \Magento\Framework\App\Action\Action
             return $this->redirect->redirect($this->response, '/');
         }
     }
+
 
     private function setOrderStatusState(&$order, $result = '')
     {
