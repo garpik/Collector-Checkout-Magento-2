@@ -85,6 +85,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'FI',
         'DE'
     ];
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
 
     /**
      * Data constructor.
@@ -106,6 +110,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Collector\Base\Helper\Prices $collectorPriceHelper
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -125,8 +130,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Magento\Framework\Message\ManagerInterface $_messageManager,
         \Collector\Base\Model\Config $collectorConfig,
-        \Collector\Base\Helper\Prices $collectorPriceHelper
+        \Collector\Base\Helper\Prices $collectorPriceHelper,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->collectorPriceHelper = $collectorPriceHelper;
         $this->checkoutHelper = $checkoutHelper;
         $this->apiRequest = $apiRequest;
@@ -223,7 +230,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
                 $shipMethod['content'] = $rate->getMethodTitle() . ": "
                     . $this->pricingHelper->currency(
-                        $rate->getPrice(),
+                        $rate->getPrice() + ($this->scopeConfig->getValue('tax/cart_display/subtotal') == 1 ? 0 : $rate->getPrice() * $shippingTax / 100),
                         true,
                         false
                     );
@@ -322,10 +329,18 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'name' => $cartItem->getName(),
                     'options' => $options,
                     'id' => $cartItem->getId(),
-                    'unitPrice' => $this->checkoutHelper->formatPrice($cartItem->getPriceInclTax()),
+
+                    'unitPrice' =>
+                        $this->checkoutHelper->formatPrice(
+                            $this->scopeConfig->getValue('tax/cart_display/price') == 1 ?
+                                $cartItem->getPrice() :
+                                $cartItem->getPriceInclTax()
+                        ),
                     'qty' => $cartItem->getQty(),
                     'sum' => $this->pricingHelper->currency(
-                        $cartItem->getPriceInclTax() * $cartItem->getQty(),
+                        $this->scopeConfig->getValue('tax/cart_display/price') == 1 ?
+                            $cartItem->getRowTotal() :
+                            $cartItem->getRowTotalInclTax(),
                         true,
                         false
                     ),
