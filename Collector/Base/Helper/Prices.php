@@ -33,7 +33,8 @@ class Prices extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($cartTotals as $total) {
             $price = $format ? $this->checkoutHelper->formatPrice($total->getValue()) : $total->getValue();
             $quoteTotals = $quote->getShippingAddress()->getData();
-            if ($this->scopeConfig->getValue('tax/cart_display/subtotal') == 1) {
+            if ($this->scopeConfig->getValue('tax/cart_display/subtotal') == 1 && $total->getCode() !== 'shipping'
+                || $this->scopeConfig->getValue('tax/cart_display/shipping') == 1 && $total->getCode() == 'shipping') {
                 if (!empty($quoteTotals[$total->getCode()])) {
                     $price = $format ? $this->checkoutHelper->formatPrice($quoteTotals[$total->getCode()]) : $quoteTotals[$total->getCode()];
                 }

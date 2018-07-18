@@ -230,7 +230,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
                 $shipMethod['content'] = $rate->getMethodTitle() . ": "
                     . $this->pricingHelper->currency(
-                        $rate->getPrice() + ($this->scopeConfig->getValue('tax/cart_display/subtotal') == 1 ? 0 : $rate->getPrice() * $shippingTax / 100),
+                        $rate->getPrice() + ($this->scopeConfig->getValue('tax/cart_display/shipping') == 1 ? 0 : $rate->getPrice() * $shippingTax / 100),
                         true,
                         false
                     );
