@@ -122,7 +122,11 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Iframe\Model\ResourceModel\Fraud\Collection
      */
     protected $fraudCollection;
-
+	/**
+     * @var \Magento\Customer\Api\AddressRepositoryInterface
+     */
+    protected $addressRepository;
+	
     /**
      * Index constructor.
      * @param \Collector\Base\Model\Config $collectorConfig
@@ -150,6 +154,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Magento\Customer\Model\AddressFactory $addressFactory
      * @param \Magento\Framework\App\Response\RedirectInterface $redirect
      * @param \Magento\Customer\Model\Session $customerSession
+	 * @param \Magento\Customer\Api\AddressRepositoryInterface $_addressRepository
      */
     public function __construct(
         \Collector\Base\Model\Config $collectorConfig,
@@ -176,8 +181,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Response\Http $response,
         \Magento\Customer\Model\AddressFactory $addressFactory,
         \Magento\Framework\App\Response\RedirectInterface $redirect,
-        \Magento\Customer\Model\Session $customerSession
+        \Magento\Customer\Model\Session $customerSession,
+		\Magento\Customer\Api\AddressRepositoryInterface $_addressRepository
     ) {
+		$this->addressRepository = $_addressRepository;
         $this->fraudCollection = $fraudCollection;
         $this->customerSession = $customerSession;
         $this->addressFactory = $addressFactory;
@@ -377,6 +384,8 @@ class Index extends \Magento\Framework\App\Action\Action
                     $cShippingAddress->setIsDefaultShipping('1');
                     $cShippingAddress->setSaveInAddressBook('1');
                     $cShippingAddress->save();
+					$customer->setDefaultShipping($cShippingAddress->getId());
+					$customer->save();
                 }
                 $cBillingAddress = $this->addressFactory->create();
                 $cBillingAddress->setCustomerId($customer->getId());
@@ -393,6 +402,8 @@ class Index extends \Magento\Framework\App\Action\Action
                 $cBillingAddress->setIsDefaultBilling('1');
                 $cBillingAddress->setSaveInAddressBook('1');
                 $cBillingAddress->save();
+				$customer->setDefaultBilling($cBillingAddress->getId());
+				$customer->save();
             }
             if (!empty($this->collectorSession->getNewsletterSignup(''))) {
                 $this->subscriberFactory->create()->subscribe($response['data']['customer']['email']);
