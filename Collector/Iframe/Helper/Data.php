@@ -85,6 +85,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         'FI',
         'DE'
     ];
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
 
     /**
      * Data constructor.
@@ -106,6 +110,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Framework\Message\ManagerInterface $_messageManager
      * @param \Collector\Base\Model\Config $collectorConfig
      * @param \Collector\Base\Helper\Prices $collectorPriceHelper
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
@@ -125,9 +130,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Magento\Framework\Message\ManagerInterface $_messageManager,
         \Collector\Base\Model\Config $collectorConfig,
-        \Collector\Base\Helper\Prices $collectorPriceHelper
-    )
-    {
+        \Collector\Base\Helper\Prices $collectorPriceHelper,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+    ) {
+        $this->scopeConfig = $scopeConfig;
         $this->collectorPriceHelper = $collectorPriceHelper;
         $this->checkoutHelper = $checkoutHelper;
         $this->apiRequest = $apiRequest;
@@ -156,7 +162,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function getNotificationUrl()
     {
-		return $this->storeManager->getStore()->getBaseUrl()."collectorcheckout/CollectorInvoiceStatus?OrderNo=".$this->cart->getQuote()->getReservedOrderId();
+        return $this->storeManager->getStore()->getBaseUrl() .
+            "collectorcheckout/CollectorInvoiceStatus?OrderNo=" .
+            $this->cart->getQuote()->getReservedOrderId();
     }
 
     public function getDiscount()
@@ -220,11 +228,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $first = false;
                     $this->setShippingMethod($rate->getCode());
                 }
-                if ($shippingTax == 0) {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice(), true, false);
-                } else {
-                    $shipMethod['content'] = $rate->getMethodTitle() . ": " . $this->pricingHelper->currency($rate->getPrice() * (1 + ($shippingTax / 100)), true, false);
-                }
+                $shipMethod['content'] = $rate->getMethodTitle() . ": "
+                    . $this->pricingHelper->currency(
+                        $rate->getPrice() + ($this->scopeConfig->getValue('tax/cart_display/shipping') == 1 ? 0 : $rate->getPrice() * $shippingTax / 100),
+                        true,
+                        false
+                    );
+
                 array_push($shippingMethods, $shipMethod);
             }
         }
@@ -248,7 +258,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function unsetDiscountCode()
     {
         $this->collectorSession->setCollectorAppliedDiscountCode('');
-        $this->cart->getQuote()->setData('collector_applied_discount_code', NULL);
+        $this->cart->getQuote()->setData('collector_applied_discount_code', null);
         $this->cart->getQuote()->save();
         $this->messageManager->addSuccess(__('You canceled the coupon code.'));
         $this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
@@ -304,22 +314,42 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $op = $cartItem->getProduct()->getTypeInstance(true)->getOrderOptions($cartItem->getProduct());
             if ($cartItem->getProductType() == 'configurable') {
                 foreach ($op['attributes_info'] as $option) {
-                    $options[] = $option['label'] . ": " . $option['value'];;
+                    $options[] = $option['label'] . ": " . $option['value'];
                 }
-            } else if ($cartItem->getProductType() == 'bundle') {
-                foreach ($op['bundle_options'] as $option) {
-                    $options[] = $option['value'][0]['title'];
+            } else {
+                if ($cartItem->getProductType() == 'bundle') {
+                    foreach ($op['bundle_options'] as $option) {
+                        $options[] = $option['value'][0]['title'];
+                    }
                 }
             }
-            array_push($items, array(
-                'name' => $cartItem->getName(),
-                'options' => $options,
-                'id' => $cartItem->getId(),
-                'unitPrice' => $this->checkoutHelper->formatPrice($cartItem->getPrice()),
-                'qty' => $cartItem->getQty(),
-                'sum' => $this->pricingHelper->currency($cartItem->getPrice() * $cartItem->getQty(), true, false),
-                'img' => $this->imageHelper->init($product, 'product_page_image_small')->setImageFile($product->getFile())->resize(80, 80)->getUrl()
-            ));
+            array_push(
+                $items,
+                array(
+                    'name' => $cartItem->getName(),
+                    'options' => $options,
+                    'id' => $cartItem->getId(),
+
+                    'unitPrice' =>
+                        $this->checkoutHelper->formatPrice(
+                            $this->scopeConfig->getValue('tax/cart_display/price') == 1 ?
+                                $cartItem->getPrice() :
+                                $cartItem->getPriceInclTax()
+                        ),
+                    'qty' => $cartItem->getQty(),
+                    'sum' => $this->pricingHelper->currency(
+                        $this->scopeConfig->getValue('tax/cart_display/price') == 1 ?
+                            $cartItem->getRowTotal() :
+                            $cartItem->getRowTotalInclTax(),
+                        true,
+                        false
+                    ),
+                    'img' => $this->imageHelper->init(
+                        $product,
+                        'product_page_image_small'
+                    )->setImageFile($product->getFile())->resize(80, 80)->getUrl()
+                )
+            );
         }
         return $items;
     }
@@ -378,7 +408,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'id' => 'discount',
                 'description' => $coupon,
                 'quantity' => 1,
-                'unitPrice' => sprintf("%01.2f", $this->apiRequest->convert($this->cart->getQuote()->getGrandTotal() - $totals, 'SEK')),
+                'unitPrice' => sprintf(
+                    "%01.2f",
+                    $this->apiRequest->convert($this->cart->getQuote()->getGrandTotal() - $totals, 'SEK')
+                ),
                 'vat' => '25',
             );
             array_push($items, $code);

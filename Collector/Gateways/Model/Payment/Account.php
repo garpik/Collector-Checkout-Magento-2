@@ -19,24 +19,8 @@ class Account extends \Collector\Gateways\Model\Payment\Invoice
     protected $_isOffline = false;
     protected $_canAuthorize = false;
 
-	
-    public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
+    public function getTitle()
     {
-		parent::authorize($payment, $amount);
-    }
-
-    public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-		parent::capture($payment, $amount);
-    }
-
-    public function void(\Magento\Payment\Model\InfoInterface $payment)
-    {
-		parent::void($payment, $amount);
-    }
-
-    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-		parent::refund($payment, $amount);
+        return "Collector Account";
     }
 }

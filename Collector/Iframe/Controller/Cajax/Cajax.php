@@ -72,6 +72,31 @@ class Cajax extends \Magento\Framework\App\Action\Action
     protected $apiRequest;
 
     /**
+     * @var \Magento\CatalogInventory\Api\StockStateInterface
+     */
+    protected $stockState;
+    /**
+     * @var \Magento\Framework\Message\ManagerInterface
+     */
+    protected $messageManager;
+    /**
+     * @var \Magento\CatalogInventory\Model\StockStateProvider
+     */
+    protected $stockStateProvider;
+    /**
+     * @var \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory
+     */
+    protected $stockItemInterface;
+    /**
+     * @var \Magento\CatalogInventory\Model\ResourceModel\Stock\Item
+     */
+    protected $stockItemResource;
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
      * Cajax constructor.
      * @param \Magento\Framework\View\Result\LayoutFactory $_layoutFactory
      * @param \Collector\Iframe\Helper\Data $_helper
@@ -85,6 +110,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Logger\Collector $logger
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
+     * @param \Magento\CatalogInventory\Api\StockStateInterface $stockState
+     * @param \Magento\Framework\Message\ManagerInterface $_messageManager
+     * @param \Magento\CatalogInventory\Model\StockStateProvider $_stockStateProvider
+     * @param \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $_stockItemInterface
+     * @param \Magento\CatalogInventory\Model\ResourceModel\Stock\Item $_stockItemResource
+     * @param \Magento\Store\Model\StoreManagerInterface $_storeManager
      */
     public function __construct(
         \Magento\Framework\View\Result\LayoutFactory $_layoutFactory,
@@ -98,9 +129,14 @@ class Cajax extends \Magento\Framework\App\Action\Action
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
-        \Magento\Framework\Json\Helper\Data $jsonHelper
-    )
-    {
+        \Magento\Framework\Json\Helper\Data $jsonHelper,
+        \Magento\CatalogInventory\Api\StockStateInterface $stockState,
+        \Magento\Framework\Message\ManagerInterface $_messageManager,
+        \Magento\CatalogInventory\Model\StockStateProvider $_stockStateProvider,
+        \Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $_stockItemInterface,
+        \Magento\CatalogInventory\Model\ResourceModel\Stock\Item $_stockItemResource,
+        \Magento\Store\Model\StoreManagerInterface $_storeManager
+    ) {
         parent::__construct($context);
         $this->apiRequest = $apiRequest;
         $this->logger = $logger;
@@ -113,6 +149,12 @@ class Cajax extends \Magento\Framework\App\Action\Action
         $this->resultPageFactory = $resultPageFactory;
         $this->jsonHelper = $jsonHelper;
         $this->resultJsonFactory = $resultJsonFactory;
+        $this->stockState = $stockState;
+        $this->messageManager = $_messageManager;
+        $this->stockStateProvider = $_stockStateProvider;
+        $this->stockItemInterface = $_stockItemInterface;
+        $this->stockItemResource = $_stockItemResource;
+        $this->storeManager = $_storeManager;
     }
 
     /**
@@ -130,15 +172,25 @@ class Cajax extends \Magento\Framework\App\Action\Action
             $changed = false;
             switch ($this->getRequest()->getParam('type')) {
                 case "shippingValidate":
-                    $this->cart->getQuote()->getShippingAddress()->setCollectShippingRates(true)->collectShippingRates();
+                    $this->cart
+                        ->getQuote()
+                        ->getShippingAddress()
+                        ->setCollectShippingRates(true)
+                        ->collectShippingRates();
                     $errors = $this->cart->getQuote()->getShippingAddress()->validate();
                     if ($errors == true) {
                         $errors = [];
                     }
-                    if (!in_array($this->cart->getQuote()->getShippingAddress()->getCountryId(), $this->helper->allowedCountries) && $this->getRequest()->getParam('ignore_country') == false) {
+                    if (!in_array(
+                        $this->cart->getQuote()->getShippingAddress()->getCountryId(),
+                        $this->helper->allowedCountries
+                    ) && $this->getRequest()->getParam('ignore_country') == false) {
                         $errors[] = ('This country is not allowed');
                     }
-                    return $result->setData(['error' => count($errors) > 0 ? 1 : 0, 'messages' => implode("\n", $errors)]);
+                    return $result->setData([
+                        'error' => count($errors) > 0 ? 1 : 0,
+                        'messages' => implode("\n", $errors)
+                    ]);
                 case "shippingAddress":
                     $customizeAttribute = ['street_1', 'street_2'];
                     $name = $this->getRequest()->getParam('name');
@@ -197,10 +249,16 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $id = explode('_', $this->getRequest()->getParam('id'))[1];
                     foreach ($allItems as $item) {
                         if ($item->getId() == $id) {
-                            $item->setQty($item->getQty() + 1);
-                            $changed = true;
-                            $updateCart = true;
-                            $updateFees = true;
+                            if ($this->stockState->getStockQty($item->getProduct()->getId(), $item->getProduct()->getStore()->getWebsiteId()) - $item->getQty() >= 0) {
+                                $item->setQty($item->getQty() + 1);
+                                $changed = true;
+                                $updateCart = true;
+                                $updateFees = true;
+                            } else {
+                                $this->messageManager->addError(
+                                    __('We don\'t have as many "%1" as you requested.', $item->getName())
+                                );
+                            }
                         }
                     }
                     $this->cart->save();
@@ -231,6 +289,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     foreach ($allItems as $item) {
                         if ($item->getId() == $id) {
                             $this->cart->removeItem($item->getId());
+							$this->cart->save();
                             if (count($allItems) == 1) {
                                 return $result->setData("redirect");
                             }
@@ -249,8 +308,6 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     $this->collectionSession->setCollectorPublicToken('');
                     $changeLanguage = true;
                     $changed = true;
-                 //   $updateCart = true;
-                  //  $updateFees = true;
                     break;
                 case "updatecustomer":
                     try {
@@ -263,11 +320,14 @@ class Cajax extends \Magento\Framework\App\Action\Action
                                 'postcode' => $resp['data']['customer']['businessCustomer']['postalCode']
                             ];
                             if (isset($resp['data']['businessCustomer']['deliveryAddress']['address'])) {
-                                $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['address'];
+                                $shipping['street'] =
+                                    $resp['data']['businessCustomer']['deliveryAddress']['address'];
                             } else {
-                                $shipping['street'] = $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
+                                $shipping['street'] =
+                                    $resp['data']['businessCustomer']['deliveryAddress']['postalCode'];
                             }
-                            $billing = ['firstname' => $resp['data']['businessCustomer']['firstName'],
+                            $billing = [
+                                'firstname' => $resp['data']['businessCustomer']['firstName'],
                                 'lastname' => $resp['data']['businessCustomer']['lastName'],
                                 'city' => $resp['data']['businessCustomer']['invoiceAddress']['city'],
                                 'postcode' => $resp['data']['businessCustomer']['invoiceAddress']['postalCode'],
@@ -286,7 +346,8 @@ class Cajax extends \Magento\Framework\App\Action\Action
                                 'city' => $resp['data']['customer']['deliveryAddress']['city'],
                                 'postcode' => $resp['data']['customer']['deliveryAddress']['postalCode']
                             ];
-                            $billing = ['firstname' => $resp['data']['customer']['billingAddress']['firstName'],
+                            $billing = [
+                                'firstname' => $resp['data']['customer']['billingAddress']['firstName'],
                                 'lastname' => $resp['data']['customer']['billingAddress']['lastName'],
                                 'street' => $resp['data']['customer']['billingAddress']['address'],
                                 'city' => $resp['data']['customer']['billingAddress']['city'],

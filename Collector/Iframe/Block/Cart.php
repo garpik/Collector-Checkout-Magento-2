@@ -50,7 +50,6 @@ class Cart extends \Magento\Checkout\Block\Onepage
     /**
      * Cart constructor.
      * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param array $data
      * @param \Magento\Checkout\Model\Session $_checkoutSession
      * @param \Magento\Framework\Data\Form\FormKey $formKey
      * @param \Magento\Checkout\Model\CompositeConfigProvider $configProvider
@@ -63,10 +62,10 @@ class Cart extends \Magento\Checkout\Block\Onepage
      * @param \Magento\Checkout\Helper\Data $checkoutHelper
      * @param \Collector\Base\Helper\Prices $collectorPriceHelper
      * @param array $layoutProcessors
+     * @param array $data
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
-        array $data = [],
         \Magento\Checkout\Model\Session $_checkoutSession,
         \Magento\Framework\Data\Form\FormKey $formKey,
         \Magento\Checkout\Model\CompositeConfigProvider $configProvider,
@@ -78,9 +77,9 @@ class Cart extends \Magento\Checkout\Block\Onepage
         \Collector\Base\Model\Config $collectorConfig,
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Collector\Base\Helper\Prices $collectorPriceHelper,
-        array $layoutProcessors = []
-    )
-    {
+        array $layoutProcessors = [],
+        array $data = []
+    ) {
         parent::__construct($context, $formKey, $configProvider, $layoutProcessors, $data);
         $this->collectorPriceHelper = $collectorPriceHelper;
         $this->checkoutHelper = $checkoutHelper;

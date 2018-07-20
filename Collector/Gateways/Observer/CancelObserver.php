@@ -25,7 +25,15 @@ class CancelObserver extends AbstractDataAssignObserver
      * @var \Collector\Base\Logger\Collector
      */
     protected $logger;
+    /**
+     * @var \Collector\Base\Model\Config
+     */
     protected $collectorConfig;
+
+    /**
+     * @var \Collector\Base\Model\ApiRequest
+     */
+    protected $apiRequest;
 
     /**
      * CancelObserver constructor.
@@ -41,8 +49,7 @@ class CancelObserver extends AbstractDataAssignObserver
         \Collector\Base\Logger\Collector $logger,
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Collector\Base\Model\Config $collectorConfig
-    )
-    {
+    ) {
         $this->apiRequest = $apiRequest;
         $this->collectorConfig = $collectorConfig;
         $this->logger = $logger;

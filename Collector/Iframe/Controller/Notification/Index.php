@@ -1,6 +1,7 @@
 <?php
 
 namespace Collector\Iframe\Controller\Notification;
+
 class Index extends \Magento\Framework\App\Action\Action
 {
 
@@ -56,8 +57,7 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Quote\Model\ResourceModel\Quote\CollectionFactory $_quoteCollectionFactory,
         \Magento\Quote\Model\Quote\Address\Rate $_shippingRate,
         \Magento\Framework\Json\Helper\Data $jsonHelper
-    )
-    {
+    ) {
         $this->formKey = $formKey;
         $this->helper = $_helper;
         $this->layoutFactory = $_layoutFactory;

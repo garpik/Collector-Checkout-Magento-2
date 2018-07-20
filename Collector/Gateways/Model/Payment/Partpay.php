@@ -21,21 +21,17 @@ class Partpay extends \Magento\Payment\Model\Method\AbstractMethod
 
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-
     }
 
     public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-
     }
 
     public function void(\Magento\Payment\Model\InfoInterface $payment)
     {
-
     }
 
     public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-
     }
 }

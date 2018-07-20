@@ -88,8 +88,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
-    )
-    {
+    ) {
         $this->collectorConfig = $collectorConfig;
         $this->apiRequest = $apiRequest;
         $this->logger = $logger;
@@ -215,13 +214,21 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 $client->ActivateInvoice($req);
                 $payment->setTransactionId($order->getData('collector_invoice_id'));
                 $payment->setParentTransactionId($payment->getTransactionId());
-                $transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH, null, true, "");
+                $transaction = $payment->addTransaction(
+                    \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH,
+                    null,
+                    true,
+                    ""
+                );
                 $transaction->setIsClosed(true);
                 $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                 $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
             } catch (\Exception $e) {
                 $this->logger->error(var_export($req, true));
-                $this->logger->error("capture " . $payment->getOrder()->getIncrementId() . ": " . var_export($req, true));
+                $this->logger->error(
+                    "capture " . $payment->getOrder()->getIncrementId() . ": " .
+                    var_export($req, true)
+                );
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());
             }
@@ -245,7 +252,8 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                             $product = $item->getOrderItem()->getProduct();
                             if ($product->getPriceType() == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_FIXED) {
                                 $bundlesWithFixedPrice[] = $item->getItemId();
-                            } elseif ($product->getPriceType() == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_DYNAMIC) {
+                            } elseif ($product->getPriceType()
+                                == \Magento\Bundle\Model\Product\Price::PRICE_TYPE_DYNAMIC) {
                                 continue;
                             }
                         }
@@ -276,7 +284,12 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                         $resp = $client->PartActivateInvoice($req);
                         $payment->setTransactionId($order->getData('collector_invoice_id'));
                         $payment->setParentTransactionId($payment->getTransactionId());
-                        $transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH, null, true, "");
+                        $transaction = $payment->addTransaction(
+                            \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH,
+                            null,
+                            true,
+                            ""
+                        );
                         $transaction->setIsClosed(true);
                         $order->setData('fee_amount_invoiced', $order->getData('fee_amount'));
                         $order->setData('base_fee_amount_invoiced', $order->getData('base_fee_amount'));
@@ -284,7 +297,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                     } catch (\Exception $e) {
                         $this->logger->error($e->getMessage());
                         $this->logger->error($e->getTraceAsString());
-
                     }
                 }
             }
@@ -326,7 +338,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             $this->logger->error($e->getTraceAsString());
-
         }
     }
 

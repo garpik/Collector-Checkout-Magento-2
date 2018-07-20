@@ -10,7 +10,6 @@
 
 namespace Collector\Gateways\Block\Sales\Order;
 
-
 class Fee extends \Magento\Framework\View\Element\Template
 {
     /**
@@ -18,17 +17,13 @@ class Fee extends \Magento\Framework\View\Element\Template
      *
      * @var \Magento\Tax\Model\Config
      */
-    protected $_config;
+    protected $config;
 
-    /**
-     * @var Order
-     */
-    protected $_order;
 
     /**
      * @var \Magento\Framework\DataObject
      */
-    protected $_source;
+    protected $source;
 
     /**
      * Fee constructor.
@@ -40,9 +35,8 @@ class Fee extends \Magento\Framework\View\Element\Template
         \Magento\Framework\View\Element\Template\Context $context,
         \Magento\Tax\Model\Config $taxConfig,
         array $data = []
-    )
-    {
-        $this->_config = $taxConfig;
+    ) {
+        $this->config = $taxConfig;
         parent::__construct($context, $data);
     }
 
@@ -63,7 +57,7 @@ class Fee extends \Magento\Framework\View\Element\Template
      */
     public function getSource()
     {
-        return $this->_source;
+        return $this->source;
     }
 
     /**
@@ -71,7 +65,7 @@ class Fee extends \Magento\Framework\View\Element\Template
      */
     public function getStore()
     {
-        return $this->_order->getStore();
+        return $this->order->getStore();
     }
 
     /**
@@ -79,7 +73,7 @@ class Fee extends \Magento\Framework\View\Element\Template
      */
     public function getOrder()
     {
-        return $this->_order;
+        return $this->order;
     }
 
     /**
@@ -104,16 +98,16 @@ class Fee extends \Magento\Framework\View\Element\Template
     public function initTotals()
     {
         $parent = $this->getParentBlock();
-        $this->_order = $parent->getOrder();
-        $this->_source = $parent->getSource();
-        if (!$this->_source->getFeeAmount()) {
+        $this->order = $parent->getOrder();
+        $this->source = $parent->getSource();
+        if (!$this->source->getFeeAmount()) {
             return $this;
         }
         $fee = new \Magento\Framework\DataObject(
             [
                 'code' => 'fee',
                 'strong' => false,
-                'value' => $this->_source->getFeeAmount(),
+                'value' => $this->source->getFeeAmount(),
                 'label' => __('Surcharge Fee'),
             ]
         );
@@ -121,5 +115,4 @@ class Fee extends \Magento\Framework\View\Element\Template
         $parent->addTotal($fee, 'fee');
         return $this;
     }
-
 }

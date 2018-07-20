@@ -146,9 +146,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Request\Http $request,
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Model\ApiRequest $apiRequest,
-        \Collector\Base\Logger\Collector $logger
-    )
-    {
+        \Collector\Base\Logger\Collector $logger,
+        \Collector\Iframe\Model\FraudFactory $fraudFactory
+    ) {
+        $this->fraudFactory = $fraudFactory;
         $this->collectorLogger = $logger;
         $this->apiRequest = $apiRequest;
         $this->request = $request;
@@ -179,35 +180,44 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         if (!empty($this->request->getParam('OrderNo')) && !empty($this->request->getParam('InvoiceStatus'))) {
-			sleep(60);
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if ($order->getId()) {
                 if ($this->request->getParam('InvoiceStatus') == "0") {
                     $status = $this->helper->getHoldStatus();
                     $order->setState($status)->setStatus($status);
                     $order->save();
-                } else if ($this->request->getParam('InvoiceStatus') == "1") {
-                    $status = $this->helper->getAcceptStatus();
-                    $order->setState($status)->setStatus($status);
-                    $order->save();
                 } else {
-                    $status = $this->helper->getDeniedStatus();
-                    $order->setState($status)->setStatus($status);
-                    $order->save();
+                    if ($this->request->getParam('InvoiceStatus') == "1") {
+                        $status = $this->helper->getAcceptStatus();
+                        $order->setState($status)->setStatus($status);
+                        $order->save();
+                    } else {
+                        $status = $this->helper->getDeniedStatus();
+                        $order->setState($status)->setStatus($status);
+                        $order->save();
+                    }
                 }
             } else {
-                $quote = $this->quoteCollectionFactory->create()->getItemByColumnValue('reserved_order_id', $this->request->getParam('OrderNo'));
-                $this->createOrder($quote);
+
+                //if ($this->request->getParam('InvoiceStatus') == "0" || $this->request->getParam('InvoiceStatus') == "1") {
+
+                //}
             }
+            $fraud = $this->fraudFactory->create();
+            $fraud->setIncrementId($this->request->getParam('OrderNo'));
+            $fraud->setStatus($this->request->getParam('InvoiceStatus'));
+            $fraud->setIsAntiFraud(1);
+            $fraud->save();
         }
-		if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))){
-			sleep(20);
-            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-            $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
-            if (!$order->getId()){
-                $quote = $objectManager->get(\Magento\Quote\Model\ResourceModel\Quote\CollectionFactory::class)->create()->getItemByColumnValue('reserved_order_id', $this->request->getParam('OrderNo'));
-                $this->createOrder($quote, $this->request->getParam('OrderNo'));
-            }
+        if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))) {
+
+            $fraud = $this->fraudFactory->create();
+            $fraud->setData('increment_id',$this->request->getParam('OrderNo'));
+            $fraud->setStatus(5);
+            $fraud->setIsAntiFraud(1);
+
+            $fraud->save();
+            print_r($fraud->getData());exit;
         }
         return $this->resultPageFactory->create();
     }
@@ -241,13 +251,22 @@ class Index extends \Magento\Framework\App\Action\Action
             if ($exOrder->getIncrementId()) {
                 return $resultPage;
             }
-            
-            $shippingCountryId = $this->getCountryCodeByName($response['data']['customer']['deliveryAddress']['country'], $response['data']['countryCode']);
-            $billingCountryId = $this->getCountryCodeByName($response['data']['customer']['billingAddress']['country'], $response['data']['countryCode']);
+
+            $shippingCountryId = $this->getCountryCodeByName(
+                $response['data']['customer']['deliveryAddress']['country'],
+                $response['data']['countryCode']
+            );
+            $billingCountryId = $this->getCountryCodeByName(
+                $response['data']['customer']['billingAddress']['country'],
+                $response['data']['countryCode']
+            );
 
             $shippingCode = $quote->getData('curr_shipping_code');
 
-            $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter("reserved_order_id", $response['data']['reference'])->getFirstItem();
+            $actual_quote = $this->quoteCollectionFactory->create()->addFieldToFilter(
+                "reserved_order_id",
+                $response['data']['reference']
+            )->getFirstItem();
 
             //init the store id and website id @todo pass from array
             $store = $this->storeManager->getStore();
@@ -354,14 +373,16 @@ class Index extends \Magento\Framework\App\Action\Action
                 $status = $this->helper->getHoldStatus();
                 $order->setState($status)->setStatus($status);
                 $order->save();
-            } else if ($response["data"]["purchase"]["result"] == "Preliminary") {
-                $status = $this->helper->getAcceptStatus();
-                $order->setState($status)->setStatus($status);
-                $order->save();
             } else {
-                $status = $this->helper->getDeniedStatus();
-                $order->setState($status)->setStatus($status);
-                $order->save();
+                if ($response["data"]["purchase"]["result"] == "Preliminary") {
+                    $status = $this->helper->getAcceptStatus();
+                    $order->setState($status)->setStatus($status);
+                    $order->save();
+                } else {
+                    $status = $this->helper->getDeniedStatus();
+                    $order->setState($status)->setStatus($status);
+                    $order->save();
+                }
             }
 
             $this->eventManager->dispatch(
@@ -394,18 +415,18 @@ class Index extends \Magento\Framework\App\Action\Action
         }
         return [];
     }
-	
-	private function getCountryCodeByName($name, $default)
+
+    private function getCountryCodeByName($name, $default)
     {
         $id = $default;
         switch ($name) {
-            case 'Sverige' :
+            case 'Sverige':
                 $id = 'SE';
                 break;
-            case 'Norge' :
+            case 'Norge':
                 $id = 'NO';
                 break;
-            case 'Suomi' :
+            case 'Suomi':
                 $id = 'FI';
                 break;
             case 'Deutschland':

@@ -2,9 +2,9 @@
 
 namespace Collector\Iframe\Api\Data;
 
-interface StateInterface
+interface FraudInterface
 {
-    const ENTITY_ID = 'status';
+    const ENTITY_ID = 'id';
 
     /**
      * Get ID

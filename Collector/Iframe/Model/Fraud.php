@@ -4,45 +4,30 @@
 namespace Collector\Iframe\Model;
 
 use Magento\Framework\Model\AbstractModel;
-use Collector\Iframe\Api\Data\StateInterface;
-use Magento\Framework\DataObject\IdentityInterface;
 
 /**
- * Class State
+ * Class Fraud
  * @package Collector\Iframe\Model
  */
-class State extends AbstractModel implements StateInterface, IdentityInterface
+class Fraud extends AbstractModel implements \Collector\Iframe\Api\Data\FraudInterface, \Magento\Framework\DataObject\IdentityInterface
 {
 
-    const CACHE_TAG = 'sales_order_status_state';
+    const CACHE_TAG = 'collector_anti_fraud';
 
     /**
      * @var string
      */
-    protected $_cacheTag = 'sales_order_status_state';
+    protected $_cacheTag = 'collector_anti_fraud';
     /**
      * @var string
      */
-    protected $_eventPrefix = 'sales_order_status_state';
+    protected $_eventPrefix = 'collector_anti_fraud';
 
     protected function _construct()
     {
-        $this->_init('Collector\Iframe\Model\ResourceModel\State');
+        $this->_init('Collector\Iframe\Model\ResourceModel\Fraud');
     }
 
-    /**
-     * @param int $id
-     * @param null $field
-     * @return $this|bool
-     */
-    public function load($id, $field = null)
-    {
-        if ($id === null) {
-            return false;
-        }
-
-        return parent::load($id, $field);
-    }
 
     /**
      * @return array
@@ -68,4 +53,5 @@ class State extends AbstractModel implements StateInterface, IdentityInterface
     {
         return $this->setData(self::ENTITY_ID, $id);
     }
+
 }

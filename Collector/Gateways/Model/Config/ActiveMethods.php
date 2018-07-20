@@ -22,24 +22,25 @@ class ActiveMethods
     public function __construct(
         \Magento\Payment\Model\Config $paymentConfig,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-    )
-    {
+    ) {
         $this->paymentConfig = $paymentConfig;
         $this->scopeConfig = $scopeConfig;
     }
 
-    protected function _getPaymentMethods()
+    protected function getPaymentMethods()
     {
         return $this->paymentConfig->getActiveMethods();
     }
 
     public function toOptionArray()
     {
-        $methods = [[
-            'value' => '',
-            'label' => ''
-        ]];
-        foreach ($this->_getPaymentMethods() as $paymentCode => $paymentModel) {
+        $methods = [
+            [
+                'value' => '',
+                'label' => ''
+            ]
+        ];
+        foreach ($this->getPaymentMethods() as $paymentCode => $paymentModel) {
             $paymentTitle = $this->scopeConfig->getValue('payment/' . $paymentCode . '/title');
             $methods[$paymentCode] = [
                 'label' => $paymentTitle,

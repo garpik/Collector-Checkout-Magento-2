@@ -8,7 +8,7 @@ define([
             if (window.showCollectorShipping) {
                 $(document).on('mouseover', '.collector-checkout-wrapper', function () {
                     if ($('.collector-checkout.disabled').length > 0) {
-                        if (!$('.form-shipping-address').valid()) {
+                        if (!$('.form-shipping-address').validate().valid()) {
                             $('.collector-checkout').addClass('disabled');
                         } else {
                             var param = {
@@ -40,7 +40,10 @@ define([
                         }
                     }
                 });
-                $(document).on('change', '.collector_shipping_address input, .collector_shipping_address select', function () {
+                $(document).on(
+                    'change',
+                    '.collector_shipping_address input, .collector_shipping_address select',
+                    function () {
                         var param = {
                             is_ajax: true,
                             type: 'shippingAddress',
@@ -49,6 +52,7 @@ define([
                         }
                         $('.collector-checkout').addClass('disabled');
                         $(this).mage('validation', {});
+                        $(this).validate();
                         if ($(this).valid()) {
                             $.ajax({
                                 url: ajaxUrl,
@@ -109,6 +113,9 @@ define([
                         }
                     }
                 );
+                setTimeout(function ($) {
+                    $('.collector-checkout').addClass('disabled')
+                }, 2000, $);
             } else {
                 $('.collector-checkout').removeClass('disabled');
             }
@@ -239,8 +246,7 @@ define([
                                 if (!$('.form-shipping-address').valid()) {
                                     $('div.mage-error').remove();
                                     $('.collector-checkout').addClass('disabled');
-                                }
-                                else {
+                                } else {
                                     $('.collector-checkout').removeClass('disabled');
                                 }
                             }
@@ -281,11 +287,10 @@ define([
                     },
                     success: function (data) {
                         if (window.showCollectorShipping) {
-                            if (!$('.form-shipping-address').valid()) {
+                            if (!$('.form-shipping-address').validate().valid()) {
                                 $('div.mage-error').remove();
                                 $('.collector-checkout').addClass('disabled');
-                            }
-                            else {
+                            } else {
                                 $('.collector-checkout').removeClass('disabled');
                             }
                         }
@@ -374,8 +379,7 @@ define([
                             jQuery("#b2c").removeClass("col-active");
                             jQuery("#b2b").addClass("col-active");
                             jQuery("#b2b").removeClass("col-inactive");
-                        }
-                        else if (ctype == "b2c") {
+                        } else if (ctype == "b2c") {
                             jQuery("#b2b").addClass("col-inactive");
                             jQuery("#b2b").removeClass("col-active");
                             jQuery("#b2c").addClass("col-active");

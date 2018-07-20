@@ -21,8 +21,7 @@ class Url
     public function __construct(
         \Magento\Framework\UrlInterface $urlBuilder,
         \Collector\Base\Model\Config $collectorConfig
-    )
-    {
+    ) {
         $this->collectorConfig = $collectorConfig;
         $this->urlBuilder = $urlBuilder;
     }

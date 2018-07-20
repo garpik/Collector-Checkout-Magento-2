@@ -25,5 +25,4 @@ class Campaign extends \Collector\Iframe\Model\Payment\BasePayment
 {
 
     protected $_code = "campaign";
-    
 }

@@ -11,17 +11,17 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
     /**
      * @var \Collector\Gateways\Helper\Data
      */
-    protected $_helperData;
+    protected $helperData;
 
     /**
      * @var \Magento\Framework\UrlInterface
      */
-    protected $_urlInterface;
+    protected $urlInterface;
 
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
-    protected $_config;
+    protected $config;
 
     /**
      * @var \Collector\Base\Model\Session
@@ -47,13 +47,12 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Model\Config $collectorConfig,
         \Magento\Framework\App\Config\ScopeConfigInterface $config
-    )
-    {
+    ) {
         $this->collectorConfig = $collectorConfig;
         $this->collectorSession = $_collectorSession;
-        $this->_config = $config;
-        $this->_helperData = $helperData;
-        $this->_urlInterface = $urlInterface;
+        $this->config = $config;
+        $this->helperData = $helperData;
+        $this->urlInterface = $urlInterface;
     }
 
     /**
@@ -66,8 +65,8 @@ class Fee extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
      */
     public function fetch(\Magento\Quote\Model\Quote $quote, \Magento\Quote\Model\Quote\Address\Total $total)
     {
-        $checkout = strpos($this->_urlInterface->getCurrentUrl(), 'collectorcheckout') !== false
-            && strpos($this->_urlInterface->getCurrentUrl(), 'success') == false;
+        $checkout = strpos($this->urlInterface->getCurrentUrl(), 'collectorcheckout') !== false
+            && strpos($this->urlInterface->getCurrentUrl(), 'success') == false;
         $result = [
             'code' => $this->getCode(),
             'title' => __('Invoice Fee'),
