@@ -102,6 +102,11 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Logger\Collector
      */
     protected $collectorLogger;
+	
+	/**
+     * @var \Collector\Base\Logger\Collector
+     */
+    protected $config;
 
     /**
      * Index constructor.
@@ -147,8 +152,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Collector\Base\Model\Session $_collectorSession,
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Collector\Base\Logger\Collector $logger,
-        \Collector\Iframe\Model\FraudFactory $fraudFactory
+        \Collector\Iframe\Model\FraudFactory $fraudFactory,
+		\Collector\Base\Model\Config $_config
     ) {
+		$this->config = $_config;
         $this->fraudFactory = $fraudFactory;
         $this->collectorLogger = $logger;
         $this->apiRequest = $apiRequest;
@@ -183,16 +190,16 @@ class Index extends \Magento\Framework\App\Action\Action
             $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
             if ($order->getId()) {
                 if ($this->request->getParam('InvoiceStatus') == "0") {
-                    $status = $this->helper->getHoldStatus();
+                    $status = $this->config->getHoldStatus();
                     $order->setState($status)->setStatus($status);
                     $order->save();
                 } else {
                     if ($this->request->getParam('InvoiceStatus') == "1") {
-                        $status = $this->helper->getAcceptStatus();
+                        $status = $this->config->getAcceptStatus();
                         $order->setState($status)->setStatus($status);
                         $order->save();
                     } else {
-                        $status = $this->helper->getDeniedStatus();
+                        $status = $this->config->getDeniedStatus();
                         $order->setState($status)->setStatus($status);
                         $order->save();
                     }
