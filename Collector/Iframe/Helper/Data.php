@@ -439,12 +439,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             ];
         }
         if (!empty($shippingAddress->getShippingMethod())) {
-            $ret ['shipping'] = [
-                'id' => "shipping",
-                'description' => $shippingAddress->getShippingMethod(),
-                'unitPrice' => $this->apiRequest->convert($shippingAddress->getShippingInclTax(), 'SEK'),
-                'vat' => 0
-            ];
+			if ($this->apiRequest->convert($shippingAddress->getShippingInclTax(), 'SEK') !== NULL){
+				$ret ['shipping'] = [
+					'id' => "shipping",
+					'description' => $shippingAddress->getShippingMethod(),
+					'unitPrice' => $this->apiRequest->convert($shippingAddress->getShippingInclTax(), 'SEK'),
+					'vat' => 0
+				];
+			}
+			else {
+				$ret ['shipping'] = [
+					'id' => "shipping",
+					'description' => $shippingAddress->getShippingMethod(),
+					'unitPrice' => 0,
+					'vat' => 0
+				];
+			}
         } else {
             $ret['shipping'] = [
                 'id' => 'shipping',
