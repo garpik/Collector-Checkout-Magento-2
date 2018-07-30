@@ -114,8 +114,9 @@ class ApiRequest
             array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr)
         );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_exec($ch);
+        $result = curl_exec($ch);
         curl_close($ch);
+		return json_decode($result);
     }
 
     public function callCheckoutsFees($params, $cart = null)
@@ -133,8 +134,9 @@ class ApiRequest
             array('Content-Type: application/json', 'charset=utf-8', 'Authorization:' . $hashstr)
         );
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_exec($ch);
+        $result = curl_exec($ch);
         curl_close($ch);
+		return json_decode($result);
     }
 
     public function getTokenRequest($params = [])

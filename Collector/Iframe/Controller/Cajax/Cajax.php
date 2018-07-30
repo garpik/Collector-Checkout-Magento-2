@@ -168,6 +168,7 @@ class Cajax extends \Magento\Framework\App\Action\Action
         $updateCart = false;
         $updateFees = false;
         $changeLanguage = false;
+		$message = "";
         if ($this->getRequest()->isAjax()) {
             $changed = false;
             switch ($this->getRequest()->getParam('type')) {
@@ -272,9 +273,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
                     break;
                 case "submit":
                     if (!empty($this->collectionSession->getCollectorAppliedDiscountCode())) {
-                        $this->helper->unsetDiscountCode();
+                        $message = $this->helper->unsetDiscountCode();
                     } else {
-                        $this->helper->setDiscountCode($this->getRequest()->getParam('value'));
+                        $message = $this->helper->setDiscountCode($this->getRequest()->getParam('value'));
                     }
                     $changed = true;
                     $updateCart = true;
@@ -367,10 +368,26 @@ class Cajax extends \Magento\Framework\App\Action\Action
             }
             if ($changed) {
                 if ($updateCart) {
-                    $this->helper->updateCart();
+                    $gunk = $this->helper->updateCart();
+					if (is_array($gunk)){
+						$return = array(
+							'error' => $gunk['error'],
+							'message' => $gunk['message']
+						);
+						$this->helper->setMessage($gunk['message'], true);
+						return $result->setData($return);
+					}
                 }
                 if ($updateFees) {
-                    $this->helper->updateFees();
+                    $gunk = $this->helper->updateFees();
+					if (is_array($gunk)){
+						$return = array(
+							'error' => $gunk['error'],
+							'message' => $gunk['message']
+						);
+						$this->helper->setMessage($gunk['message'], true);
+						return $result->setData($return);
+					}
                 }
                 $page = $this->resultPageFactory->create();
                 $layout = $page->getLayout();
@@ -381,7 +398,9 @@ class Cajax extends \Magento\Framework\App\Action\Action
                 $shippingBlock = $layout->getBlock('collectorcart');
                 $shippingBlock->setTemplate('Collector_Iframe::Shipping-methods.phtml');
                 $shippingHtml = $shippingBlock->toHtml();
-
+				if (is_array($message)){
+					$this->helper->setMessage($message['message'], $message['error']);
+                }
                 if ($changeLanguage) {
                     $checkoutBlock = $layout->getBlock('collectorcheckout');
                     $checkoutBlock->setTemplate('Collector_Iframe::Checkout.phtml');

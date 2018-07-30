@@ -127,6 +127,9 @@ class Checkout extends \Magento\Checkout\Block\Onepage
             "cart" => ['items' => $this->helper->getProducts()],
             "fees" => $this->helper->getFees()
         ]);
+		if ($result['error'] !== NULL){
+			return array('error'=>true,'message'=>$result['error']['errors'][0]['message']);
+		}
         $this->collectorSession->setCollectorPublicToken($result["data"]["publicToken"]);
         $this->collectorSession->setCollectorPrivateId($result['data']['privateId']);
         $this->cart->getQuote()->setData('collector_private_id', $result['data']['privateId']);

@@ -66,7 +66,42 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     'comment' => 'Increment ID'
                 ]
             );
+        }
 
+        if (version_compare($context->getVersion(), '1.1.12') < 0) {
+            $tableName = $setup->getTable('collector_order_checker');
+            $table = $setup->getConnection()
+                ->newTable($tableName)
+                ->addColumn(
+                    'id',
+                    Table::TYPE_INTEGER,
+                    null,
+                    [
+                        'identity' => true,
+                        'unsigned' => true,
+                        'nullable' => false,
+                        'primary' => true
+                    ],
+                    'ID'
+                )
+                ->addColumn(
+                    'increment_id',
+                    Table::TYPE_TEXT,
+                    null,
+                    ['nullable' => false, 'default' => ''],
+                    'Increment'
+                )
+                ->addColumn(
+                    'created_at',
+                    \Magento\Framework\DB\Ddl\Table::TYPE_TIMESTAMP,
+                    null,
+                    ['nullable' => false, 'default' => \Magento\Framework\DB\Ddl\Table::TIMESTAMP_INIT],
+                    'Created At'
+                )
+                ->setComment('Anti fraud')
+                ->setOption('type', 'InnoDB')
+                ->setOption('charset', 'utf8');
+            $setup->getConnection()->createTable($table);
         }
         $setup->endSetup();
     }

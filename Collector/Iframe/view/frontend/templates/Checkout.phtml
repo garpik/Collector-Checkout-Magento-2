@@ -1,4 +1,19 @@
+<?php $token = $this->getPublicToken();
+$error = false;
+$message = "";
+if (is_array($token)){
+	if (array_key_exists('error', $token)){
+		$error = true;
+		$message = $token['message'];
+	}
+}
+if (!$error): ?>
 <div id="collector-checkout" class="collector-checkout">
     <script src="<?php echo $this->getCheckoutUrl() ?>" data-token="<?php echo $this->getPublicToken(); ?>"
             data-lang='<?php echo $this->getLanguage(); ?>' <?php echo $this->getDataVariant(); ?>></script>
 </div>
+<?php else: ?>
+<div id="collector-checkout" class="collector-checkout">
+	<center><?php echo $message; ?></center>
+</div>
+<?php endif; ?>

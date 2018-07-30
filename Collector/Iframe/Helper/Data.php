@@ -249,19 +249,28 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->collectorSession->setCollectorAppliedDiscountCode($code);
             $this->cart->getQuote()->setData('collector_applied_discount_code', $code);
             $this->cart->getQuote()->save();
-            $this->messageManager->addSuccess(__('You used coupon code "%1".', $code));
+            return array('message'=>__('You used coupon code "%1".', $code), 'error'=>false);
         } else {
-            $this->messageManager->addError(__('The coupon code "%1" is not valid.', $code));
+            return array('message'=>__('The coupon code "%1" is not valid.', $code), 'error'=>false);
         }
     }
+	
+	public function setMessage($message, $error){
+		if ($error){
+			$this->messageManager->addError($message);
+		}
+		else {
+			$this->messageManager->addSuccess($message);
+		}
+	}
 
     public function unsetDiscountCode()
     {
         $this->collectorSession->setCollectorAppliedDiscountCode('');
         $this->cart->getQuote()->setData('collector_applied_discount_code', null);
         $this->cart->getQuote()->save();
-        $this->messageManager->addSuccess(__('You canceled the coupon code.'));
         $this->checkoutSession->getQuote()->setCouponCode()->collectTotals()->save();
+        return array('message'=>__('You canceled the coupon code.'), 'error'=>false);
     }
 
     public function getShippingMethod()
@@ -468,15 +477,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function updateFees()
     {
-        $this->apiRequest->callCheckoutsFees($this->getFees(), $this->cart);
+        $result = $this->apiRequest->callCheckoutsFees($this->getFees(), $this->cart);
+		if ($result->error !== NULL){
+			return array('error'=>true,'message'=>$result->error->errors[0]->message);
+		}
+		return true;
     }
 
     public function updateCart()
     {
-        $this->apiRequest->callCheckoutsCart([
+        $result = $this->apiRequest->callCheckoutsCart([
             'countryCode' => $this->collectorConfig->getCountryCode(),
             'items' => $this->getProducts()
         ], $this->cart);
+		if ($result->error !== NULL){
+			return array('error'=>true,'message'=>$result->error->errors[0]->message);
+		}
+		return true;
     }
 
     public function getOrderResponse()

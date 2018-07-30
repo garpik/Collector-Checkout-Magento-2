@@ -122,6 +122,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Iframe\Model\ResourceModel\Fraud\Collection
      */
     protected $fraudCollection;
+	
 	/**
      * @var \Magento\Customer\Api\AddressRepositoryInterface
      */
@@ -479,7 +480,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
             $fraud = $this->fraudCollection->addFieldToFilter('increment_id', $response['data']['reference'])
                 ->getFirstItem();
-            /*if ($fraud->getId()) {
+            if ($fraud->getId()) {
                 if ($fraud->getStatus() == 1) {
                     $this->setOrderStatusState($order, 'Preliminary');
                 } elseif ($fraud->getStatus() == 2) {
@@ -487,7 +488,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 } else {
                     $this->setOrderStatusState($order, '');
                 }
-            }*/
+            }
             $order->save();
             return $resultPage;
         } catch (\Exception $e) {
@@ -533,9 +534,9 @@ class Index extends \Magento\Framework\App\Action\Action
         try {
             switch ($result) {
                 case "OnHold":
-                 /*   $activeStatus = $this->collectorConfig->getAcceptStatus();
+                    $activeStatus = $this->collectorConfig->getAcceptStatus();
                     $activeState = $this->orderState->load($activeStatus)->getState();
-                    $order->setHoldBeforeState($activeState)->setHoldBeforeStatus($activeStatus);*/
+                    $order->setHoldBeforeState($activeState)->setHoldBeforeStatus($activeStatus);
 
                     $status = $this->collectorConfig->getHoldStatus();
                     $state = $this->orderState->load($status)->getState();

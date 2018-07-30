@@ -102,7 +102,15 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var \Collector\Base\Logger\Collector
      */
     protected $collectorLogger;
-	
+
+    /**
+     * @var \Collector\Iframe\Model\FraudFactory
+     */
+    protected $fraudFactory;
+    /**
+     * @var \Collector\Iframe\Model\CheckerFactory
+     */
+    protected $checkerFactory;
 	/**
      * @var \Collector\Base\Logger\Collector
      */
@@ -130,6 +138,9 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Collector\Base\Model\Session $_collectorSession
      * @param \Collector\Base\Model\ApiRequest $apiRequest
      * @param \Collector\Base\Logger\Collector $logger
+     * @param \Collector\Iframe\Model\FraudFactory $fraudFactory
+     * @param \Collector\Iframe\Model\CheckerFactory $checkerFactory
+	 * @param \Collector\Base\Model\Config $_config
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -153,8 +164,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Collector\Base\Model\ApiRequest $apiRequest,
         \Collector\Base\Logger\Collector $logger,
         \Collector\Iframe\Model\FraudFactory $fraudFactory,
+        \Collector\Iframe\Model\CheckerFactory $checkerFactory,
 		\Collector\Base\Model\Config $_config
     ) {
+        $this->checkerFactory = $checkerFactory;
 		$this->config = $_config;
         $this->fraudFactory = $fraudFactory;
         $this->collectorLogger = $logger;
@@ -186,45 +199,36 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
-        if (!empty($this->request->getParam('OrderNo')) && !empty($this->request->getParam('InvoiceStatus'))) {
-            $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
-            if ($order->getId()) {
-                if ($this->request->getParam('InvoiceStatus') == "0") {
-                    $status = $this->config->getHoldStatus();
-                    $order->setState($status)->setStatus($status);
-                    $order->save();
-                } else {
-                    if ($this->request->getParam('InvoiceStatus') == "1") {
-                        $status = $this->config->getAcceptStatus();
+        if (!empty($this->request->getParam('OrderNo'))) {
+            if (!empty($this->request->getParam('InvoiceStatus'))) {
+                $order = $this->orderInterface->loadByIncrementId($this->request->getParam('OrderNo'));
+                if ($order->getId()) {
+                    if ($this->request->getParam('InvoiceStatus') == "0") {
+                        $status = $this->helper->getHoldStatus();
                         $order->setState($status)->setStatus($status);
                         $order->save();
                     } else {
-                        $status = $this->config->getDeniedStatus();
-                        $order->setState($status)->setStatus($status);
-                        $order->save();
+                        if ($this->request->getParam('InvoiceStatus') == "1") {
+                            $status = $this->helper->getAcceptStatus();
+                            $order->setState($status)->setStatus($status);
+                            $order->save();
+                        } else {
+                            $status = $this->helper->getDeniedStatus();
+                            $order->setState($status)->setStatus($status);
+                            $order->save();
+                        }
                     }
                 }
-            } else {
+                $fraud = $this->fraudFactory->create();
+                $fraud->setIncrementId($this->request->getParam('OrderNo'));
+                $fraud->setStatus($this->request->getParam('InvoiceStatus'));
+                $fraud->setIsAntiFraud(1);
+                $fraud->save();
 
-                //if ($this->request->getParam('InvoiceStatus') == "0" || $this->request->getParam('InvoiceStatus') == "1") {
-
-                //}
             }
-            $fraud = $this->fraudFactory->create();
-            $fraud->setIncrementId($this->request->getParam('OrderNo'));
-            $fraud->setStatus($this->request->getParam('InvoiceStatus'));
-            $fraud->setIsAntiFraud(1);
-            $fraud->save();
-        }
-        if (!empty($this->request->getParam('OrderNo')) && empty($this->request->getParam('InvoiceStatus'))) {
-
-            $fraud = $this->fraudFactory->create();
-            $fraud->setData('increment_id',$this->request->getParam('OrderNo'));
-            $fraud->setStatus(5);
-            $fraud->setIsAntiFraud(1);
-
-            $fraud->save();
-            print_r($fraud->getData());exit;
+            $checker = $this->checkerFactory->create();
+            $checker->setData('increment_id', $this->request->getParam('OrderNo'));
+            $checker->save();
         }
         return $this->resultPageFactory->create();
     }
