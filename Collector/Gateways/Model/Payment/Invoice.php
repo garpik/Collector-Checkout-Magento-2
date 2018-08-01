@@ -124,6 +124,14 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
 			$transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
 			$payment->addTransactionCommentsToOrder($transaction, "testing");
         }
+		$countryCode = $this->collectorConfig->getCountryCode();
+		if ($countryCode == null){
+			$store = $order->getStore();
+			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
+			if ($countryCode == null){
+				$countryCode = $this->collectorConfig->getDefaultCountryCode();
+			}
+		}
         if (!$isIframe) {
             $soap = $this->collectorApi->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
             if ($order->getBillingAddress()->getCompany()) {
@@ -135,7 +143,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $req = array(
                 'ActivationOption' => "0",
                 'CorrelationId' => $order->getIncrementId(),
-                'CountryCode' => $this->collectorConfig->getCountryCode(),
+                'CountryCode' => $countryCode,
                 'Currency' => 'SEK',
                 'DeliveryAddress' => $this->helper->getDeliveryAddress($order),
                 'InvoiceAddress' => $this->helper->getInvoiceAddress($order),
@@ -175,7 +183,14 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $order = $payment->getOrder();
         $soap = $this->collectorApi->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
-
+        $countryCode = $this->collectorConfig->getCountryCode();
+		if ($countryCode == null){
+			$store = $order->getStore();
+			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
+			if ($countryCode == null){
+				$countryCode = $this->collectorConfig->getDefaultCountryCode();
+			}
+		}
         if ($order->getBillingAddress()->getCompany()) {
             $storeID = $this->collectorConfig->getB2BStoreID();
         } else {
@@ -184,7 +199,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         if ($order->getGrandTotal() - $order->getTotalInvoiced() == $amount) {
             $req = array(
                 'CorrelationId' => $payment->getOrder()->getIncrementId(),
-                'CountryCode' => $this->collectorConfig->getCountryCode(),
+                'CountryCode' => $countryCode,
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeID,
             );
@@ -210,7 +225,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
                 if ($invoice->getState() == null) {
                     $req = array(
                         'CorrelationId' => $payment->getOrder()->getIncrementId(),
-                        'CountryCode' => $this->collectorConfig->getCountryCode(),
+                        'CountryCode' => $countryCode,
                         'InvoiceNo' => $order->getData('collector_invoice_id'),
                         'StoreId' => $storeID,
                         'ArticleList' => array()
@@ -295,7 +310,7 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
 
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
-            'CountryCode' => $this->collectorConfig->getCountryCode(),
+            'CountryCode' => $countryCode,
             'InvoiceNo' => $order->getData('collector_invoice_id'),
             'StoreId' => $storeID,
         );
@@ -320,10 +335,17 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
             $storeID = $this->collectorConfig->getB2CStoreID();
         }
         $soap = $this->collectorApi->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
-
+		$countryCode = $this->collectorConfig->getCountryCode();
+		if ($countryCode == null){
+			$store = $order->getStore();
+			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
+			if ($countryCode == null){
+				$countryCode = $this->collectorConfig->getDefaultCountryCode();
+			}
+		}
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
-            'CountryCode' => $this->collectorConfig->getCountryCode(),
+            'CountryCode' => $countryCode,
             'InvoiceNo' => $order->getData('collector_invoice_id'),
             'StoreId' => $storeID,
         );
@@ -347,11 +369,19 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         } else {
             $storeID = $this->collectorConfig->getB2CStoreID();
         }
+		$countryCode = $this->collectorConfig->getCountryCode();
+		if ($countryCode == null){
+			$store = $order->getStore();
+			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
+			if ($countryCode == null){
+				$countryCode = $this->collectorConfig->getDefaultCountryCode();
+			}
+		}
         $soap = $this->collectorApi->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
         if ($order->getGrandTotal() == $amount) {
             $req = array(
                 'CorrelationId' => $order->getIncrementId(),
-                'CountryCode' => $this->collectorConfig->getCountryCode(),
+                'CountryCode' => $countryCode,
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")

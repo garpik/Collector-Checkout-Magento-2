@@ -148,6 +148,23 @@ class Config
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
+	
+	public function getStoreCountryCode($store)
+    {
+        return $this->scopeConfig->getValue(
+            'general/country/default',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+			$store->getCode()
+        );
+    }
+	
+	public function getDefaultCountryCode()
+    {
+        return $this->scopeConfig->getValue(
+            'general/country/default',
+            'default'
+        );
+    }
 
     public function getTermsUrl()
     {
