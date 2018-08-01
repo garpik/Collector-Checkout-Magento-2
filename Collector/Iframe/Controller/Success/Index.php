@@ -128,6 +128,11 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     protected $addressRepository;
 	
+	/**
+     * @var \Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface
+     */
+    protected $transactionBuilder;
+	
     /**
      * Index constructor.
      * @param \Collector\Base\Model\Config $collectorConfig
@@ -156,6 +161,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param \Magento\Framework\App\Response\RedirectInterface $redirect
      * @param \Magento\Customer\Model\Session $customerSession
 	 * @param \Magento\Customer\Api\AddressRepositoryInterface $_addressRepository
+	 * @param \Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface $transactionBuilder
      */
     public function __construct(
         \Collector\Base\Model\Config $collectorConfig,
@@ -183,8 +189,10 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Customer\Model\AddressFactory $addressFactory,
         \Magento\Framework\App\Response\RedirectInterface $redirect,
         \Magento\Customer\Model\Session $customerSession,
-		\Magento\Customer\Api\AddressRepositoryInterface $_addressRepository
+		\Magento\Customer\Api\AddressRepositoryInterface $_addressRepository,
+		\Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface $transactionBuilder
     ) {
+		$this->transactionBuilder = $transactionBuilder;
 		$this->addressRepository = $_addressRepository;
         $this->fraudCollection = $fraudCollection;
         $this->customerSession = $customerSession;
@@ -460,6 +468,58 @@ class Index extends \Magento\Framework\App\Action\Action
                 $order->setCollectorSsn($response['data']['businessCustomer']['organizationNumber']);
             }
 
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			$payment = $order->getPayment();
+            $payment->setLastTransId($response['data']['purchase']['purchaseIdentifier']);
+            $payment->setTransactionId($response['data']['purchase']['purchaseIdentifier']);
+            $payment->setAdditionalInformation(
+                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array) $response['data']['purchase']]
+            );
+            $formatedPrice = $order->getBaseCurrency()->formatTxt(
+                $order->getGrandTotal()
+            );
+ 
+            $message = __('The authorized amount is %1.', $formatedPrice);
+            //get the object of builder class
+            $trans = $this->transactionBuilder;
+            $transaction = $trans->setPayment($payment)
+            ->setOrder($order)
+            ->setTransactionId($response['data']['purchase']['purchaseIdentifier'])
+            ->setAdditionalInformation(
+                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array) $response['data']['purchase']]
+            )
+            ->setFailSafe(true)
+            //build method creates the transaction and returns the object
+            ->build(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
+ 
+            $payment->addTransactionCommentsToOrder(
+                $transaction,
+                $message
+            );
+            $payment->setParentTransactionId(null);
+            $payment->save();
+            $order->save();
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
 
             $order->setFeeAmount($fee);
             $order->setBaseFeeAmount($fee);

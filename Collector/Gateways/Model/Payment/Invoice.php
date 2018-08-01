@@ -119,7 +119,10 @@ class Invoice extends \Magento\Payment\Model\Method\AbstractMethod
         $isIframe = false;
         if (!empty($this->collectorSession->getIsIframe(''))) {
             $isIframe = true;
+			$payment->setShouldCloseParentTransaction(false);
             $payment->setIsTransactionClosed(false);
+			$transaction = $payment->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
+			$payment->addTransactionCommentsToOrder($transaction, "testing");
         }
         if (!$isIframe) {
             $soap = $this->collectorApi->getInvoiceSOAP(['ClientIpAddress' => $payment->getOrder()->getRemoteIp()]);
