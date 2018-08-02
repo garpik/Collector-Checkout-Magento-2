@@ -127,7 +127,9 @@ class Partrefund
                 $client->PartCreditInvoice($req);
                 $memo->setData('fee_amount', $order->getData('fee_amount_invoiced'));
                 $memo->setData('base_fee_amount', $order->getData('fee_amount_invoiced'));
+
                 $order->setData('fee_amount_refunded', $order->getData('fee_amount_invoiced'));
+                $order->setData('fee_amount_invoiced', 0);
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
                 $this->logger->error($e->getTraceAsString());

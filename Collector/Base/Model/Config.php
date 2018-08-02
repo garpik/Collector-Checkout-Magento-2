@@ -148,17 +148,29 @@ class Config
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
-	
-	public function getStoreCountryCode($store)
+
+    public function getCountryCodeNotNull($store = null)
+    {
+        $countryCode = $this->getCountryCode();
+        if ($countryCode == null) {
+            $countryCode = $this->getStoreCountryCode($store);
+            if ($countryCode == null) {
+                $countryCode = $this->getDefaultCountryCode();
+            }
+        }
+        return $countryCode;
+    }
+
+    public function getStoreCountryCode($store)
     {
         return $this->scopeConfig->getValue(
             'general/country/default',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-			$store->getCode()
+            $store->getCode()
         );
     }
-	
-	public function getDefaultCountryCode()
+
+    public function getDefaultCountryCode()
     {
         return $this->scopeConfig->getValue(
             'general/country/default',

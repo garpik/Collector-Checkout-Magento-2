@@ -149,14 +149,6 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         //send addinvoice request
         //if error throw error
         //spara, corelation id och invoice id
-		$countryCode = $this->collectorConfig->getCountryCode();
-		if ($countryCode == null){
-			$store = $order->getStore();
-			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
-			if ($countryCode == null){
-				$countryCode = $this->collectorConfig->getDefaultCountryCode();
-			}
-		}
 
         $info = $this->getInfoInstance();
         $paymentInfo = $info->getAdditionalInformation();
@@ -172,7 +164,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
             $req = array(
                 'ActivationOption' => "0",
                 'CorrelationId' => $order->getIncrementId(),
-                'CountryCode' => $countryCode,
+                'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
                 'Currency' => 'SEK',
                 'DeliveryAddress' => $this->helper->getDeliveryAddress($order),
                 'InvoiceAddress' => $this->helper->getInvoiceAddress($order),
@@ -209,18 +201,11 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $client = $this->apiRequest->getInvoiceSOAP();
         $storeID = $this->getB2BrB2CStoreId($order);
-		$countryCode = $this->collectorConfig->getCountryCode();
-		if ($countryCode == null){
-			$store = $order->getStore();
-			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
-			if ($countryCode == null){
-				$countryCode = $this->collectorConfig->getDefaultCountryCode();
-			}
-		}
+
         if ($order->getGrandTotal() - $order->getTotalInvoiced() == $amount) {
             $req = array(
                 'CorrelationId' => $payment->getOrder()->getIncrementId(),
-                'CountryCode' => $countryCode,
+                'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeID,
             );
@@ -251,7 +236,7 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
                 if ($invoice->getState() == null) {
                     $req = array(
                         'CorrelationId' => $payment->getOrder()->getIncrementId(),
-                        'CountryCode' => $countryCode,
+                        'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
                         'InvoiceNo' => $order->getData('collector_invoice_id'),
                         'StoreId' => $storeID,
                         'ArticleList' => array()
@@ -322,17 +307,10 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
-		$countryCode = $this->collectorConfig->getCountryCode();
-		if ($countryCode == null){
-			$store = $order->getStore();
-			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
-			if ($countryCode == null){
-				$countryCode = $this->collectorConfig->getDefaultCountryCode();
-			}
-		}
+
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
-            'CountryCode' => $countryCode,
+            'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
             'InvoiceNo' => $order->getData('collector_invoice_id'),
             'StoreId' => $storeID,
         );
@@ -349,17 +327,10 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
-		$countryCode = $this->collectorConfig->getCountryCode();
-		if ($countryCode == null){
-			$store = $order->getStore();
-			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
-			if ($countryCode == null){
-				$countryCode = $this->collectorConfig->getDefaultCountryCode();
-			}
-		}
+
         $req = array(
             'CorrelationId' => $order->getIncrementId(),
-            'CountryCode' => $countryCode,
+            'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
             'InvoiceNo' => $order->getData('collector_invoice_id'),
             'StoreId' => $storeID,
         );
@@ -376,18 +347,11 @@ class BasePayment extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $storeID = $this->getB2BrB2CStoreId($order);
         $client = $this->apiRequest->getInvoiceSOAP();
-		$countryCode = $this->collectorConfig->getCountryCode();
-		if ($countryCode == null){
-			$store = $order->getStore();
-			$countryCode = $this->collectorConfig->getStoreCountryCode($store);
-			if ($countryCode == null){
-				$countryCode = $this->collectorConfig->getDefaultCountryCode();
-			}
-		}
+
         if ($order->getGrandTotal() == $amount) {
             $req = array(
                 'CorrelationId' => $order->getIncrementId(),
-                'CountryCode' => $countryCode,
+                'CountryCode' => $this->collectorConfig->getCountryCodeNotNull($order->getStore()),
                 'InvoiceNo' => $order->getData('collector_invoice_id'),
                 'StoreId' => $storeID,
                 'CreditDate' => date("Y-m-d")
